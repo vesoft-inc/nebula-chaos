@@ -1,2 +1,3 @@
 nebula_add_subdirectory(common)
 nebula_add_subdirectory(utils)
+nebula_add_subdirectory(nebula)

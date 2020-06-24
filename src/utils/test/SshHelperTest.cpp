@@ -12,7 +12,14 @@ namespace nebula_chaos {
 namespace utils {
 
 TEST(SSHHelperTest, DateTest) {
-    auto ret = SshHelper::run("date", "127.0.0.1");
+    auto ret = SshHelper::run("date",
+                              "127.0.0.1",
+                              [] (const std::string& out) {
+                                 LOG(INFO) << out;
+                              },
+                              [] (const std::string& err) {
+                                 LOG(ERROR) << err;
+                              });
     EXPECT_EQ(0, ret.exitStatus());
 }
 

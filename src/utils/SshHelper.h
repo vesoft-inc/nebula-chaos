@@ -13,13 +13,18 @@
 namespace nebula_chaos {
 namespace utils {
 
+using ReadCallback = std::function<void(const std::string&)>;
+
 class SshHelper {
 public:
     /**
      * ssh to the host as current user, and run command
      * */
     static folly::ProcessReturnCode run(const std::string& command,
-                                        const std::string& hostName);
+                                        const std::string& hostName,
+                                        ReadCallback readStdout,
+                                        ReadCallback readStderr,
+                                        const std::string& user = "");
 
 private:
     SshHelper() = default;

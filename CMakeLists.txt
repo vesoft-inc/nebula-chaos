@@ -96,8 +96,8 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "_build")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "_build")
 
 # Set the project home dir
-set(NEBULA_HOME ${CMAKE_CURRENT_SOURCE_DIR})
-add_definitions(-DNEBULA_HOME=${NEBULA_HOME})
+set(NEBULA_CHAOS_HOME ${CMAKE_CURRENT_SOURCE_DIR})
+add_definitions(-DNEBULA_CHAOS_HOME=${CMAKE_CURRENT_SOURCE_DIR})
 
 # Let s2 use glog
 add_definitions(-DS2_USE_GLOG)
@@ -126,8 +126,8 @@ if (GIT_INFO_SHA)
 endif()
 
 # To include customized FindXXX.cmake modules
-list(APPEND CMAKE_MODULE_PATH "${NEBULA_HOME}/cmake")
-#list(APPEND CMAKE_MODULE_PATH "${NEBULA_HOME}/modules/common")
+list(APPEND CMAKE_MODULE_PATH "${NEBULA_CHAOS_HOME}/cmake")
+#list(APPEND CMAKE_MODULE_PATH "${NEBULA_CHAOS_HOME}/modules/common")
 message(STATUS "CMAKE_MODULE_PATH: " ${CMAKE_MODULE_PATH})
 # When NEBULA_THIRDPARTY_ROOT is null, set default value as /opt/nebula/third-party
 if("${NEBULA_THIRDPARTY_ROOT}" STREQUAL "")
@@ -304,10 +304,6 @@ macro(nebula_add_test)
         ${ARGN}
     )
 
-    message(STATUS "SOURCES ${nebula_test_SOURCES}")
-    message(STATUS "OBJECTS ${nebula_test_OBJECTS}")
-    message(STATUS "LIBRARIES ${nebula_test_LIBRARIES}")
-
     nebula_add_executable(
         NAME ${nebula_test_NAME}
         SOURCES ${nebula_test_SOURCES}
@@ -342,7 +338,7 @@ macro(nebula_add_library name type)
     add_library(${name} ${type} ${ARGN})
 endmacro()
 
-include_directories(AFTER ${NEBULA_HOME}/src)
+include_directories(AFTER ${NEBULA_CHAOS_HOME}/src)
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L ${NEBULA_THIRDPARTY_ROOT}/lib")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L ${NEBULA_THIRDPARTY_ROOT}/lib64")
