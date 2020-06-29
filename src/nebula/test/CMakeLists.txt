@@ -18,10 +18,13 @@ nebula_add_executable(
     SOURCES
         NebulaActionTest.cpp
     OBJECTS
-        $<TARGET_OBJECTS:nebula_actions_obj>
+        $<TARGET_OBJECTS:nebula_client_obj>
+        $<TARGET_OBJECTS:graph_thrift_obj>
+        $<TARGET_OBJECTS:nebula_plan_obj>
         $<TARGET_OBJECTS:nebula_instance_obj>
         $<TARGET_OBJECTS:ssh_helper_obj>
         $<TARGET_OBJECTS:base_obj>
     LIBRARIES
         gtest
+        ${THRIFT_LIBRARIES}
 )

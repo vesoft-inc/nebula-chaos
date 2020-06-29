@@ -22,6 +22,7 @@ public:
         UNKNOWN,
     };
 
+    NebulaInstance() = default;
     NebulaInstance(const std::string& host,
                    const std::string& installPath,
                    NebulaInstance::Type type,

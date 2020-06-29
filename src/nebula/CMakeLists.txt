@@ -4,8 +4,11 @@ nebula_add_library(
 )
 
 nebula_add_library(
-    nebula_actions_obj OBJECT
+    nebula_plan_obj OBJECT
+    NebulaChaosPlan.cpp
     NebulaAction.cpp
 )
 
+nebula_add_subdirectory(interface)
+nebula_add_subdirectory(client)
 nebula_add_subdirectory(test)
