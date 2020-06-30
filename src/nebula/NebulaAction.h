@@ -74,6 +74,29 @@ private:
     NebulaInstance* inst_ = nullptr;
 };
 
+class ClientConnectAction : public core::Action {
+public:
+    ClientConnectAction(GraphClient* client)
+        : client_(client) {}
+
+    virtual ~ClientConnectAction() = default;
+
+    ResultCode doRun() override {
+        CHECK_NOTNULL(client_);
+        auto code = client_->connect("user", "password");
+        if (Code::SUCCEEDED == code) {
+            return ResultCode::OK;
+        }
+        return ResultCode::ERR_FAILED;
+    }
+
+    std::string toString() const override {
+        return folly::stringPrintf("Connect to %s", client_->serverAddress().c_str());
+    }
+
+private:
+    GraphClient* client_ = nullptr;
+};
 /**
  * The action will change the meta on the cluster.
  * */
@@ -87,6 +110,10 @@ public:
     ResultCode doRun() override;
 
     virtual std::string command() const = 0;
+
+    std::string toString() const override {
+        return command();
+    }
 
 protected:
     GraphClient* client_ = nullptr;
@@ -106,20 +133,31 @@ public:
     ~CreateSpaceAction() = default;
 
     std::string command() const override {
-        return folly::stringPrintf("CREATE SPACE %s (replica_factor=%d, partition_number=%d)",
-                                   spaceName_.c_str(),
-                                   replica_,
-                                   parts_);
-    }
-
-    std::string toString() const override {
-        return command();
+        return folly::stringPrintf(
+                       "CREATE SPACE IF NOT EXISTS %s (replica_factor=%d, partition_num=%d)",
+                       spaceName_.c_str(),
+                       replica_,
+                       parts_);
     }
 
 protected:
     std::string spaceName_;
     int32_t replica_;
     int32_t parts_;
+};
+
+class UseSpaceAction : public MetaAction {
+public:
+    UseSpaceAction(GraphClient* client, const std::string& spaceName)
+        : MetaAction(client)
+        , spaceName_(spaceName) {}
+
+    std::string command() const override {
+        return folly::stringPrintf("USE %s", spaceName_.c_str());
+    }
+
+private:
+    std::string spaceName_;
 };
 
 using NameType = std::pair<std::string, std::string>;
@@ -145,6 +183,7 @@ public:
         str.reserve(256);
         str += "CREATE ";
         str += edgeOrTag_ ? "EDGE " : "TAG ";
+        str += "IF NOT EXISTS ";
         str += name_;
         if (props_.empty()) {
             return str;
@@ -158,10 +197,6 @@ public:
         }
         str[str.size() - 1] = ')';
         return str;
-    }
-
-    std::string toString() const override {
-        return command();
     }
 
 protected:

@@ -28,6 +28,8 @@ Action* NebulaChaosPlan::addStartActions() {
         metads.emplace_back(std::move(metad));
     }
 
+
+
     VLOG(1) << "Begin add start actions...";
     addActions(std::move(metads));
     addActions(std::move(storageds));
@@ -51,6 +53,32 @@ void NebulaChaosPlan::addStopActions(Action* upstream) {
         upstream->addDependency(metad.get());
         addAction(std::move(metad));
     }
+}
+
+Action* NebulaChaosPlan::createSpaceAndSchema(Action* upstream) {
+    auto connectClient = std::make_unique<ClientConnectAction>(client_.get());
+    upstream->addDependency(connectClient.get());
+    addAction(std::move(connectClient));
+
+    auto createSpace = std::make_unique<CreateSpaceAction>(client_.get(),
+                                                           ctx_->space,
+                                                           ctx_->replica,
+                                                           ctx_->partsNum);
+    last()->addDependency(createSpace.get());
+    addAction(std::move(createSpace));
+
+    auto useSpace = std::make_unique<UseSpaceAction>(client_.get(),
+                                                     ctx_->space);
+    last()->addDependency(useSpace.get());
+    addAction(std::move(useSpace));
+
+    auto createTag = std::make_unique<CreateSchemaAction>(client_.get(),
+                                                          ctx_->tag,
+                                                          ctx_->props,
+                                                          false);
+    last()->addDependency(createTag.get());
+    addAction(std::move(createTag));
+    return last();
 }
 
 }   // namespace nebula

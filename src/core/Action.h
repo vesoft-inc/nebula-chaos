@@ -61,9 +61,11 @@ public:
         CHECK(Status::RUNNING == status_);
         if (rc == ResultCode::OK) {
             status_ = Status::SUCCEEDED;
-            promise_.setTry(folly::Try<folly::Unit>());
+            LOG(ERROR) << "Run action " << toString() << " succeeded!";
+            promise_.setTry(folly::Try<folly::Unit>(folly::Unit()));
         } else {
             status_ = Status::FAILED;
+            LOG(ERROR) << "Run action " << toString() << " failed!";
             promise_.setException(
                     std::runtime_error(
                         folly::stringPrintf("run failed, rc %d",

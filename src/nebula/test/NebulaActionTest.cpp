@@ -55,7 +55,7 @@ The plan looks like this:
 | Stop metad |    |Stop Storage-1|   | Stop Storaged-2|   | Stop Storaged-3| | Stop Graphd  |
 |            |    |              |   |                |   |                | |              |
 +------------+    +--------------+   +----------------+   +----------------+ +--------------+
-*//
+*/
 TEST(NebulaChaosTest, PlanTest) {
     PlanContext ctx;
     ctx.metads.emplace_back(instance(NebulaInstance::Type::META,
@@ -72,17 +72,31 @@ TEST(NebulaChaosTest, PlanTest) {
                           folly::stringPrintf("%s/conf/nebula-graphd.conf",
                                               FLAGS_install_path.c_str()));
 
+    ctx.space = "chaos";
+    ctx.replica = 3;
+    ctx.partsNum = 100;
+    ctx.tag = "circle";
+    ctx.props.emplace_back("nextId", "int");
+
     std::unique_ptr<NebulaChaosPlan> plan(new NebulaChaosPlan(&ctx, 5));
     auto* action = plan->addStartActions();
     LOG(INFO) << "The last action for current plan is " << action->toString();
-
     // wait 10s
-    auto waitAction = std::make_unique<core::WaitAction>(10000);
-    action->addDependency(waitAction.get());
-    plan->addAction(std::move(waitAction));
+    {
+        auto waitAction = std::make_unique<core::WaitAction>(10000);
+        action->addDependency(waitAction.get());
+        plan->addAction(std::move(waitAction));
+    }
+    auto* last = plan->createSpaceAndSchema(plan->last());
+    // wait 10s
+    {
+        auto waitAction = std::make_unique<core::WaitAction>(10000);
+        last->addDependency(waitAction.get());
+        plan->addAction(std::move(waitAction));
+    }
 
     // Stop all services
-    plan->addStopActions(plan->last());
+    plan->addStopActions(last);
 
     LOG(INFO) << "Now let's schedule the plan...";
     plan->schedule();

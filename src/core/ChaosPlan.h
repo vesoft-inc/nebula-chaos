@@ -8,7 +8,7 @@
 #define PLAN_CHAOSPLAN_H_
 
 #include "common/Base.h"
-#include <folly/executors/IOThreadPoolExecutor.h>
+#include <folly/executors/CPUThreadPoolExecutor.h>
 
 namespace nebula_chaos {
 namespace core {
@@ -19,7 +19,7 @@ using ActionStatus = Action::Status;
 class ChaosPlan {
 public:
     ChaosPlan(int32_t concurrency = 10) {
-        threadsPool_ = std::make_unique<folly::IOThreadPoolExecutor>(concurrency);
+        threadsPool_ = std::make_unique<folly::CPUThreadPoolExecutor>(concurrency);
     }
 
     virtual ~ChaosPlan() {
@@ -39,7 +39,10 @@ public:
         }
     }
 
+    virtual void prepare() {};
+
     void schedule() {
+        prepare();
         for (auto& action : actions_) {
             if (action->dependees_.empty()) {
                 action->run();
@@ -47,10 +50,11 @@ public:
             }
             std::vector<folly::Future<folly::Unit>> dependees;
             for (auto* dee : action->dependees_) {
+                LOG(INFO) << "Add dependee " << dee->toString() << " for " << action->toString();
                 dependees.emplace_back(dee->promise_.getFuture());
             }
             auto actionPtr = action.get();
-            folly::collectAll(dependees)
+            folly::collect(dependees)
                         .via(threadsPool_.get())
                         .thenValue([this, actionPtr](auto&&) {
                             actionPtr->run();
@@ -72,8 +76,7 @@ public:
 
 protected:
     std::vector<ActionPtr> actions_;
-    std::unique_ptr<folly::IOThreadPoolExecutor> threadsPool_;
-
+    std::unique_ptr<folly::CPUThreadPoolExecutor> threadsPool_;
 };
 
 }  // action
