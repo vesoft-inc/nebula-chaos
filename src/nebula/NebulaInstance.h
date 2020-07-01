@@ -36,6 +36,10 @@ public:
 
     bool init();
 
+    /**
+     * Read the pid inside PID file, so if the instance not started,
+     * it will get the last pid.
+     * */
     folly::Optional<int32_t> getPid();
 
     folly::Optional<int32_t> getPort() const;

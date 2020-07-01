@@ -37,6 +37,24 @@ TEST(CommunicateSubprocessTest, SimpleRead) {
     proc.waitChecked();
 }
 
+TEST(CommunicateSubprocessTest, TakeOwnershipOfPipes) {
+    std::vector<folly::Subprocess::ChildPipe> pipes;
+    {
+        folly::Subprocess proc(
+            std::vector<std::string>{"/bin/sh", "-c", "echo $'oh\\nmy\\ncat' | wc -l &"},
+            folly::Subprocess::Options().pipeStdout());
+        pipes = proc.takeOwnershipOfPipes();
+        proc.waitChecked();
+    }
+    EXPECT_EQ(1, pipes.size());
+    EXPECT_EQ(1, pipes[0].childFd);
+
+    char buf[10];
+    EXPECT_EQ(2, folly::readFull(pipes[0].pipe.fd(), buf, 10));
+    buf[2] = 0;
+    EXPECT_EQ("3\n", std::string(buf));
+}
+
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);
     folly::init(&argc, &argv, true);

@@ -8,6 +8,8 @@
 #define PLAN_CHAOSPLAN_H_
 
 #include "common/Base.h"
+#include "core/RunTaskAction.h"
+#include "core/SendEmailAction.h"
 #include <folly/executors/CPUThreadPoolExecutor.h>
 
 namespace nebula_chaos {
@@ -18,6 +20,11 @@ using ActionStatus = Action::Status;
 // The plan is a DAG structure.
 class ChaosPlan {
 public:
+    enum class Status {
+        SUCCEEDED,
+        FAILED,
+    };
+
     ChaosPlan(int32_t concurrency = 10) {
         threadsPool_ = std::make_unique<folly::CPUThreadPoolExecutor>(concurrency);
     }
@@ -27,44 +34,13 @@ public:
     }
 
     // Transfer the ownership into the plan.
-    void addAction(ActionPtr action) {
-        LOG(INFO) << "Add action " << action->toString() << " into plan";
-        actions_.emplace_back(std::move(action));
-    }
+    void addAction(ActionPtr action);
 
-    void addActions(std::vector<ActionPtr>&& actions) {
-        for (auto& action : actions) {
-            LOG(INFO) << "Add action " << action->toString() << " into plan";
-            actions_.emplace_back(std::move(action));
-        }
-    }
+    void addActions(std::vector<ActionPtr>&& actions);
 
     virtual void prepare() {};
 
-    void schedule() {
-        prepare();
-        for (auto& action : actions_) {
-            if (action->dependees_.empty()) {
-                action->run();
-                continue;
-            }
-            std::vector<folly::Future<folly::Unit>> dependees;
-            for (auto* dee : action->dependees_) {
-                LOG(INFO) << "Add dependee " << dee->toString() << " for " << action->toString();
-                dependees.emplace_back(dee->promise_.getFuture());
-            }
-            auto actionPtr = action.get();
-            folly::collect(dependees)
-                        .via(threadsPool_.get())
-                        .thenValue([this, actionPtr](auto&&) {
-                            actionPtr->run();
-                        })
-                        .thenError([this, actionPtr](auto ew) {
-                            LOG(ERROR) << "Run " << actionPtr->toString() << " failed, msg " << ew.what();
-                            actionPtr->markFailed(std::move(ew));
-                        });
-        }
-    }
+    void schedule();
 
     const std::vector<std::unique_ptr<Action>>& actions() const {
         return actions_;
@@ -74,9 +50,12 @@ public:
         return actions_.back().get();
     }
 
+    std::string toString() const;
+
 protected:
     std::vector<ActionPtr> actions_;
     std::unique_ptr<folly::CPUThreadPoolExecutor> threadsPool_;
+    Status status_{Status::SUCCEEDED};
 };
 
 }  // action

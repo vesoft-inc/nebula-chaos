@@ -98,8 +98,11 @@ TEST(NebulaChaosTest, PlanTest) {
     // Stop all services
     plan->addStopActions(last);
 
-    LOG(INFO) << "Now let's schedule the plan...";
+    LOG(INFO) << "=================== Now let's schedule the plan =========================";
     plan->schedule();
+
+    LOG(INFO) << "=================== Finish the plan =========================";
+    LOG(INFO) << "\n" << plan->toString();
 }
 
 }  // namespace utils

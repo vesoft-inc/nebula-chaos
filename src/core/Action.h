@@ -23,6 +23,8 @@ namespace core {
 enum class ResultCode {
     OK,
     ERR_TIMEOUT,
+    ERR_NOT_FOUND,
+    ERR_BAD_ARGUMENT,
     ERR_FAILED,
 };
 
@@ -52,6 +54,22 @@ public:
 
     Status status() const {
         return status_;
+    }
+
+    std::string statusStr() const {
+        switch (status_) {
+            case Status::INIT:
+                return "init";
+            case Status::RUNNING:
+                return "running";
+            case Status::SUCCEEDED:
+                return "succceeded";
+            case Status::FAILED:
+                return "failed";
+            default:
+                break;
+        }
+        return "unknown";
     }
 
     void run() {
@@ -92,6 +110,26 @@ protected:
 private:
     Status status_{Status::INIT};
     folly::SharedPromise<folly::Unit> promise_;
+};
+
+class EmptyAction : public Action {
+public:
+    EmptyAction(const std::string& name = "EmptyAction")
+        : name_(name) {}
+
+    ~EmptyAction() = default;
+
+    ResultCode doRun() override {
+        LOG(INFO) << toString();
+        return ResultCode::OK;
+    }
+
+    std::string toString() const override {
+        return name_;
+    }
+
+private:
+    std::string name_;
 };
 
 using ActionPtr = std::unique_ptr<Action>;

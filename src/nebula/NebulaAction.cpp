@@ -6,6 +6,7 @@
 
 #include "nebula/NebulaAction.h"
 #include "utils/SshHelper.h"
+#include "core/CheckProcAction.h"
 
 namespace nebula_chaos {
 namespace nebula {
@@ -43,7 +44,13 @@ ResultCode StartAction::doRun() {
                 },
                 inst_->owner());
     CHECK_EQ(0, ret.exitStatus());
-    return ResultCode::OK;
+    auto pid = inst_->getPid();
+    if (!pid.hasValue()) {
+        return ResultCode::ERR_FAILED;
+    }
+    // Check the start action succeeded or not
+    nebula_chaos::core::CheckProcAction action(inst_->getHost(), pid.value(), inst_->owner());
+    return action.doRun();
 }
 
 ResultCode StopAction::doRun() {
@@ -61,7 +68,14 @@ ResultCode StopAction::doRun() {
                 },
                 inst_->owner());
     CHECK_EQ(0, ret.exitStatus());
-    return ResultCode::OK;
+    auto pid = inst_->getPid();
+    if (!pid.hasValue()) {
+        return ResultCode::ERR_FAILED;
+    }
+    // Check the stop action succeeded or not
+    nebula_chaos::core::CheckProcAction action(inst_->getHost(), pid.value(), inst_->owner());
+    auto res = action.doRun();
+    return res == ResultCode::ERR_NOT_FOUND ? ResultCode::OK : ResultCode::ERR_FAILED;
 }
 
 ResultCode MetaAction::doRun() {

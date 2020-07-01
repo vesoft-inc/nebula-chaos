@@ -199,15 +199,23 @@ find_package(SSH REQUIRED)
 if("${SSH_EXECUTABLE}" STREQUAL "SSH_EXECUTABLE-NOTFOUND")
     message(FATAL_ERROR "ssh should be installed!")
 endif()
-
 add_definitions(-DSSH_EXEC=${SSH_EXECUTABLE})
+
+if("${MAIL_EXECUTABLE}" STREQUAL "MAIL_EXECUTABLE-NOTFOUND")
+    message(FATAL_ERROR "mail should be installed!")
+endif()
+add_definitions(-DMAIL_EXEC=${MAIL_EXECUTABLE})
+
+if("${ECHO_EXECUTABLE}" STREQUAL "ECHO_EXECUTABLE-NOTFOUND")
+    message(FATAL_ERROR "echo should be installed!")
+endif()
+add_definitions(-DECHO_EXEC=${ECHO_EXECUTABLE})
 
 find_package(CURL REQUIRED)
 if("${CURL_EXECUTABLE}" STREQUAL "CURL_EXECUTABLE-NOTFOUND")
     message(FATAL_ERROR "curl should be installed!")
 endif()
 add_definitions(-DCURL_EXEC=${CURL_EXECUTABLE})
-
 
 if(NOT ENABLE_ASAN AND NOT ENABLE_NATIVE)
     find_package(PCHSupport)
