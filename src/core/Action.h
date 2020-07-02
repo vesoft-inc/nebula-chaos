@@ -8,6 +8,7 @@
 #define ACTIONS_ACTION_H_
 
 #include "common/Base.h"
+#include <chrono>
 #include <folly/Unit.h>
 #include <folly/Try.h>
 #include <folly/Executor.h>
@@ -19,6 +20,9 @@
 
 namespace nebula_chaos {
 namespace core {
+using Clock = std::chrono::high_resolution_clock;
+using TimePoint = Clock::time_point;
+using Duration = Clock::duration;
 
 enum class ResultCode {
     OK,
@@ -75,7 +79,10 @@ public:
     void run() {
         CHECK(Status::INIT == status_);
         status_ = Status::RUNNING;
+        TimePoint start = Clock::now();
         auto rc = this->doRun();
+        auto end = Clock::now();
+        timeSpent_ = end - start;
         CHECK(Status::RUNNING == status_);
         if (rc == ResultCode::OK) {
             status_ = Status::SUCCEEDED;
@@ -106,6 +113,7 @@ protected:
     std::vector<Action*>    dependers_;
     // other actions on which this action depends
     std::vector<Action*>    dependees_;
+    Duration                timeSpent_;
 
 private:
     Status status_{Status::INIT};

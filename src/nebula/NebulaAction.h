@@ -10,6 +10,7 @@
 #include "core/Action.h"
 #include "nebula/NebulaInstance.h"
 #include "nebula/client/GraphClient.h"
+#include <folly/Expected.h>
 
 namespace nebula_chaos {
 namespace nebula {
@@ -97,6 +98,77 @@ public:
 private:
     GraphClient* client_ = nullptr;
 };
+
+class WriteCircleAction : public core::Action {
+public:
+    WriteCircleAction(GraphClient* client,
+                      const std::string& tag,
+                      const std::string& col,
+                      uint64_t totalRows = 10000000000,
+                      uint32_t batchNum = 1024,
+                      uint32_t tryNum = 32)
+        : client_(client)
+        , tag_(tag)
+        , col_(col)
+        , totalRows_(totalRows)
+        , batchNum_(batchNum)
+        , try_(tryNum) {}
+
+    virtual ~WriteCircleAction() = default;
+
+    ResultCode doRun() override;
+
+    std::string toString() const override {
+        return folly::stringPrintf("Write data to %s", client_->serverAddress().c_str());
+    }
+
+private:
+   ResultCode sendBatch(const std::vector<std::string>& batchCmds);
+
+private:
+    GraphClient* client_ = nullptr;
+    std::string tag_;
+    std::string col_;
+    uint64_t    totalRows_;
+    uint32_t    batchNum_;
+    uint32_t    try_;
+};
+
+class WalkThroughAction : public core::Action {
+public:
+    WalkThroughAction(GraphClient* client,
+                      const std::string& tag,
+                      const std::string& col,
+                      uint64_t totalRows,
+                      uint32_t tryNum = 32)
+        : client_(client)
+        , tag_(tag)
+        , col_(col)
+        , totalRows_(totalRows)
+        , try_(tryNum) {}
+
+    virtual ~WalkThroughAction() = default;
+
+    ResultCode doRun() override;
+
+    std::string toString() const override {
+        return folly::stringPrintf("Wark through the circle, from %ld, total %ld",
+                                   start_,
+                                   totalRows_);
+    }
+
+private:
+    folly::Expected<uint64_t, ResultCode> sendCommand(const std::string& cmd);
+
+private:
+    GraphClient* client_ = nullptr;
+    std::string  tag_;
+    std::string  col_;
+    uint64_t     totalRows_;
+    uint64_t     start_ = 0;
+    uint32_t     try_;
+};
+
 /**
  * The action will change the meta on the cluster.
  * */

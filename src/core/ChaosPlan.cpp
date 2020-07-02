@@ -25,7 +25,7 @@ void ChaosPlan::addActions(std::vector<ActionPtr>&& actions) {
 
 void ChaosPlan::schedule() {
     prepare();
-
+    auto start = Clock::now();
     std::vector<Action*> rootActions;
     std::vector<Action*> leafActions;
 
@@ -38,7 +38,8 @@ void ChaosPlan::schedule() {
         }
     }
 
-    addAction(std::make_unique<RunTaskAction>([this]() {
+    addAction(std::make_unique<RunTaskAction>([this, &start]() {
+        timeSpent_ = Clock::now() - start;
         std::string subject;
         if (status_ == Status::SUCCEEDED) {
             subject = "Nebula Survived!";
@@ -88,13 +89,20 @@ void ChaosPlan::schedule() {
     }
     return;
 }
-
+using namespace std::chrono;
 std::string ChaosPlan::toString() const {
     std::stringstream str;
     str << "STATUS: " << (status_ == Status::SUCCEEDED ? "SUCCEEDED" : "FAILED") << "\n";
     for (auto& action : actions_) {
-        str << "Action " << action->toString() << ", Status: " << action->statusStr() << "\n";
+        if (action->dependees_.empty() || action->dependers_.empty()) {
+            continue;
+        }
+        str << "Action " << action->toString() << ", Status: " << action->statusStr()
+            << ", Cost "
+            << duration_cast<milliseconds>(action->timeSpent_).count()
+            << "ms\n";
     }
+    str << "TIME COSTS: " << duration_cast<milliseconds>(timeSpent_).count() <<  "ms\n";
     return str.str();
 }
 

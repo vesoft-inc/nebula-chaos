@@ -56,6 +56,7 @@ protected:
     std::vector<ActionPtr> actions_;
     std::unique_ptr<folly::CPUThreadPoolExecutor> threadsPool_;
     Status status_{Status::SUCCEEDED};
+    Duration  timeSpent_;
 };
 
 }  // action

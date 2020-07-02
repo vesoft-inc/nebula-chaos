@@ -10,6 +10,7 @@
 DEFINE_string(user, "heng", "");
 DEFINE_string(host, "192.168.8.210", "");
 DEFINE_string(install_path, "/home/vesoft/prog/heng", "");
+DEFINE_int64(total_rows, 10000, "");
 
 namespace nebula_chaos {
 namespace nebula {
@@ -94,9 +95,29 @@ TEST(NebulaChaosTest, PlanTest) {
         last->addDependency(waitAction.get());
         plan->addAction(std::move(waitAction));
     }
+    // Begin write data
+    {
+        auto* client = plan->getGraphClient();
+        auto writeAction = std::make_unique<WriteCircleAction>(client,
+                                                               ctx.tag,
+                                                               ctx.props[0].first,
+                                                               FLAGS_total_rows);
+        plan->last()->addDependency(writeAction.get());
+        plan->addAction(std::move(writeAction));
+    }
+    // Begin walk through
+    {
+        auto* client = plan->getGraphClient();
+        auto walkAction = std::make_unique<WalkThroughAction>(client,
+                                                              ctx.tag,
+                                                              ctx.props[0].first,
+                                                              FLAGS_total_rows);
+        plan->last()->addDependency(walkAction.get());
+        plan->addAction(std::move(walkAction));
+    }
 
     // Stop all services
-    plan->addStopActions(last);
+    plan->addStopActions(plan->last());
 
     LOG(INFO) << "=================== Now let's schedule the plan =========================";
     plan->schedule();
