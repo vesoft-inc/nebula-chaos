@@ -65,6 +65,8 @@ public:
      * */
     Action* createSpaceAndSchema(Action* upstream);
 
+    Action* balanceAndCheck(Action* upstream, int32_t expectedLeaders);
+
 protected:
     PlanContext* ctx_ = nullptr;
     std::unique_ptr<GraphClient> client_;

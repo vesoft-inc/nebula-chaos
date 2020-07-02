@@ -4,6 +4,7 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 #include "nebula/NebulaChaosPlan.h"
+#include "core/WaitAction.h"
 
 namespace nebula_chaos {
 namespace nebula {
@@ -28,12 +29,16 @@ Action* NebulaChaosPlan::addStartActions() {
         metads.emplace_back(std::move(metad));
     }
 
-
-
     VLOG(1) << "Begin add start actions...";
     addActions(std::move(metads));
     addActions(std::move(storageds));
     addAction(std::move(graphd));
+    // wait 5s
+    {
+        auto waitAction = std::make_unique<core::WaitAction>(5000);
+        last()->addDependency(waitAction.get());
+        addAction(std::move(waitAction));
+    }
     return last();
 }
 
@@ -78,6 +83,36 @@ Action* NebulaChaosPlan::createSpaceAndSchema(Action* upstream) {
                                                           false);
     last()->addDependency(createTag.get());
     addAction(std::move(createTag));
+    // wait 5s
+    {
+        auto waitAction = std::make_unique<core::WaitAction>(5000);
+        last()->addDependency(waitAction.get());
+        addAction(std::move(waitAction));
+    }
+    return last();
+}
+
+Action* NebulaChaosPlan::balanceAndCheck(Action* upstream, int32_t expectedLeaders) {
+    CHECK(client_ != nullptr);
+    // balance leader and check
+    {
+        auto balanceAction = std::make_unique<BalanceAction>(client_.get(), false);
+        upstream->addDependency(balanceAction.get());
+        addAction(std::move(balanceAction));
+    }
+    // wait 15s
+    {
+        auto waitAction = std::make_unique<core::WaitAction>(15000);
+        last()->addDependency(waitAction.get());
+        addAction(std::move(waitAction));
+    }
+    // check leaders
+    {
+        auto checkLeadersAction = std::make_unique<CheckLeadersAction>(client_.get(),
+                                                                       expectedLeaders);
+        last()->addDependency(checkLeadersAction.get());
+        addAction(std::move(checkLeadersAction));
+    }
     return last();
 }
 

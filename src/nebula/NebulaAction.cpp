@@ -8,6 +8,7 @@
 #include "utils/SshHelper.h"
 #include "core/CheckProcAction.h"
 #include <folly/Random.h>
+#include <folly/GLog.h>
 
 namespace nebula_chaos {
 namespace nebula {
@@ -27,7 +28,13 @@ ResultCode CrashAction::doRun() {
                 },
                 inst_->owner());
     CHECK_EQ(0, ret.exitStatus());
-    return ResultCode::OK;
+    auto pid = inst_->getPid();
+    if (!pid.hasValue()) {
+        return ResultCode::ERR_FAILED;
+    }
+    nebula_chaos::core::CheckProcAction action(inst_->getHost(), pid.value(), inst_->owner());
+    auto res = action.doRun();
+    return res == ResultCode::ERR_NOT_FOUND ? ResultCode::OK : ResultCode::ERR_FAILED;
 }
 
 ResultCode StartAction::doRun() {
@@ -89,20 +96,29 @@ ResultCode StopAction::doRun() {
     return ResultCode::ERR_FAILED;
 }
 
+ResultCode MetaAction::checkResp(const ExecutionResponse&) const {
+    return ResultCode::OK;
+}
+
 ResultCode MetaAction::doRun() {
     CHECK_NOTNULL(client_);
     auto cmd = command();
     LOG(INFO) << "Send " << cmd << " to graphd";
-
     ExecutionResponse resp;
-    auto res = client_->execute(cmd, resp);
-    if (res == Code::SUCCEEDED) {
-        LOG(INFO) << "Execute " << cmd << " successfully!";
-        return ResultCode::OK;
-    } else {
-        LOG(ERROR) << "Execute " << cmd << " failed!";
-        return ResultCode::ERR_FAILED;
+    int32_t retry = 0;
+    while (++retry < 32) {
+        auto res = client_->execute(cmd, resp);
+        if (res == Code::SUCCEEDED) {
+            LOG(INFO) << "Execute " << cmd << " successfully!";
+            return checkResp(resp);
+        } else {
+            LOG(ERROR) << "Execute " << cmd << " failed, retry " << retry
+                       << " after " << retry << " seconds...";
+            sleep(retry);
+            continue;
+        }
     }
+    return ResultCode::ERR_FAILED;
 }
 
 ResultCode WriteCircleAction::sendBatch(const std::vector<std::string>& batchCmds) {
@@ -114,12 +130,12 @@ ResultCode WriteCircleAction::sendBatch(const std::vector<std::string>& batchCmd
     VLOG(1) << cmd;
     ExecutionResponse resp;
     uint32_t tryTimes = 0;
-    while (tryTimes++ < try_) {
+    while (++tryTimes < try_) {
         auto res = client_->execute(cmd, resp);
         if (res == Code::SUCCEEDED) {
             return ResultCode::OK;
         }
-        usleep(1000 * 5 * tryTimes);
+        sleep(tryTimes);
         LOG(WARNING) << "Failed to send request, tryTimes " << tryTimes
                      << ", error code " << static_cast<int32_t>(res);
     }
@@ -141,8 +157,8 @@ ResultCode WriteCircleAction::doRun() {
                 LOG(ERROR) << "Send request failed!";
                 return res;
             }
-            LOG(INFO) << "Send requests successfully, start row " << row
-                      << ", batch " << batchNum_;
+            FB_LOG_EVERY_MS(INFO, 3000) << "Send requests successfully, row "
+                                        << row;
             batchCmds.clear();
         }
         batchCmds.emplace_back(folly::stringPrintf("%ld:(%ld)", row, row + 1));
@@ -157,7 +173,7 @@ WalkThroughAction::sendCommand(const std::string& cmd) {
     VLOG(1) << cmd;
     ExecutionResponse resp;
     uint32_t tryTimes = 0;
-    while (tryTimes++ < try_) {
+    while (++tryTimes < try_) {
         auto res = client_->execute(cmd, resp);
         if (res == Code::SUCCEEDED) {
             if (resp.rows.empty() || resp.rows[0].columns.empty()) {
@@ -167,7 +183,7 @@ WalkThroughAction::sendCommand(const std::string& cmd) {
             VLOG(1) << resp.rows.size() << ", " << resp.rows[0].columns.size();
             return resp.rows[0].columns[1].get_integer();
         }
-        usleep(1000 * 5 * tryTimes);
+        sleep(tryTimes);
         LOG(WARNING) << "Failed to send request, tryTimes " << tryTimes
                      << ", error code " << static_cast<int32_t>(res);
     }
@@ -185,6 +201,7 @@ ResultCode WalkThroughAction::doRun() {
                                        id,
                                        tag_.c_str(),
                                        col_.c_str());
+        FB_LOG_EVERY_MS(INFO, 3000) << cmd;
         auto res = sendCommand(cmd);
         if (bool(res)) {
             id = res.value();
@@ -203,6 +220,80 @@ ResultCode WalkThroughAction::doRun() {
         return ResultCode::ERR_FAILED;
     }
     return count == totalRows_ ? ResultCode::OK : ResultCode::ERR_FAILED;
+}
+
+ResultCode CheckLeadersAction::checkResp(const ExecutionResponse& resp) const {
+    if (resp.rows.empty()) {
+        LOG(ERROR) << "Result should not be empty!";
+        return ResultCode::ERR_FAILED;
+    }
+    auto& row = resp.rows[resp.rows.size() - 1];
+    if (row.columns.size() != 6) {
+        LOG(ERROR) << "Column number is wrong!";
+        return ResultCode::ERR_FAILED;
+    }
+    if (row.columns[0].get_str() == "Total"
+            && row.columns[3].get_integer() == expectedNum_) {
+        return ResultCode::OK;
+    }
+    LOG(ERROR) << "row.columns unmatch, col0 is " << row.columns[0].get_str()
+              << ", col3 is " << row.columns[3].get_integer();
+    return ResultCode::ERR_FAILED;
+}
+
+ResultCode RandomRestartAction::stop(NebulaInstance* inst) {
+    if (graceful_) {
+        StopAction stop(inst);
+        return stop.doRun();
+    } else {
+        CrashAction crash(inst);
+        return crash.doRun();
+    }
+}
+
+ResultCode RandomRestartAction::start(NebulaInstance* inst) {
+    for (int retry = 0; retry != 32; retry++) {
+        StartAction start(inst);
+        auto ret = start.doRun();
+        if (ret == ResultCode::OK) {
+            return ret;
+        }
+        LOG(ERROR) << "Start failed, retry " << retry;
+        sleep(retry);
+    }
+    return ResultCode::ERR_FAILED;
+}
+
+ResultCode RandomRestartAction::doRun() {
+    int32_t i = 0;
+    while (++i < loopTimes_) {
+        sleep(nextLoopInterval_);
+        auto index = folly::Random::rand32(instances_.size());
+        auto* inst = instances_[index];
+        CHECK_NOTNULL(inst);
+ 
+        {
+            LOG(INFO) << "Begin to kill " << inst->toString() << ", graceful " << graceful_;
+            auto rc = stop(inst);
+            if (rc != ResultCode::OK) {
+                LOG(ERROR) << "Stop instance " << inst->toString() << " failed!";
+                return rc;
+            }
+            LOG(INFO) << "Finish to kill " << inst->toString();
+        }
+
+        sleep(restartInterval_);
+        {
+            LOG(INFO) << "Begin to start " << inst->toString();
+            auto rc = start(inst);
+            if (rc != ResultCode::OK) {
+                LOG(ERROR) << "Start instance " << inst->toString() << " failed!";
+                return rc;
+            }
+            LOG(INFO) << "Finish to start " << inst->toString();
+        }
+    }
+    return ResultCode::OK;
 }
 
 }   // namespace nebula

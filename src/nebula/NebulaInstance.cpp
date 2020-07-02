@@ -72,8 +72,8 @@ bool NebulaInstance::init() {
     return parseConf(confPath_);
 }
 
-folly::Optional<int32_t> NebulaInstance::getPid() {
-    if (pid_ != -1) {
+folly::Optional<int32_t> NebulaInstance::getPid(bool skipCache) {
+    if (pid_ != -1 && !skipCache) {
         return pid_;
     }
     auto it = conf_.find("--pid_file");

@@ -56,6 +56,14 @@ public:
         return true;
     }
 
+    void setId(int32_t id) {
+        id_ = id;
+    }
+
+    int32_t id() const {
+        return id_;
+    }
+
     Status status() const {
         return status_;
     }
@@ -80,17 +88,18 @@ public:
         CHECK(Status::INIT == status_);
         status_ = Status::RUNNING;
         TimePoint start = Clock::now();
+        LOG(INFO) << "Begin the action " << id_ << ":" << toString();
         auto rc = this->doRun();
         auto end = Clock::now();
         timeSpent_ = end - start;
         CHECK(Status::RUNNING == status_);
         if (rc == ResultCode::OK) {
             status_ = Status::SUCCEEDED;
-            LOG(ERROR) << "Run action " << toString() << " succeeded!";
+            LOG(INFO) << "Then action " << id_ << ":" << toString() << " finished!";
             promise_.setTry(folly::Try<folly::Unit>(folly::Unit()));
         } else {
             status_ = Status::FAILED;
-            LOG(ERROR) << "Run action " << toString() << " failed!";
+            LOG(ERROR) << "The action " << id_ << ":" << toString() << " failed!";
             promise_.setException(
                     std::runtime_error(
                         folly::stringPrintf("run failed, rc %d",
@@ -118,6 +127,7 @@ protected:
 private:
     Status status_{Status::INIT};
     folly::SharedPromise<folly::Unit> promise_;
+    int32_t     id_;
 };
 
 class EmptyAction : public Action {

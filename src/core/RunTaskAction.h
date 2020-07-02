@@ -17,8 +17,9 @@ using ActionTask = folly::Function<ResultCode()>;
 
 class RunTaskAction : public Action {
 public:
-    RunTaskAction(ActionTask&& task)
-        : task_(std::move(task)) {
+    RunTaskAction(ActionTask&& task, const std::string& name)
+        : task_(std::move(task))
+        , name_(name) {
     }
 
     ~RunTaskAction() = default;
@@ -31,11 +32,12 @@ public:
     }
 
     std::string toString() const override {
-        return "Run task";
+        return name_;
     }
 
 protected:
     ActionTask task_;
+    std::string name_;
 };
 
 }   // namespace core

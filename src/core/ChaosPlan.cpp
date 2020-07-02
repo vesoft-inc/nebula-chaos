@@ -12,14 +12,15 @@ namespace core {
 
 // Transfer the ownership into the plan.
 void ChaosPlan::addAction(ActionPtr action) {
-    LOG(INFO) << "Add action " << action->toString() << " into plan";
+    action->setId(actions_.size());
+    LOG(INFO) << "Add action " << action->id()
+              << ":" << action->toString() << " into plan";
     actions_.emplace_back(std::move(action));
 }
 
 void ChaosPlan::addActions(std::vector<ActionPtr>&& actions) {
     for (auto& action : actions) {
-        LOG(INFO) << "Add action " << action->toString() << " into plan";
-        actions_.emplace_back(std::move(action));
+        addAction(std::move(action));
     }
 }
 
@@ -49,7 +50,7 @@ void ChaosPlan::schedule() {
         auto content = this->toString();
         SendEmailAction action(subject, content, FLAGS_email_to);
         return action.doRun();
-    }));
+    }, "Send Email"));
 
     auto* sinkAction = last();
     for (auto* action : leafActions) {
@@ -65,7 +66,7 @@ void ChaosPlan::schedule() {
     for (auto& action : actions_) {
         std::vector<folly::Future<folly::Unit>> dependees;
         for (auto* dee : action->dependees_) {
-            LOG(INFO) << "Add dependee " << dee->toString() << " for " << action->toString();
+            LOG(INFO) << "Add dependee " << dee->id() << " for " << action->id();
             dependees.emplace_back(dee->promise_.getFuture());
         }
         auto actionPtr = action.get();
@@ -97,10 +98,16 @@ std::string ChaosPlan::toString() const {
         if (action->dependees_.empty() || action->dependers_.empty()) {
             continue;
         }
-        str << "Action " << action->toString() << ", Status: " << action->statusStr()
+        str << "Action " << action->id() << ", " << action->toString()
+            << ", Status: " << action->statusStr()
             << ", Cost "
-            << duration_cast<milliseconds>(action->timeSpent_).count()
-            << "ms\n";
+            << duration_cast<milliseconds>(action->timeSpent_).count() << "ms"
+            << ", Depends on Action ";
+        for (auto& der : action->dependees_) {
+            str << der->id() << ",";
+        }
+        str.seekp(-1, std::ios_base::end);
+        str << std::endl;
     }
     str << "TIME COSTS: " << duration_cast<milliseconds>(timeSpent_).count() <<  "ms\n";
     return str.str();

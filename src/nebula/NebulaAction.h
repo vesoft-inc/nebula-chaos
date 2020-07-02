@@ -84,9 +84,14 @@ public:
 
     ResultCode doRun() override {
         CHECK_NOTNULL(client_);
-        auto code = client_->connect("user", "password");
-        if (Code::SUCCEEDED == code) {
-            return ResultCode::OK;
+        int retry = 0;
+        while (++retry < 32) {
+            auto code = client_->connect("user", "password");
+            if (Code::SUCCEEDED == code) {
+                return ResultCode::OK;
+            }
+            LOG(ERROR) << "connect failed, retry " << retry;
+            sleep(retry);
         }
         return ResultCode::ERR_FAILED;
     }
@@ -104,8 +109,8 @@ public:
     WriteCircleAction(GraphClient* client,
                       const std::string& tag,
                       const std::string& col,
-                      uint64_t totalRows = 10000000000,
-                      uint32_t batchNum = 1024,
+                      uint64_t totalRows = 10000,
+                      uint32_t batchNum = 1,
                       uint32_t tryNum = 32)
         : client_(client)
         , tag_(tag)
@@ -147,7 +152,7 @@ public:
         , totalRows_(totalRows)
         , try_(tryNum) {}
 
-    virtual ~WalkThroughAction() = default;
+    ~WalkThroughAction() = default;
 
     ResultCode doRun() override;
 
@@ -186,6 +191,8 @@ public:
     std::string toString() const override {
         return command();
     }
+
+    virtual ResultCode checkResp(const ExecutionResponse& resp) const;
 
 protected:
     GraphClient* client_ = nullptr;
@@ -275,6 +282,78 @@ protected:
     std::string name_;
     std::vector<NameType> props_;
     bool edgeOrTag_;
+};
+
+class BalanceAction : public MetaAction {
+public:
+    /**
+     * Balance data if dataOrLeader is true, otherwide balance leader
+     * This action must be run after UseSpaceAction
+     */
+    BalanceAction(GraphClient* client, bool dataOrLeader)
+        : MetaAction(client)
+        , dataOrLeader_(dataOrLeader) {}
+
+    std::string command() const override {
+        return dataOrLeader_ ? "balance data" : "balance leader";
+    }
+
+private:
+    bool dataOrLeader_;
+};
+
+class CheckLeadersAction : public MetaAction {
+public:
+    CheckLeadersAction(GraphClient* client, int32_t expectedNum)
+        : MetaAction(client)
+        , expectedNum_(expectedNum) {}
+
+    std::string command() const override {
+        return "show hosts";
+    }
+
+    ResultCode checkResp(const ExecutionResponse& resp) const override;
+
+private:
+    int32_t expectedNum_;
+};
+
+/**
+ * Random kill the instance and restart it.
+ * We could set the loop times.
+ * */
+class RandomRestartAction : public core::Action {
+public:
+    RandomRestartAction(const std::vector<NebulaInstance*>& instances,
+                        int32_t loopTimes,
+                        int32_t restartInterval,
+                        int32_t nextLoopInterval,
+                        bool graceful = false)
+        : instances_(instances)
+        , loopTimes_(loopTimes)
+        , restartInterval_(restartInterval)
+        , nextLoopInterval_(nextLoopInterval)
+        , graceful_(graceful) {}
+
+    ~RandomRestartAction() = default;
+
+    ResultCode doRun() override;
+
+    std::string toString() const override {
+        return folly::stringPrintf("Random kill: loop %d", loopTimes_);
+    }
+
+private:
+    ResultCode start(NebulaInstance* inst);
+
+    ResultCode stop(NebulaInstance* inst);
+
+private:
+    std::vector<NebulaInstance*> instances_;
+    int32_t loopTimes_;
+    int32_t restartInterval_;  // seconds
+    int32_t nextLoopInterval_;  // seconds
+    bool graceful_;
 };
 
 }   // namespace nebula

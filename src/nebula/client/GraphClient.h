@@ -9,6 +9,7 @@
 
 #include "common/Base.h"
 #include "nebula/interface/gen-cpp2/GraphServiceAsyncClient.h"
+#include <folly/executors/IOThreadPoolExecutor.h>
 
 namespace nebula_chaos {
 namespace nebula {
@@ -40,6 +41,8 @@ private:
     const std::string addr_;
     const uint16_t port_;
     int64_t sessionId_;
+    std::unique_ptr<folly::IOThreadPoolExecutor> ioPool_;
+    folly::EventBase* evb_;
 };
 
 }  // namespace nebula
