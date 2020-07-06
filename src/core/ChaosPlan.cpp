@@ -5,14 +5,14 @@
  */
 #include "core/ChaosPlan.h"
 
-DEFINE_string(email_to, "", "");
-
 namespace nebula_chaos {
 namespace core {
 
 // Transfer the ownership into the plan.
 void ChaosPlan::addAction(ActionPtr action) {
-    action->setId(actions_.size());
+    if (action->id() < 0) {
+        action->setId(actions_.size());
+    }
     LOG(INFO) << "Add action " << action->id()
               << ":" << action->toString() << " into plan";
     actions_.emplace_back(std::move(action));
@@ -41,6 +41,9 @@ void ChaosPlan::schedule() {
 
     addAction(std::make_unique<RunTaskAction>([this, &start]() {
         timeSpent_ = Clock::now() - start;
+        if (emailTo_.empty()) {
+            return ResultCode::OK;
+        }
         std::string subject;
         if (status_ == Status::SUCCEEDED) {
             subject = "Nebula Survived!";
@@ -48,7 +51,7 @@ void ChaosPlan::schedule() {
             subject = "Thanos killed nebula!";
         }
         auto content = this->toString();
-        SendEmailAction action(subject, content, FLAGS_email_to);
+        SendEmailAction action(subject, content, emailTo_);
         return action.doRun();
     }, "Send Email"));
 
@@ -66,7 +69,7 @@ void ChaosPlan::schedule() {
     for (auto& action : actions_) {
         std::vector<folly::Future<folly::Unit>> dependees;
         for (auto* dee : action->dependees_) {
-            LOG(INFO) << "Add dependee " << dee->id() << " for " << action->id();
+            LOG(INFO) << "Add depender " << action->id() << " for " << dee->id();
             dependees.emplace_back(dee->promise_.getFuture());
         }
         auto actionPtr = action.get();

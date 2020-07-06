@@ -13,6 +13,7 @@ DEFINE_string(host, "192.168.8.210", "");
 DEFINE_string(install_path, "/home/vesoft/prog/heng", "");
 DEFINE_int64(total_rows, 10000, "");
 DEFINE_int32(loop_times, 10, "");
+DEFINE_string(email_to, "", "");
 
 namespace nebula_chaos {
 namespace nebula {
@@ -28,28 +29,30 @@ The plan looks like this:
 
 */
 TEST(NebulaChaosTest, PlanTest) {
-    PlanContext ctx;
-    ctx.metads.emplace_back(instance(NebulaInstance::Type::META,
-                                     folly::stringPrintf("%s/conf/nebula-metad.conf",
+    auto ctx = std::make_unique<PlanContext>();
+    ctx->metads.emplace_back(instance(NebulaInstance::Type::META,
+                                      folly::stringPrintf("%s/conf/nebula-metad.conf",
                                                          FLAGS_install_path.c_str())));
 
     for (int i = 1; i <= 3; i++) {
-        ctx.storageds.emplace_back(instance(NebulaInstance::Type::STORAGE,
-                                            folly::stringPrintf("%s/conf/nebula-storaged-%d.conf",
-                                                                FLAGS_install_path.c_str(),
-                                                                i)));
+        ctx->storageds.emplace_back(instance(NebulaInstance::Type::STORAGE,
+                                             folly::stringPrintf("%s/conf/nebula-storaged-%d.conf",
+                                                                 FLAGS_install_path.c_str(),
+                                                                 i)));
     }
-    ctx.graphd = instance(NebulaInstance::Type::GRAPH,
-                          folly::stringPrintf("%s/conf/nebula-graphd.conf",
-                                              FLAGS_install_path.c_str()));
+    ctx->graphd = instance(NebulaInstance::Type::GRAPH,
+                           folly::stringPrintf("%s/conf/nebula-graphd.conf",
+                                               FLAGS_install_path.c_str()));
 
-    ctx.space = "chaos";
-    ctx.replica = 3;
-    ctx.partsNum = 100;
-    ctx.tag = Utils::getOperatingTable("circle");
-    ctx.props.emplace_back("nextId", "int");
+    ctx->space = "chaos";
+    ctx->replica = 3;
+    ctx->partsNum = 100;
+    ctx->tag = Utils::getOperatingTable("circle");
+    ctx->props.emplace_back("nextId", "int");
 
-    std::unique_ptr<NebulaChaosPlan> plan(new NebulaChaosPlan(&ctx, 5));
+    std::unique_ptr<NebulaChaosPlan> plan(new NebulaChaosPlan(std::move(ctx), 5, FLAGS_email_to));
+
+    auto* pctx = plan->getContext();
     LOG(INFO) << "Start the cluster...";
     auto* action = plan->addStartActions();
     LOG(INFO) << "Create space and the schema...";
@@ -65,7 +68,7 @@ TEST(NebulaChaosTest, PlanTest) {
     // Add randomRestartAction
     {
         std::vector<NebulaInstance*> storageds;
-        for (auto& inst : ctx.storageds) {
+        for (auto& inst : pctx->storageds) {
             storageds.emplace_back(&inst);
         }
         auto randomRestartAction = std::make_unique<RandomRestartAction>(storageds,
@@ -81,8 +84,8 @@ TEST(NebulaChaosTest, PlanTest) {
     // Begin write data
     {
         auto writeAction = std::make_unique<WriteCircleAction>(client,
-                                                               ctx.tag,
-                                                               ctx.props[0].first,
+                                                               pctx->tag,
+                                                               pctx->props[0].first,
                                                                FLAGS_total_rows);
         last->addDependency(writeAction.get());
         plan->addAction(std::move(writeAction));
@@ -90,8 +93,8 @@ TEST(NebulaChaosTest, PlanTest) {
     // Begin walk through
     {
         auto walkAction = std::make_unique<WalkThroughAction>(client,
-                                                              ctx.tag,
-                                                              ctx.props[0].first,
+                                                              pctx->tag,
+                                                              pctx->props[0].first,
                                                               FLAGS_total_rows);
         plan->last()->addDependency(walkAction.get());
         plan->addAction(std::move(walkAction));

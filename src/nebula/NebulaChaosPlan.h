@@ -35,15 +35,20 @@ struct PlanContext {
 
 class NebulaChaosPlan : public nebula_chaos::core::ChaosPlan {
 public:
-    NebulaChaosPlan(PlanContext* ctx, int32_t concurrency)
-        : ChaosPlan(concurrency)
-        , ctx_(ctx) {
+    NebulaChaosPlan(std::unique_ptr<PlanContext> ctx,
+                    int32_t concurrency,
+                    const std::string& emailTo = "")
+        : ChaosPlan(concurrency, emailTo)
+        , ctx_(std::move(ctx)) {
         CHECK_NOTNULL(ctx_);
         auto port = ctx_->graphd.getPort();
         if (port.hasValue()) {
             client_ = std::make_unique<GraphClient>(ctx_->graphd.getHost(), port.value());
         }
     }
+
+    static std::unique_ptr<NebulaChaosPlan>
+    loadFromFile(const std::string& filename);
 
     void prepare() override {
     }
@@ -67,8 +72,12 @@ public:
 
     Action* balanceAndCheck(Action* upstream, int32_t expectedLeaders);
 
+    PlanContext* getContext() const {
+        return ctx_.get();
+    }
+
 protected:
-    PlanContext* ctx_ = nullptr;
+    std::unique_ptr<PlanContext> ctx_;
     std::unique_ptr<GraphClient> client_;
 };
 

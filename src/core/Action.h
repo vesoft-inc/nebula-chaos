@@ -56,6 +56,12 @@ public:
         return true;
     }
 
+    void addDependee(Action* action) {
+        CHECK_NOTNULL(action);
+        this->dependees_.emplace_back(action);
+        action->dependers_.emplace_back(this);
+    }
+
     void setId(int32_t id) {
         id_ = id;
     }
@@ -127,7 +133,7 @@ protected:
 private:
     Status status_{Status::INIT};
     folly::SharedPromise<folly::Unit> promise_;
-    int32_t     id_;
+    int32_t     id_ = -1;
 };
 
 class EmptyAction : public Action {
