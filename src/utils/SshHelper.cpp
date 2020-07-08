@@ -25,7 +25,7 @@ SshHelper::run(const std::string& command,
     }
     VLOG(1) << "Remote " << remote  << ", command " << command;
     folly::Subprocess proc({NEBULA_STRINGIFY(SSH_EXEC), remote, command},
-                           folly::Subprocess::Options().pipeStdout());
+                           folly::Subprocess::Options().pipeStdin().pipeStdout().pipeStderr());
     auto p = proc.communicate();
     readStdout(p.first);
     if (!p.second.empty()) {

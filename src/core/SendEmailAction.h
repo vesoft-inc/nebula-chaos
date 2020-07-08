@@ -34,7 +34,7 @@ public:
                                         subject_.c_str(),
                                         to_.c_str());
         folly::Subprocess proc(std::vector<std::string>{"/bin/bash", "-c", mail},
-                               folly::Subprocess::Options().pipeStdout());
+                               folly::Subprocess::Options().pipeStdin().pipeStdout().pipeStderr());
         proc.waitChecked();
         return ResultCode::OK;
     }
