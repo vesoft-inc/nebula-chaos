@@ -7,31 +7,10 @@
 #include "core/WaitAction.h"
 #include <folly/FileUtil.h>
 #include <folly/json.h>
+#include "nebula/NebulaUtils.h"
 
 namespace nebula_chaos {
 namespace nebula {
-
-
- std::unique_ptr<core::Action>
- loadAction(folly::dynamic& obj, const std::vector<NebulaInstance*>& insts) {
-    auto type = obj.at("type").asString();
-    if (type == "StartAction") {
-        auto instIndex = obj.at("inst_index").asInt();
-        CHECK_GE(instIndex, 0);
-        CHECK_LT(instIndex, insts.size());
-        return std::make_unique<StartAction>(insts[instIndex]);
-    } else if (type == "StopAction") {
-        auto instIndex = obj.at("inst_index").asInt();
-        CHECK_GE(instIndex, 0);
-        CHECK_LT(instIndex, insts.size());
-        return std::make_unique<StopAction>(insts[instIndex]);
-    } else if (type == "WaitAction") {
-       auto waitTimeMs = obj.at("wait_time_ms").asInt();
-       CHECK_GT(waitTimeMs, 0);
-       return std::make_unique<core::WaitAction>(waitTimeMs);
-    }
-    return nullptr;
-}
 
 // static
 std::unique_ptr<NebulaChaosPlan>
@@ -44,6 +23,7 @@ NebulaChaosPlan::loadFromFile(const std::string& filename) {
     auto jsonObj = folly::parseJson(jsonStr);
     VLOG(1) << folly::toPrettyJson(jsonObj);
     auto instances = jsonObj.at("instances");
+    auto rolling = jsonObj.getDefault("rollling_table", true).asBool();
     CHECK(instances.isArray());
     auto it = instances.begin();
     auto ctx = std::make_unique<PlanContext>();
@@ -100,11 +80,15 @@ NebulaChaosPlan::loadFromFile(const std::string& filename) {
     auto plan = std::make_unique<NebulaChaosPlan>(std::move(ctx), concurrency, emailTo);
     auto actionsItem = jsonObj.at("actions");
     std::vector<std::unique_ptr<core::Action>> actions;
+    LoadContext loadCtx;
+    loadCtx.insts = std::move(insts);
+    loadCtx.gClient = plan->getGraphClient();
+    loadCtx.rolling = rolling;
     {
         auto actionIt = actionsItem.begin();
         while (actionIt != actionsItem.end()) {
             CHECK(actionIt->isObject());
-            auto action = loadAction(*actionIt, insts);
+            auto action = Utils::loadAction(*actionIt, loadCtx);
             action->setId(actions.size());
             actions.emplace_back(std::move(action));
             actionIt++;
@@ -115,6 +99,7 @@ NebulaChaosPlan::loadFromFile(const std::string& filename) {
         int32_t index = 0;
         while (actionIt != actionsItem.end()) {
             CHECK(actionIt->isObject());
+            LOG(INFO) << "Load the " << index << " action's dependees!";
             auto depends = actionIt->at("depends");
             for (auto& dependeeIndex : depends) {
                 auto i = dependeeIndex.asInt();

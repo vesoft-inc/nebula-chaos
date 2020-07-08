@@ -11,11 +11,19 @@ namespace nebula_chaos {
 namespace nebula {
 
 int run() {
-    auto plan = NebulaChaosPlan::loadFromFile(FLAGS_conf_file);
-    LOG(INFO) << "\n============= run the plan =================\n";
-    plan->schedule();
-    LOG(INFO) << "\n" << plan->toString();
-    return 1;
+    try {
+        auto plan = NebulaChaosPlan::loadFromFile(FLAGS_conf_file);
+        if (plan == nullptr) {
+            return 0;
+        }
+        LOG(INFO) << "\n============= run the plan =================\n";
+        plan->schedule();
+        LOG(INFO) << "\n" << plan->toString();
+        return 0;
+    } catch (const std::out_of_range& e) {
+        LOG(ERROR) << "Load plan failed, err " << e.what();
+        return-1;
+    }
 }
 
 }  // namespace nebula
