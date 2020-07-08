@@ -21,24 +21,15 @@ struct PlanContext {
     std::vector<NebulaInstance>  storageds;
     std::vector<NebulaInstance>  metads;
     NebulaInstance               graphd;
-    // space and schema information
-    // Currently, we jsut support one space and one tag with one propery(nextId)
-    // I THINK IT IS ENOUGH FOR CHAOS, IF YOU WANT MORE, BUILD YOUR OWN PLAN.
-    // We want the data constrct one circle to make the check phase to be more easy.
-    std::string                  space;
-    int32_t                      replica;
-    int32_t                      partsNum;
-
-    std::string                  tag;
-    std::vector<NameType>        props;
 };
 
 class NebulaChaosPlan : public nebula_chaos::core::ChaosPlan {
 public:
     NebulaChaosPlan(std::unique_ptr<PlanContext> ctx,
                     int32_t concurrency,
-                    const std::string& emailTo = "")
-        : ChaosPlan(concurrency, emailTo)
+                    const std::string& emailTo = "",
+                    const std::string& planName = "")
+        : ChaosPlan(concurrency, emailTo, planName)
         , ctx_(std::move(ctx)) {
         CHECK_NOTNULL(ctx_);
         auto port = ctx_->graphd.getPort();
@@ -56,21 +47,6 @@ public:
     GraphClient* getGraphClient() {
         return client_.get();
     }
-
-    /**
-     * Return the action which depends on all start actions.
-     * */
-    Action* addStartActions();
-
-    void addStopActions(Action* upstream);
-
-    /**
-     * Create related space and schema on cluster
-     * Return the last action currently in the plan.
-     * */
-    Action* createSpaceAndSchema(Action* upstream);
-
-    Action* balanceAndCheck(Action* upstream, int32_t expectedLeaders);
 
     PlanContext* getContext() const {
         return ctx_.get();

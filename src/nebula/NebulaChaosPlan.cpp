@@ -22,6 +22,7 @@ NebulaChaosPlan::loadFromFile(const std::string& filename) {
     }
     auto jsonObj = folly::parseJson(jsonStr);
     VLOG(1) << folly::toPrettyJson(jsonObj);
+    auto planName = jsonObj.at("name").asString();
     auto instances = jsonObj.at("instances");
     auto rolling = jsonObj.getDefault("rollling_table", true).asBool();
     CHECK(instances.isArray());
@@ -77,7 +78,7 @@ NebulaChaosPlan::loadFromFile(const std::string& filename) {
     }
     auto concurrency = jsonObj.at("concurrency").asInt();
     auto emailTo = jsonObj.at("email").asString();
-    auto plan = std::make_unique<NebulaChaosPlan>(std::move(ctx), concurrency, emailTo);
+    auto plan = std::make_unique<NebulaChaosPlan>(std::move(ctx), concurrency, emailTo, planName);
     auto actionsItem = jsonObj.at("actions");
     std::vector<std::unique_ptr<core::Action>> actions;
     LoadContext loadCtx;
@@ -111,113 +112,6 @@ NebulaChaosPlan::loadFromFile(const std::string& filename) {
     }
     plan->addActions(std::move(actions));
     return plan;
-}
-
-Action* NebulaChaosPlan::addStartActions() {
-    auto graphd = std::make_unique<StartAction>(&ctx_->graphd);
-    // start storaged
-    std::vector<ActionPtr> storageds;
-    for (auto& inst : ctx_->storageds) {
-        auto storaged = std::make_unique<StartAction>(&inst);
-        storaged->addDependency(graphd.get());
-        storageds.emplace_back(std::move(storaged));
-    }
-
-    // Start metad
-    std::vector<ActionPtr> metads;
-    for (auto& inst : ctx_->metads) {
-        auto metad = std::make_unique<StartAction>(&inst);
-        for (auto& storaged : storageds) {
-            metad->addDependency(storaged.get());
-        }
-        metads.emplace_back(std::move(metad));
-    }
-
-    VLOG(1) << "Begin add start actions...";
-    addActions(std::move(metads));
-    addActions(std::move(storageds));
-    addAction(std::move(graphd));
-    // wait 5s
-    {
-        auto waitAction = std::make_unique<core::WaitAction>(5000);
-        last()->addDependency(waitAction.get());
-        addAction(std::move(waitAction));
-    }
-    return last();
-}
-
-void NebulaChaosPlan::addStopActions(Action* upstream) {
-    VLOG(1) << "Begin add stop actions....";
-    auto graphd = std::make_unique<StopAction>(&ctx_->graphd);
-    upstream->addDependency(graphd.get());
-    addAction(std::move(graphd));
-    for (auto& inst : ctx_->storageds) {
-        auto storaged = std::make_unique<StopAction>(&inst);
-        upstream->addDependency(storaged.get());
-        addAction(std::move(storaged));
-    }
-
-    for (auto& inst : ctx_->metads) {
-        auto metad = std::make_unique<StopAction>(&inst);
-        upstream->addDependency(metad.get());
-        addAction(std::move(metad));
-    }
-}
-
-Action* NebulaChaosPlan::createSpaceAndSchema(Action* upstream) {
-    auto connectClient = std::make_unique<ClientConnectAction>(client_.get());
-    upstream->addDependency(connectClient.get());
-    addAction(std::move(connectClient));
-
-    auto createSpace = std::make_unique<CreateSpaceAction>(client_.get(),
-                                                           ctx_->space,
-                                                           ctx_->replica,
-                                                           ctx_->partsNum);
-    last()->addDependency(createSpace.get());
-    addAction(std::move(createSpace));
-
-    auto useSpace = std::make_unique<UseSpaceAction>(client_.get(),
-                                                     ctx_->space);
-    last()->addDependency(useSpace.get());
-    addAction(std::move(useSpace));
-
-    auto createTag = std::make_unique<CreateSchemaAction>(client_.get(),
-                                                          ctx_->tag,
-                                                          ctx_->props,
-                                                          false);
-    last()->addDependency(createTag.get());
-    addAction(std::move(createTag));
-    // wait 5s
-    {
-        auto waitAction = std::make_unique<core::WaitAction>(5000);
-        last()->addDependency(waitAction.get());
-        addAction(std::move(waitAction));
-    }
-    return last();
-}
-
-Action* NebulaChaosPlan::balanceAndCheck(Action* upstream, int32_t expectedLeaders) {
-    CHECK(client_ != nullptr);
-    // balance leader and check
-    {
-        auto balanceAction = std::make_unique<BalanceAction>(client_.get(), false);
-        upstream->addDependency(balanceAction.get());
-        addAction(std::move(balanceAction));
-    }
-    // wait 15s
-    {
-        auto waitAction = std::make_unique<core::WaitAction>(15000);
-        last()->addDependency(waitAction.get());
-        addAction(std::move(waitAction));
-    }
-    // check leaders
-    {
-        auto checkLeadersAction = std::make_unique<CheckLeadersAction>(client_.get(),
-                                                                       expectedLeaders);
-        last()->addDependency(checkLeadersAction.get());
-        addAction(std::move(checkLeadersAction));
-    }
-    return last();
 }
 
 }   // namespace nebula

@@ -1,4 +1,5 @@
 {
+    "name": "Nebula random-kill plan",
     "concurrency": 10,
     "email": "heng.chen@vesoft.com",
     "rolling_table": true,

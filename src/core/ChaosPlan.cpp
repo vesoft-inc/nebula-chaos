@@ -46,9 +46,9 @@ void ChaosPlan::schedule() {
         }
         std::string subject;
         if (status_ == Status::SUCCEEDED) {
-            subject = "Nebula Survived!";
+            subject = folly::stringPrintf("%s passed!", planName_.c_str());
         } else {
-            subject = "Thanos killed nebula!";
+            subject = folly::stringPrintf("%s failed!", planName_.c_str());
         }
         auto content = this->toString();
         SendEmailAction action(subject, content, emailTo_);

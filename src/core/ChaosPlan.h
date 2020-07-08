@@ -25,8 +25,11 @@ public:
         FAILED,
     };
 
-    ChaosPlan(int32_t concurrency = 10, const std::string& emailTo = "") {
+    ChaosPlan(int32_t concurrency = 10,
+              const std::string& emailTo = "",
+              const std::string& planName = "") {
         emailTo_ = emailTo;
+        planName_ = planName;
         threadsPool_ = std::make_unique<folly::CPUThreadPoolExecutor>(concurrency);
     }
 
@@ -59,6 +62,7 @@ protected:
     Status status_{Status::SUCCEEDED};
     Duration  timeSpent_;
     std::string  emailTo_;
+    std::string  planName_;
 };
 
 }  // action
