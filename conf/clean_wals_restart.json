@@ -1,0 +1,147 @@
+{
+    "name": "Nebula clean-wals plan",
+    "concurrency": 10,
+    "email": "heng.chen@vesoft.com",
+    "rolling_table": true,
+    "instances": [
+        {
+            "host":"192.168.8.210",
+            "install_dir":"/home/vesoft/prog/heng",
+            "conf_dir":"/home/vesoft/prog/heng/conf/nebula-graphd.conf",
+            "type": "graphd",
+            "user": "heng"
+        },
+        {
+            "host":"192.168.8.210",
+            "install_dir":"/home/vesoft/prog/heng",
+            "conf_dir":"/home/vesoft/prog/heng/conf/nebula-metad.conf",
+            "type": "metad",
+            "user": "heng"
+        },
+        {
+            "host":"192.168.8.210",
+            "install_dir":"/home/vesoft/prog/heng",
+            "conf_dir":"/home/vesoft/prog/heng/conf/nebula-storaged-1.conf",
+            "type": "storaged",
+            "user": "heng"
+        },
+        {
+            "host":"192.168.8.210",
+            "install_dir":"/home/vesoft/prog/heng",
+            "conf_dir":"/home/vesoft/prog/heng/conf/nebula-storaged-2.conf",
+            "type": "storaged",
+            "user": "heng"
+        },
+        {
+            "host":"192.168.8.210",
+            "install_dir":"/home/vesoft/prog/heng",
+            "conf_dir":"/home/vesoft/prog/heng/conf/nebula-storaged-3.conf",
+            "type": "storaged",
+            "user": "heng"
+        }
+     ],
+     "actions" : [
+        {
+            "type": "CleanWalAction",
+            "inst_index": 2,
+            "space_id": 1,
+            "depends": []
+        },
+        {
+            "type": "CleanWalAction",
+            "inst_index": 3,
+            "space_id": 1,
+            "depends": []
+        },
+        {
+            "type": "CleanWalAction",
+            "inst_index": 4,
+            "space_id": 1,
+            "depends": []
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 0,
+            "depends": [2]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 1,
+            "depends": [2]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 2,
+            "depends": [2]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 3,
+            "depends": [2]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 4,
+            "depends": [2]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 20000,
+            "depends": [3, 4, 5, 6, 7]
+        },
+        {
+            "type": "ClientConnectAction",
+            "depends": [8]
+        },
+        {
+            "type": "UseSpaceAction",
+            "space_name": "chaos",
+            "depends": [9]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 10000,
+            "depends": [10]
+        },
+        {
+            "type": "CheckLeadersAction",
+            "expected_num": 100,
+            "depends": [11]
+        },
+        {
+            "type": "BalanceAction",
+            "data_or_leader": false,
+            "depends": [12]
+        },
+        {
+            "type": "CheckLeadersAction",
+            "expected_num": 100,
+            "depends": [13]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 0,
+            "depends": [14]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 1,
+            "depends": [14]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 2,
+            "depends": [14]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 3,
+            "depends": [14]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 4,
+            "depends": [14]
+        }
+     ]
+}

@@ -46,6 +46,11 @@ public:
 
     folly::Optional<int32_t> getHttpPort() const;
 
+    // Return the data_path in conf file.
+    folly::Optional<std::vector<std::string>> dataDirs() const;
+
+    folly::Optional<std::vector<std::string>> walDirs(int64_t spaceId) const;
+
     std::string startCommand() const;
 
     std::string stopCommand() const;
@@ -66,6 +71,10 @@ public:
 
     const std::string& getHost() const {
         return host_;
+    }
+
+    Type type() const {
+        return type_;
     }
 
 private:

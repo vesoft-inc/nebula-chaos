@@ -119,13 +119,12 @@ folly::Optional<int32_t> NebulaInstance::getIntFromConf(const std::string& key) 
         return folly::to<int32_t>(it->second.asString());
     } catch (const folly::ConversionError& e) {
         LOG(ERROR) << "Parse failed, error " << e.what();
-        return -1;
+        return folly::none;
     } catch (const folly::TypeError& e) {
         LOG(ERROR) << "Parse failed, error " << e.what();
-        return -1;
+        return folly::none;
     }
 }
-
 
 folly::Optional<int32_t> NebulaInstance::getPort() const {
     return getIntFromConf("port");
@@ -133,6 +132,48 @@ folly::Optional<int32_t> NebulaInstance::getPort() const {
 
 folly::Optional<int32_t> NebulaInstance::getHttpPort() const {
     return getIntFromConf("ws_http_port");
+}
+
+folly::Optional<std::vector<std::string>>
+NebulaInstance::dataDirs() const {
+    try {
+        CHECK(conf_.isObject());
+        auto it = conf_.find("--data_path");
+        if (it == conf_.items().end()) {
+            LOG(ERROR) << "Can't find data_path in conf";
+            return folly::none;
+        }
+        auto pathStr = it->second.asString();
+        std::vector<std::string> strArray;
+        folly::split(",", pathStr, strArray);
+        for (auto& dataPath : strArray) {
+            if (!boost::starts_with(dataPath, "/")) {
+                dataPath = folly::stringPrintf("%s/%s", installPath_.c_str(), dataPath.c_str());
+            }
+        }
+        return strArray;
+    } catch (const folly::ConversionError& e) {
+        LOG(ERROR) << "Parse failed, error " << e.what();
+        return folly::none;
+    } catch (const folly::TypeError& e) {
+        LOG(ERROR) << "Parse failed, error " << e.what();
+        return folly::none;
+    }
+}
+
+folly::Optional<std::vector<std::string>>
+NebulaInstance::walDirs(int64_t spaceId) const {
+    auto data = dataDirs();
+    if (!data.hasValue()) {
+        LOG(ERROR) << "Get data path failed!";
+        return folly::none;
+    }
+    std::vector<std::string> walPaths;
+    walPaths.reserve(8);
+    for (auto& dataPath : data.value()) {
+        walPaths.emplace_back(folly::stringPrintf("%s/nebula/%ld/wal", dataPath.c_str(), spaceId));
+    }
+    return walPaths;
 }
 
 std::string NebulaInstance::command(const std::string& cmd) const {

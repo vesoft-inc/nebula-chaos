@@ -136,6 +136,8 @@ private:
     int32_t     id_ = -1;
 };
 
+using ActionPtr = std::unique_ptr<Action>;
+
 class EmptyAction : public Action {
 public:
     EmptyAction(const std::string& name = "EmptyAction")
@@ -155,8 +157,6 @@ public:
 private:
     std::string name_;
 };
-
-using ActionPtr = std::unique_ptr<Action>;
 
 }   // namespace core
 }   // namespace nebula_chaos

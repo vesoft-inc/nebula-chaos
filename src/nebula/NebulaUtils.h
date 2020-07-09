@@ -150,6 +150,12 @@ public:
         } else if (type == "EmptyAction") {
             auto name = obj.at("name").asString();
             return std::make_unique<core::EmptyAction>(name);
+        } else if (type == "CleanWalAction") {
+            auto instIndex = obj.at("inst_index").asInt();
+            CHECK_GE(instIndex, 0);
+            CHECK_LT(instIndex, ctx.insts.size());
+            auto spaceId = obj.at("space_id").asInt();
+            return std::make_unique<CleanWalAction>(ctx.insts[instIndex], spaceId);
         }
         LOG(FATAL) << "Unknown type " << type;
         return nullptr;
