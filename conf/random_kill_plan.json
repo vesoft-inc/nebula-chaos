@@ -1,0 +1,178 @@
+{
+    "name": "Nebula random-kill plan",
+    "concurrency": 10,
+    "email": "heng.chen@vesoft.com",
+    "rolling_table": true,
+    "instances": [
+        {
+            "host":"192.168.8.210",
+            "install_dir":"/home/vesoft/prog/heng",
+            "conf_dir":"/home/vesoft/prog/heng/conf/nebula-graphd.conf",
+            "type": "graphd",
+            "user": "heng"
+        },
+        {
+            "host":"192.168.8.210",
+            "install_dir":"/home/vesoft/prog/heng",
+            "conf_dir":"/home/vesoft/prog/heng/conf/nebula-metad.conf",
+            "type": "metad",
+            "user": "heng"
+        },
+        {
+            "host":"192.168.8.210",
+            "install_dir":"/home/vesoft/prog/heng",
+            "conf_dir":"/home/vesoft/prog/heng/conf/nebula-storaged-1.conf",
+            "type": "storaged",
+            "user": "heng"
+        },
+        {
+            "host":"192.168.8.210",
+            "install_dir":"/home/vesoft/prog/heng",
+            "conf_dir":"/home/vesoft/prog/heng/conf/nebula-storaged-2.conf",
+            "type": "storaged",
+            "user": "heng"
+        },
+        {
+            "host":"192.168.8.210",
+            "install_dir":"/home/vesoft/prog/heng",
+            "conf_dir":"/home/vesoft/prog/heng/conf/nebula-storaged-3.conf",
+            "type": "storaged",
+            "user": "heng"
+        }
+     ],
+     "actions" : [
+        {
+            "type": "StartAction",
+            "inst_index": 0,
+            "depends": [2, 3, 4]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 1,
+            "depends": []
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 2,
+            "depends": [1]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 3,
+            "depends": [1]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 4,
+            "depends": [1]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 15000,
+            "depends": [0]
+        },
+        {
+            "type": "ClientConnectAction",
+            "depends": [5]
+        },
+        {
+            "type": "CreateSpaceAction",
+            "space_name": "chaos",
+            "replica": 3,
+            "parts": 100,
+            "depends": [6]
+        },
+        {
+            "type": "UseSpaceAction",
+            "space_name": "chaos",
+            "depends": [7]
+        },
+        {
+            "type": "CreateSchemaAction",
+            "name": "circle",
+            "props": [
+                {"name": "nextId", "type": "int"}
+            ],
+            "edge_or_tag": false,
+            "depends": [8]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 10000,
+            "depends": [9]
+        },
+        {
+            "type": "BalanceAction",
+            "data_or_leader": false,
+            "depends": [10]
+        },
+        {
+            "type": "CheckLeadersAction",
+            "expected_num": 100,
+            "depends": [11]
+        },
+        {
+            "type": "RandomRestartAction",
+            "insts": [2,3,4],
+            "loop_times": 20,
+            "restart_interval": 30,
+            "next_loop_interval": 30,
+            "graceful": false,
+            "depends": [12]
+        },
+        {
+            "type": "BalanceAction",
+            "data_or_leader": false,
+            "depends": [13]
+        },
+        {
+            "type": "CheckLeadersAction",
+            "expected_num": 100,
+            "depends": [14]
+        },
+        {
+            "type": "WriteCircleAction",
+            "tag": "circle",
+            "col": "nextId",
+            "total_rows": 100000,
+            "depends": [12]
+        },
+        {
+            "type": "WalkThroughAction",
+            "tag": "circle",
+            "col": "nextId",
+            "total_rows": 100000,
+            "depends": [16]
+        },
+        {
+            "type": "EmptyAction",
+            "name": "JoinNode",
+            "depends": [17, 15]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 0,
+            "depends": [18]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 1,
+            "depends": [18]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 2,
+            "depends": [18]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 3,
+            "depends": [18]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 4,
+            "depends": [18]
+        }
+     ]
+}
