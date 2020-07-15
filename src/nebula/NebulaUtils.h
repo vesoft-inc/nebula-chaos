@@ -9,6 +9,7 @@
 
 #include "common/Base.h"
 #include <ctime>
+#include <folly/Random.h>
 #include "nebula/NebulaAction.h"
 #include "core/WaitAction.h"
 
@@ -39,8 +40,7 @@ public:
                                    ltm->tm_mday);
     }
 
-    static std::unique_ptr<core::Action>
-    loadAction(folly::dynamic& obj, const LoadContext& ctx) {
+    static std::unique_ptr<core::Action> loadAction(folly::dynamic& obj, const LoadContext& ctx) {
         auto type = obj.at("type").asString();
         LOG(INFO) << "Load action " << type;
         if (type == "StartAction") {
@@ -73,12 +73,14 @@ public:
             auto totalRows = obj.getDefault("total_rows", 100000).asInt();
             auto batchNum = obj.getDefault("batch_num", 1).asInt();
             auto tryNum = obj.getDefault("try_num", 32).asInt();
+            auto retryInterval = obj.getDefault("retry_interval_ms", 1).asInt();
             return std::make_unique<WriteCircleAction>(ctx.gClient,
                                                        tag,
                                                        col,
                                                        totalRows,
                                                        batchNum,
-                                                       tryNum);
+                                                       tryNum,
+                                                       retryInterval);
         } else if (type == "WalkThroughAction") {
             auto tag = obj.at("tag").asString();
             if (ctx.rolling) {
@@ -87,11 +89,13 @@ public:
             auto col = obj.at("col").asString();
             auto totalRows = obj.getDefault("total_rows", 100000).asInt();
             auto tryNum = obj.getDefault("try_num", 32).asInt();
+            auto retryInterval = obj.getDefault("retry_interval_ms", 1).asInt();
             return std::make_unique<WalkThroughAction>(ctx.gClient,
                                                        tag,
                                                        col,
                                                        totalRows,
-                                                       tryNum);
+                                                       tryNum,
+                                                       retryInterval);
         } else if (type == "CreateSpaceAction") {
             auto spaceName = obj.at("space_name").asString();
             auto replica = obj.getDefault("replica", 3).asInt();
@@ -142,11 +146,13 @@ public:
             auto restartInterval = obj.getDefault("restart_interval", 30).asInt();
             auto nextLoopInterval = obj.getDefault("next_loop_interval", 30).asInt();
             auto graceful = obj.getDefault("graceful", false).asBool();
+            auto cleanData = obj.getDefault("clean_data", false).asBool();
             return std::make_unique<RandomRestartAction>(targetInsts,
                                                          loopTimes,
                                                          restartInterval,
                                                          nextLoopInterval,
-                                                         graceful);
+                                                         graceful,
+                                                         cleanData);
         } else if (type == "EmptyAction") {
             auto name = obj.at("name").asString();
             return std::make_unique<core::EmptyAction>(name);
@@ -159,6 +165,20 @@ public:
         }
         LOG(FATAL) << "Unknown type " << type;
         return nullptr;
+    }
+
+    static NebulaInstance* randomInstance(const std::vector<NebulaInstance*>& instances,
+                                          NebulaInstance::State state) {
+        std::vector<NebulaInstance*> candidate;
+        for (auto* instance : instances) {
+            if (instance->getState() == state) {
+                candidate.emplace_back(instance);
+            }
+        }
+        if (candidate.empty()) {
+            return nullptr;
+        }
+        return candidate[folly::Random::rand32(candidate.size())];
     }
 
 private:

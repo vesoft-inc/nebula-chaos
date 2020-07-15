@@ -5,6 +5,7 @@
  */
 
 #include "nebula/NebulaAction.h"
+#include "nebula/NebulaUtils.h"
 #include "utils/SshHelper.h"
 #include "core/CheckProcAction.h"
 #include <folly/Random.h>
@@ -34,7 +35,12 @@ ResultCode CrashAction::doRun() {
     }
     nebula_chaos::core::CheckProcAction action(inst_->getHost(), pid.value(), inst_->owner());
     auto res = action.doRun();
-    return res == ResultCode::ERR_NOT_FOUND ? ResultCode::OK : ResultCode::ERR_FAILED;
+    if (res == ResultCode::ERR_NOT_FOUND) {
+        inst_->setState(NebulaInstance::State::STOPPED);
+        return ResultCode::OK;
+    } else {
+        return ResultCode::ERR_FAILED;
+    }
 }
 
 ResultCode StartAction::doRun() {
@@ -58,7 +64,11 @@ ResultCode StartAction::doRun() {
     }
     // Check the start action succeeded or not
     nebula_chaos::core::CheckProcAction action(inst_->getHost(), pid.value(), inst_->owner());
-    return action.doRun();
+    auto res = action.doRun();
+    if (res == ResultCode::OK) {
+        inst_->setState(NebulaInstance::State::RUNNING);
+    }
+    return res;
 }
 
 ResultCode StopAction::doRun() {
@@ -90,10 +100,37 @@ ResultCode StopAction::doRun() {
             sleep(tryTimes);
             LOG(INFO) << "Wait some time, and try again, try times " << tryTimes;
         } else if (res == ResultCode::ERR_NOT_FOUND) {
+            inst_->setState(NebulaInstance::State::STOPPED);
             return ResultCode::OK;
         }
     }
     return ResultCode::ERR_FAILED;
+}
+
+ResultCode CleanDataAction::doRun() {
+    CHECK_NOTNULL(inst_);
+    if (inst_->getState() == NebulaInstance::State::RUNNING) {
+        LOG(WARNING) << "Try to clean data while instance " << inst_->toString()
+                     << " is stil running, just skip it";
+        return ResultCode::OK;
+    }
+    auto cleanCommand = inst_->cleanDataCommand();
+    if (cleanCommand.empty()) {
+        return ResultCode::ERR_BAD_ARGUMENT;
+    }
+    LOG(INFO) << cleanCommand << " on " << inst_->toString() << " as " << inst_->owner();
+    auto ret = utils::SshHelper::run(
+                cleanCommand,
+                inst_->getHost(),
+                [this] (const std::string& outMsg) {
+                    VLOG(1) << "The output is " << outMsg;
+                },
+                [] (const std::string& errMsg) {
+                    LOG(ERROR) << "The error is " << errMsg;
+                },
+                inst_->owner());
+    CHECK_EQ(0, ret.exitStatus());
+    return ResultCode::OK;
 }
 
 ResultCode MetaAction::checkResp(const ExecutionResponse&) const {
@@ -130,12 +167,14 @@ ResultCode WriteCircleAction::sendBatch(const std::vector<std::string>& batchCmd
     VLOG(1) << cmd;
     ExecutionResponse resp;
     uint32_t tryTimes = 0;
+    uint32_t retryInterval = retryIntervalMs_;
     while (++tryTimes < try_) {
         auto res = client_->execute(cmd, resp);
         if (res == Code::SUCCEEDED) {
             return ResultCode::OK;
         }
-        sleep(tryTimes);
+        usleep(retryInterval * 1000);
+        retryInterval <<= 1;
         LOG(WARNING) << "Failed to send request, tryTimes " << tryTimes
                      << ", error code " << static_cast<int32_t>(res);
     }
@@ -165,7 +204,9 @@ ResultCode WriteCircleAction::doRun() {
         row++;
     }
     batchCmds.emplace_back(folly::stringPrintf("%ld:(%ld)", row, 1L));
-    return sendBatch(batchCmds);
+    auto res = sendBatch(batchCmds);
+    LOG(INFO) << "Send all requests successfully, row " << row;
+    return res;
 }
 
 folly::Expected<uint64_t, ResultCode>
@@ -173,6 +214,7 @@ WalkThroughAction::sendCommand(const std::string& cmd) {
     VLOG(1) << cmd;
     ExecutionResponse resp;
     uint32_t tryTimes = 0;
+    uint32_t retryInterval = retryIntervalMs_;
     while (++tryTimes < try_) {
         auto res = client_->execute(cmd, resp);
         if (res == Code::SUCCEEDED) {
@@ -183,7 +225,8 @@ WalkThroughAction::sendCommand(const std::string& cmd) {
             VLOG(1) << resp.rows.size() << ", " << resp.rows[0].columns.size();
             return resp.rows[0].columns[1].get_integer();
         }
-        sleep(tryTimes);
+        usleep(retryInterval * 1000);
+        retryInterval <<= 1;
         LOG(WARNING) << "Failed to send request, tryTimes " << tryTimes
                      << ", error code " << static_cast<int32_t>(res);
     }
@@ -266,10 +309,9 @@ ResultCode RandomRestartAction::start(NebulaInstance* inst) {
 
 ResultCode RandomRestartAction::doRun() {
     int32_t i = 0;
-    while (++i < loopTimes_) {
+    while (i++ < loopTimes_) {
         sleep(nextLoopInterval_);
-        auto index = folly::Random::rand32(instances_.size());
-        auto* inst = instances_[index];
+        auto* inst = Utils::randomInstance(instances_, NebulaInstance::State::RUNNING);
         CHECK_NOTNULL(inst);
         {
             LOG(INFO) << "Begin to kill " << inst->toString() << ", graceful " << graceful_;
@@ -279,6 +321,16 @@ ResultCode RandomRestartAction::doRun() {
                 return rc;
             }
             LOG(INFO) << "Finish to kill " << inst->toString();
+        }
+
+        if (cleanData_) {
+            // plan must make sure that snapshot would be sent within nextLoopInterval_
+            CleanDataAction cleanData(inst);
+            auto rc = cleanData.doRun();
+            if (rc != ResultCode::OK) {
+                LOG(ERROR) << "Clean instance data " << inst->toString() << " failed!";
+                return rc;
+            }
         }
 
         sleep(restartInterval_);

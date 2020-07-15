@@ -18,20 +18,24 @@ class SendEmailAction : public Action {
 public:
     SendEmailAction(const std::string& subject,
                     const std::string& content,
-                    const std::string& to)
+                    const std::string& to,
+                    const std::string& annex = "")
         : subject_(subject)
         , content_(content)
-        , to_(to) {
+        , to_(to)
+        , annex_(annex) {
     }
 
     ~SendEmailAction() = default;
 
     ResultCode doRun() override {
-        auto mail = folly::stringPrintf("%s '%s' | %s -s '%s' %s",
+        std::string annex = annex_.empty() ? "" : "-a " + annex_;
+        auto mail = folly::stringPrintf("%s '%s' | %s -s '%s' %s %s",
                                         NEBULA_STRINGIFY(ECHO_EXEC),
                                         content_.c_str(),
                                         NEBULA_STRINGIFY(MAIL_EXEC),
                                         subject_.c_str(),
+                                        annex.c_str(),
                                         to_.c_str());
         folly::Subprocess proc(std::vector<std::string>{"/bin/bash", "-c", mail},
                                folly::Subprocess::Options().pipeStdin().pipeStdout().pipeStderr());
@@ -47,6 +51,7 @@ protected:
     std::string subject_;
     std::string content_;
     std::string to_;
+    std::string annex_;
 };
 
 }   // namespace core

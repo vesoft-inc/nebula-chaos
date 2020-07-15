@@ -75,6 +75,25 @@ private:
     NebulaInstance* inst_ = nullptr;
 };
 
+class CleanDataAction : public core::Action {
+public:
+    CleanDataAction(NebulaInstance* inst)
+        : inst_(inst) {}
+
+    ~CleanDataAction() = default;
+
+    ResultCode doRun() override;
+
+    std::string toString() const override {
+        CHECK_NOTNULL(inst_);
+        auto hostAddr = inst_->toString();
+        return folly::stringPrintf("clean data %s ", hostAddr.c_str());
+    }
+
+private:
+    NebulaInstance* inst_ = nullptr;
+};
+
 class ClientConnectAction : public core::Action {
 public:
     ClientConnectAction(GraphClient* client)
@@ -111,13 +130,15 @@ public:
                       const std::string& col,
                       uint64_t totalRows = 10000,
                       uint32_t batchNum = 1,
-                      uint32_t tryNum = 32)
+                      uint32_t tryNum = 32,
+                      uint32_t retryIntervalMs = 1)
         : client_(client)
         , tag_(tag)
         , col_(col)
         , totalRows_(totalRows)
         , batchNum_(batchNum)
-        , try_(tryNum) {}
+        , try_(tryNum)
+        , retryIntervalMs_(retryIntervalMs) {}
 
     virtual ~WriteCircleAction() = default;
 
@@ -137,6 +158,7 @@ private:
     uint64_t    totalRows_;
     uint32_t    batchNum_;
     uint32_t    try_;
+    uint32_t    retryIntervalMs_;
 };
 
 class WalkThroughAction : public core::Action {
@@ -145,12 +167,14 @@ public:
                       const std::string& tag,
                       const std::string& col,
                       uint64_t totalRows,
-                      uint32_t tryNum = 32)
+                      uint32_t tryNum = 32,
+                      uint32_t retryIntervalMs = 1)
         : client_(client)
         , tag_(tag)
         , col_(col)
         , totalRows_(totalRows)
-        , try_(tryNum) {}
+        , try_(tryNum)
+        , retryIntervalMs_(retryIntervalMs) {}
 
     ~WalkThroughAction() = default;
 
@@ -172,6 +196,7 @@ private:
     uint64_t     totalRows_;
     uint64_t     start_ = 0;
     uint32_t     try_;
+    uint32_t     retryIntervalMs_;
 };
 
 /**
@@ -328,12 +353,14 @@ public:
                         int32_t loopTimes,
                         int32_t restartInterval,
                         int32_t nextLoopInterval,
-                        bool graceful = false)
+                        bool graceful = false,
+                        bool cleanData = false)
         : instances_(instances)
         , loopTimes_(loopTimes)
         , restartInterval_(restartInterval)
         , nextLoopInterval_(nextLoopInterval)
-        , graceful_(graceful) {}
+        , graceful_(graceful)
+        , cleanData_(cleanData) {}
 
     ~RandomRestartAction() = default;
 
@@ -354,6 +381,7 @@ private:
     int32_t restartInterval_;  // seconds
     int32_t nextLoopInterval_;  // seconds
     bool graceful_;
+    bool cleanData_;
 };
 
 class CleanWalAction : public core::Action {

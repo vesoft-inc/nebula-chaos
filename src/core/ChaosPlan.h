@@ -56,6 +56,10 @@ public:
 
     std::string toString() const;
 
+    void setAnnex(const std::string& annex) {
+        annex_ = annex;
+    }
+
 protected:
     std::vector<ActionPtr> actions_;
     std::unique_ptr<folly::CPUThreadPoolExecutor> threadsPool_;
@@ -63,6 +67,7 @@ protected:
     Duration  timeSpent_;
     std::string  emailTo_;
     std::string  planName_;
+    std::string  annex_;
 };
 
 }  // action
