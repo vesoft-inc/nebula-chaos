@@ -151,13 +151,14 @@ ResultCode MetaAction::doRun() {
         auto res = client_->execute(cmd, resp);
         if (res == Code::SUCCEEDED) {
             LOG(INFO) << "Execute " << cmd << " successfully!";
-            return checkResp(resp);
-        } else {
-            LOG(ERROR) << "Execute " << cmd << " failed, retry " << retry
-                       << " after " << retry << " seconds...";
-            sleep(retry);
-            continue;
+            auto ret = checkResp(resp);
+            if (ret == ResultCode::OK) {
+                return ResultCode::OK;
+            }
         }
+        LOG(ERROR) << "Execute " << cmd << " failed, retry " << retry
+                   << " after " << retry << " seconds...";
+        sleep(retry);
     }
     return ResultCode::ERR_FAILED;
 }
