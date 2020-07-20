@@ -114,22 +114,26 @@ ResultCode CleanDataAction::doRun() {
                      << " is stil running, just skip it";
         return ResultCode::OK;
     }
-    auto cleanCommand = inst_->cleanDataCommand();
-    if (cleanCommand.empty()) {
-        return ResultCode::ERR_BAD_ARGUMENT;
+    auto dataPaths = inst_->dataDirs();
+    if (!dataPaths.hasValue()) {
+        LOG(ERROR) << "Can't find data path on " << inst_->toString();
+        return ResultCode::ERR_FAILED;
     }
-    LOG(INFO) << cleanCommand << " on " << inst_->toString() << " as " << inst_->owner();
-    auto ret = utils::SshHelper::run(
-                cleanCommand,
-                inst_->getHost(),
-                [this] (const std::string& outMsg) {
-                    VLOG(1) << "The output is " << outMsg;
-                },
-                [] (const std::string& errMsg) {
-                    LOG(ERROR) << "The error is " << errMsg;
-                },
-                inst_->owner());
-    CHECK_EQ(0, ret.exitStatus());
+    for (const auto& dataPath : dataPaths.value()) {
+        auto cleanCommand = folly::stringPrintf("rm -rf %s", dataPath.c_str());
+        LOG(INFO) << cleanCommand << " on " << inst_->toString() << " as " << inst_->owner();
+        auto ret = utils::SshHelper::run(
+                    cleanCommand,
+                    inst_->getHost(),
+                    [this] (const std::string& outMsg) {
+                        VLOG(1) << "The output is " << outMsg;
+                    },
+                    [] (const std::string& errMsg) {
+                        LOG(ERROR) << "The error is " << errMsg;
+                    },
+                    inst_->owner());
+        CHECK_EQ(0, ret.exitStatus());
+    }
     return ResultCode::OK;
 }
 

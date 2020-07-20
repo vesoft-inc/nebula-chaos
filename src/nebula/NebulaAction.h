@@ -75,25 +75,6 @@ private:
     NebulaInstance* inst_ = nullptr;
 };
 
-class CleanDataAction : public core::Action {
-public:
-    CleanDataAction(NebulaInstance* inst)
-        : inst_(inst) {}
-
-    ~CleanDataAction() = default;
-
-    ResultCode doRun() override;
-
-    std::string toString() const override {
-        CHECK_NOTNULL(inst_);
-        auto hostAddr = inst_->toString();
-        return folly::stringPrintf("clean data %s ", hostAddr.c_str());
-    }
-
-private:
-    NebulaInstance* inst_ = nullptr;
-};
-
 class ClientConnectAction : public core::Action {
 public:
     ClientConnectAction(GraphClient* client)
@@ -384,6 +365,7 @@ private:
     bool cleanData_;
 };
 
+// Clean wal of specified space
 class CleanWalAction : public core::Action {
 public:
     CleanWalAction(NebulaInstance* inst, int64_t spaceId)
@@ -403,6 +385,26 @@ public:
 private:
     NebulaInstance* inst_;
     int64_t spaceId_;
+};
+
+// Clean all data path
+class CleanDataAction : public core::Action {
+public:
+    CleanDataAction(NebulaInstance* inst)
+        : inst_(inst) {}
+
+    ~CleanDataAction() = default;
+
+    ResultCode doRun() override;
+
+    std::string toString() const override {
+        CHECK_NOTNULL(inst_);
+        auto hostAddr = inst_->toString();
+        return folly::stringPrintf("clean data %s ", hostAddr.c_str());
+    }
+
+private:
+    NebulaInstance* inst_ = nullptr;
 };
 
 }   // namespace nebula

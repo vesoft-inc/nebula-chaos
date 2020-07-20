@@ -216,14 +216,6 @@ std::string NebulaInstance::killCommand() const {
     return command("kill");
 }
 
-std::string NebulaInstance::cleanDataCommand() const {
-    auto path = getDataPath();
-    if (!path.hasValue()) {
-        return "";
-    }
-    return folly::stringPrintf("rm -rf %s", path.value().c_str());
-}
-
 }   // namespace nebula
 }   // namespace nebula_chaos
 

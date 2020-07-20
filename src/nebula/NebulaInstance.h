@@ -63,8 +63,6 @@ public:
 
     std::string killCommand() const;
 
-    std::string cleanDataCommand() const;
-
     std::string toString() const {
         auto port = getPort();
         if (port.hasValue()) {
