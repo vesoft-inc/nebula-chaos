@@ -344,6 +344,10 @@ endmacro()
 # including the precompiled header, a.k.a Base.h.gch, and thrift headers.
 macro(nebula_add_library name type)
     add_library(${name} ${type} ${ARGN})
+    add_dependencies(
+        ${name}
+        graph_thrift_headers
+    )
 endmacro()
 
 include_directories(AFTER ${NEBULA_CHAOS_HOME}/src)
