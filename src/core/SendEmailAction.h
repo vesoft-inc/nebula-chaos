@@ -44,7 +44,9 @@ public:
     }
 
     std::string toString() const override {
-        return folly::stringPrintf("Send e-mail to %s", to_.c_str());
+        return folly::stringPrintf("Send e-mail to %s, attachment: %s",
+                                   to_.c_str(),
+                                   attachment_.c_str());
     }
 
 protected:

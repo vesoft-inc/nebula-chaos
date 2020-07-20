@@ -51,7 +51,7 @@ void ChaosPlan::schedule() {
             subject = folly::stringPrintf("%s failed!", planName_.c_str());
         }
         auto content = this->toString();
-        SendEmailAction action(subject, content, emailTo_, annex_);
+        SendEmailAction action(subject, content, emailTo_, attachment_);
         return action.doRun();
     }, "Send Email"));
 

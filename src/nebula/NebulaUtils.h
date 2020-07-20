@@ -127,9 +127,10 @@ public:
                                                         name,
                                                         props,
                                                         edgeOrTag);
-        } else if (type == "BalanceAction") {
-            auto dataOrLeader = obj.getDefault("data_or_leader", false).asBool();
-            return std::make_unique<BalanceAction>(ctx.gClient, dataOrLeader);
+        } else if (type == "BalanceLeaderAction") {
+            return std::make_unique<BalanceLeaderAction>(ctx.gClient);
+        } else if (type == "BalanceDataAction") {
+            return std::make_unique<BalanceDataAction>(ctx.gClient);
         } else if (type == "CheckLeadersAction") {
             auto expectedNum = obj.at("expected_num").asInt();
             return std::make_unique<CheckLeadersAction>(ctx.gClient, expectedNum);

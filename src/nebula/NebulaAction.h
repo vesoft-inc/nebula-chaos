@@ -290,22 +290,32 @@ protected:
     bool edgeOrTag_;
 };
 
-class BalanceAction : public MetaAction {
+class BalanceLeaderAction : public MetaAction {
 public:
     /**
-     * Balance data if dataOrLeader is true, otherwide balance leader
+     * Balance leader
      * This action must be run after UseSpaceAction
      */
-    BalanceAction(GraphClient* client, bool dataOrLeader)
-        : MetaAction(client)
-        , dataOrLeader_(dataOrLeader) {}
+    explicit BalanceLeaderAction(GraphClient* client)
+        : MetaAction(client) {}
 
     std::string command() const override {
-        return dataOrLeader_ ? "balance data" : "balance leader";
+        return "balance leader";
     }
+};
 
-private:
-    bool dataOrLeader_;
+class BalanceDataAction : public MetaAction {
+public:
+    /**
+     * Balance data
+     * This action must be run after UseSpaceAction
+     */
+    explicit BalanceDataAction(GraphClient* client)
+        : MetaAction(client) {}
+
+    std::string command() const override {
+        return "balance data";
+    }
 };
 
 class CheckLeadersAction : public MetaAction {

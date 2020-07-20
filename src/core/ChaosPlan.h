@@ -56,8 +56,8 @@ public:
 
     std::string toString() const;
 
-    void setAnnex(const std::string& annex) {
-        annex_ = annex;
+    void setAttachment(const std::string& attachment) {
+        attachment_ = attachment;
     }
 
 protected:
@@ -67,7 +67,7 @@ protected:
     Duration  timeSpent_;
     std::string  emailTo_;
     std::string  planName_;
-    std::string  annex_;
+    std::string  attachment_;
 };
 
 }  // action

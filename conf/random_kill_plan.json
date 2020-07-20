@@ -102,8 +102,7 @@
             "depends": [9]
         },
         {
-            "type": "BalanceAction",
-            "data_or_leader": false,
+            "type": "BalanceLeaderAction",
             "depends": [10]
         },
         {
@@ -121,8 +120,7 @@
             "depends": [12]
         },
         {
-            "type": "BalanceAction",
-            "data_or_leader": false,
+            "type": "BalanceLeaderAction",
             "depends": [13]
         },
         {

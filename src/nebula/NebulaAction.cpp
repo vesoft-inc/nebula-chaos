@@ -110,8 +110,8 @@ ResultCode StopAction::doRun() {
 ResultCode CleanDataAction::doRun() {
     CHECK_NOTNULL(inst_);
     if (inst_->getState() == NebulaInstance::State::RUNNING) {
-        LOG(WARNING) << "Try to clean data while instance " << inst_->toString()
-                     << " is stil running, just skip it";
+        LOG(ERROR) << "Can't clean data while instance " << inst_->toString()
+                   << " is stil running";
         return ResultCode::OK;
     }
     auto dataPaths = inst_->dataDirs();

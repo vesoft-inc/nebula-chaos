@@ -28,7 +28,7 @@ int run() {
         if (plan == nullptr) {
             return 0;
         }
-        plan->setAnnex(flowChart);
+        plan->setAttachment(flowChart);
         LOG(INFO) << "\n============= run the plan =================\n";
         plan->schedule();
         LOG(INFO) << "\n" << plan->toString();
