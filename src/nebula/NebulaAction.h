@@ -356,6 +356,27 @@ private:
     bool graceful_;
 };
 
+class CleanWalAction : public core::Action {
+public:
+    CleanWalAction(NebulaInstance* inst, int64_t spaceId)
+        : inst_(inst)
+        , spaceId_(spaceId) {}
+
+    ~CleanWalAction() = default;
+
+    ResultCode doRun() override;
+
+    std::string toString() const override {
+        return folly::stringPrintf("Clean space %ld wal on instance %s",
+                                   spaceId_,
+                                   inst_->toString().c_str());
+    }
+
+private:
+    NebulaInstance* inst_;
+    int64_t spaceId_;
+};
+
 }   // namespace nebula
 }   // namespace nebula_chaos
 

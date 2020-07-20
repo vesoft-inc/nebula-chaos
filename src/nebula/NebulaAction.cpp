@@ -271,7 +271,6 @@ ResultCode RandomRestartAction::doRun() {
         auto index = folly::Random::rand32(instances_.size());
         auto* inst = instances_[index];
         CHECK_NOTNULL(inst);
- 
         {
             LOG(INFO) << "Begin to kill " << inst->toString() << ", graceful " << graceful_;
             auto rc = stop(inst);
@@ -292,6 +291,31 @@ ResultCode RandomRestartAction::doRun() {
             }
             LOG(INFO) << "Finish to start " << inst->toString();
         }
+    }
+    return ResultCode::OK;
+}
+
+ResultCode CleanWalAction::doRun() {
+    CHECK_NOTNULL(inst_);
+    auto wals = inst_->walDirs(spaceId_);
+    if (!wals.hasValue()) {
+        LOG(ERROR) << "Can't find wals for space " << spaceId_ << " on " << inst_->toString();
+        return ResultCode::ERR_FAILED;
+    }
+    for (auto& walDir : wals.value()) {
+        auto cmd = folly::stringPrintf("rm -rf %s", walDir.c_str());
+        LOG(INFO) << cmd << " on " << inst_->toString() << " as " << inst_->owner();
+        auto ret = utils::SshHelper::run(
+                    cmd,
+                    inst_->getHost(),
+                    [this] (const std::string& outMsg) {
+                        VLOG(1) << "The output is " << outMsg;
+                    },
+                    [] (const std::string& errMsg) {
+                        LOG(ERROR) << "The error is " << errMsg;
+                    },
+                    inst_->owner());
+        CHECK_EQ(0, ret.exitStatus());
     }
     return ResultCode::OK;
 }
