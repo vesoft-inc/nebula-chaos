@@ -126,6 +126,25 @@ folly::Optional<int32_t> NebulaInstance::getIntFromConf(const std::string& key) 
     }
 }
 
+folly::Optional<std::string> NebulaInstance::getStringFromConf(const std::string& key) const {
+    try {
+        CHECK(conf_.isObject());
+        auto it = conf_.find(folly::stringPrintf("--%s", key.c_str()));
+        if (it == conf_.items().end()) {
+            LOG(ERROR) << "Can't find the " << key << " in conf";
+            return folly::none;
+        }
+        VLOG(1) << "Found the " <<  key << ":" << it->second;
+        return it->second.asString();
+    } catch (const folly::ConversionError& e) {
+        LOG(ERROR) << "Parse failed, error " << e.what();
+        return folly::none;
+    } catch (const folly::TypeError& e) {
+        LOG(ERROR) << "Parse failed, error " << e.what();
+        return folly::none;
+    }
+}
+
 folly::Optional<int32_t> NebulaInstance::getPort() const {
     return getIntFromConf("port");
 }

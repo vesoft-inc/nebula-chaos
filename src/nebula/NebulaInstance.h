@@ -22,6 +22,12 @@ public:
         UNKNOWN,
     };
 
+    enum class State {
+        UNUSED,
+        RUNNING,
+        STOPPED,
+    };
+
     NebulaInstance() = default;
     NebulaInstance(const std::string& host,
                    const std::string& installPath,
@@ -76,9 +82,19 @@ public:
     Type type() const {
         return type_;
     }
+    
+    State getState() const {
+        return state_;
+    }
+
+    void setState(State state) {
+        state_ = state;
+    }
 
 private:
     folly::Optional<int32_t> getIntFromConf(const std::string& key) const;
+
+    folly::Optional<std::string> getStringFromConf(const std::string& key) const;
 
     bool parseConf(const std::string& confFile);
 
@@ -89,6 +105,7 @@ private:
     std::string host_;
     std::string installPath_;
     Type type_;
+    State state_ = State::UNUSED;
     int32_t     pid_ = -1;
     std::string moduleName_;
     std::string confPath_;

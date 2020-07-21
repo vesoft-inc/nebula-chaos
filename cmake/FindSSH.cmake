@@ -22,3 +22,10 @@ find_program(ECHO_EXECUTABLE
 
 message(STATUS "echo path: ${ECHO_EXECUTABLE}")
 
+
+find_program(PYTHON3_EXECUTABLE
+             NAMES python3
+             PATHS ${PYTHON3_EXECUTABLE_DIR}
+             DOC "path to the python3 executable")
+
+message(STATUS "python3: ${PYTHON3_EXECUTABLE}")

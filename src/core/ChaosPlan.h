@@ -56,6 +56,10 @@ public:
 
     std::string toString() const;
 
+    void setAttachment(const std::string& attachment) {
+        attachment_ = attachment;
+    }
+
 protected:
     std::vector<ActionPtr> actions_;
     std::unique_ptr<folly::CPUThreadPoolExecutor> threadsPool_;
@@ -63,6 +67,7 @@ protected:
     Duration  timeSpent_;
     std::string  emailTo_;
     std::string  planName_;
+    std::string  attachment_;
 };
 
 }  // action

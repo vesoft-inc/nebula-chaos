@@ -1,0 +1,240 @@
+{
+    "name": "Nebula scale-up-and-down plan",
+    "concurrency": 10,
+    "email": "doodle.wang@vesoft.com",
+    "rolling_table": true,
+    "instances": [
+        {
+            "host":"192.168.8.210",
+            "install_dir":"/home/doodle.wang/nebula",
+            "conf_dir":"/home/doodle.wang/nebula/etc/nebula-graphd.conf",
+            "type": "graphd",
+            "user": "doodle.wang"
+        },
+        {
+            "host":"192.168.8.210",
+            "install_dir":"/home/doodle.wang/nebula",
+            "conf_dir":"/home/doodle.wang/nebula/etc/nebula-metad.conf",
+            "type": "metad",
+            "user": "doodle.wang"
+        },
+        {
+            "host":"192.168.8.210",
+            "install_dir":"/home/doodle.wang/nebula",
+            "conf_dir":"/home/doodle.wang/nebula/etc/nebula-storaged-1.conf",
+            "type": "storaged",
+            "user": "doodle.wang"
+        },
+        {
+            "host":"192.168.8.210",
+            "install_dir":"/home/doodle.wang/nebula",
+            "conf_dir":"/home/doodle.wang/nebula/etc/nebula-storaged-2.conf",
+            "type": "storaged",
+            "user": "doodle.wang"
+        },
+        {
+            "host":"192.168.8.210",
+            "install_dir":"/home/doodle.wang/nebula",
+            "conf_dir":"/home/doodle.wang/nebula/etc/nebula-storaged-3.conf",
+            "type": "storaged",
+            "user": "doodle.wang"
+        },
+        {
+            "host":"192.168.8.210",
+            "install_dir":"/home/doodle.wang/nebula",
+            "conf_dir":"/home/doodle.wang/nebula/etc/nebula-storaged-4.conf",
+            "type": "storaged",
+            "user": "doodle.wang"
+        }
+     ],
+     "actions" : [
+        {
+            "type": "StartAction",
+            "inst_index": 0,
+            "depends": [2, 3, 4]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 1,
+            "depends": []
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 2,
+            "depends": [1]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 3,
+            "depends": [1]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 4,
+            "depends": [1]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 15000,
+            "depends": [0]
+        },
+        {
+            "type": "ClientConnectAction",
+            "depends": [5]
+        },
+        {
+            "type": "CreateSpaceAction",
+            "space_name": "scale_up_and_down",
+            "replica": 3,
+            "parts": 10,
+            "depends": [6]
+        },
+        {
+            "type": "UseSpaceAction",
+            "space_name": "scale_up_and_down",
+            "depends": [7]
+        },
+        {
+            "type": "CreateSchemaAction",
+            "name": "circle",
+            "props": [
+                {"name": "nextId", "type": "int"}
+            ],
+            "edge_or_tag": false,
+            "depends": [8]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 10000,
+            "depends": [9]
+        },
+        {
+            "type": "BalanceLeaderAction",
+            "depends": [10]
+        },
+        {
+            "type": "CheckLeadersAction",
+            "expected_num": 10,
+            "depends": [11]
+        },
+        {
+            "type": "WriteCircleAction",
+            "tag": "circle",
+            "col": "nextId",
+            "total_rows": 200000,
+            "depends": [12]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 5,
+            "depends": [12]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 120000,
+            "depends": [14]
+        },
+        {
+            "type": "BalanceDataAction",
+            "depends": [15]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 30000,
+            "depends": [13, 16]
+        },
+        {
+            "type": "BalanceLeaderAction",
+            "depends": [17]
+        },
+        {
+            "type": "CheckLeadersAction",
+            "expected_num": 10,
+            "depends": [18]
+        },
+        {
+            "type": "WalkThroughAction",
+            "tag": "circle",
+            "col": "nextId",
+            "total_rows": 200000,
+            "depends": [19]
+        },
+        {
+            "type": "WriteCircleAction",
+            "tag": "circle",
+            "col": "nextId",
+            "total_rows": 400000,
+            "depends": [20]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 2,
+            "depends": [20]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 120000,
+            "depends": [22]
+        },
+        {
+            "type": "BalanceDataAction",
+            "depends": [23]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 30000,
+            "depends": [21, 24]
+        },
+        {
+            "type": "BalanceLeaderAction",
+            "depends": [25]
+        },
+        {
+            "type": "CheckLeadersAction",
+            "expected_num": 10,
+            "depends": [26]
+        },
+        {
+            "type": "WalkThroughAction",
+            "tag": "circle",
+            "col": "nextId",
+            "total_rows": 400000,
+            "depends": [27]
+        },
+        {
+            "type": "EmptyAction",
+            "name": "JoinNode",
+            "depends": [28]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 0,
+            "depends": [29]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 1,
+            "depends": [30]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 2,
+            "depends": [30]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 3,
+            "depends": [30]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 4,
+            "depends": [30]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 5,
+            "depends": [30]
+        }
+    ]
+}

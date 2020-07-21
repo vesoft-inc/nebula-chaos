@@ -55,6 +55,14 @@ TEST(CommunicateSubprocessTest, TakeOwnershipOfPipes) {
     EXPECT_EQ("3\n", std::string(buf));
 }
 
+TEST(PythonTest, PythonTest) {
+    folly::Subprocess proc(std::vector<std::string>{"/bin/python3", "-c", "print('hello world')"},
+                           folly::Subprocess::Options().pipeStdout());
+    auto p = proc.communicate();
+    EXPECT_EQ("hello world\n", p.first);
+    proc.waitChecked();
+}
+
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);
     folly::init(&argc, &argv, true);
