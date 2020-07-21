@@ -528,6 +528,56 @@ private:
     std::vector<std::string> paras_;
 };
 
+class CreateCheckpointAction : public MetaAction {
+public:
+    CreateCheckpointAction(GraphClient* client)
+        : MetaAction(client) {}
+
+    ~CreateCheckpointAction() = default;
+
+    std::string command() const override {
+        return "CREATE SNAPSHOT";
+    }
+};
+
+// Clean all snapshot
+class CleanCheckpointAction : public core::Action {
+public:
+    CleanCheckpointAction(NebulaInstance* inst)
+        : inst_(inst) {}
+
+    ~CleanCheckpointAction() = default;
+
+    ResultCode doRun() override;
+
+    std::string toString() const override {
+        return folly::stringPrintf("Clean snapshot on instance %s", 
+                                   inst_->toString().c_str());
+    }
+
+private:
+    NebulaInstance* inst_;
+};
+
+// Clean all snapshot
+class RestoreFromCheckpointAction : public core::Action {
+public:
+    RestoreFromCheckpointAction(NebulaInstance* inst)
+        : inst_(inst) {}
+
+    ~RestoreFromCheckpointAction() = default;
+
+    ResultCode doRun() override;
+
+    std::string toString() const override {
+        return folly::stringPrintf("Restore db from snapshot on instance %s", 
+                                   inst_->toString().c_str());
+    }
+
+private:
+    NebulaInstance* inst_;
+};
+
 }   // namespace nebula
 }   // namespace nebula_chaos
 

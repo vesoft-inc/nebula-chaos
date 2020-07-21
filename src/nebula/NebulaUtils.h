@@ -251,24 +251,36 @@ public:
                                                                 dist,
                                                                 loss,
                                                                 duplicate);
+        } else if (type == "CreateCheckpointAction") {
+            return std::make_unique<CreateCheckpointAction>(ctx.gClient);
+        } else if (type == "CleanCheckpointAction") {
+            auto instIndex = obj.at("inst_index").asInt();
+            CHECK_GE(instIndex, 0);
+            CHECK_LT(instIndex, ctx.insts.size());
+            return std::make_unique<CleanCheckpointAction>(ctx.insts[instIndex]);
+        } else if (type == "RestoreFromCheckpointAction") {
+            auto instIndex = obj.at("inst_index").asInt();
+            CHECK_GE(instIndex, 0);
+            CHECK_LT(instIndex, ctx.insts.size());
+            return std::make_unique<RestoreFromCheckpointAction>(ctx.insts[instIndex]);
         }
-        LOG(FATAL) << "Unknown type " << type;
+    LOG(FATAL) << "Unknown type " << type;
+    return nullptr;
+}
+
+static NebulaInstance* randomInstance(const std::vector<NebulaInstance*>& instances,
+                                        NebulaInstance::State state) {
+    std::vector<NebulaInstance*> candidate;
+    for (auto* instance : instances) {
+        if (instance->getState() == state) {
+            candidate.emplace_back(instance);
+        }
+    }
+    if (candidate.empty()) {
         return nullptr;
     }
-
-    static NebulaInstance* randomInstance(const std::vector<NebulaInstance*>& instances,
-                                          NebulaInstance::State state) {
-        std::vector<NebulaInstance*> candidate;
-        for (auto* instance : instances) {
-            if (instance->getState() == state) {
-                candidate.emplace_back(instance);
-            }
-        }
-        if (candidate.empty()) {
-            return nullptr;
-        }
-        return candidate[folly::Random::rand32(candidate.size())];
-    }
+    return candidate[folly::Random::rand32(candidate.size())];
+}
 
 private:
     Utils() = default;

@@ -568,5 +568,65 @@ ResultCode RandomTrafficControlAction::recover() {
     return ResultCode::OK;
 }
 
+ResultCode CleanCheckpointAction::doRun() {
+    CHECK_NOTNULL(inst_);
+    auto dataPaths = inst_->dataDirs();
+    if (!dataPaths.hasValue()) {
+        LOG(ERROR) << "Can't find data path on " << inst_->toString();
+        return ResultCode::ERR_FAILED;
+    }
+    for (const auto& dataPath : dataPaths.value()) {
+        auto rmCmd = "find %s -type d -name \"checkpoints\" | xargs rm -rf";
+        auto cleanCommand = folly::stringPrintf(rmCmd, dataPath.c_str());
+        LOG(INFO) << cleanCommand << " on " << inst_->toString() << " as " << inst_->owner();
+        auto ret = utils::SshHelper::run(
+                    cleanCommand,
+                    inst_->getHost(),
+                    [this] (const std::string& outMsg) {
+                        VLOG(1) << "The output is " << outMsg;
+                    },
+                    [] (const std::string& errMsg) {
+                        LOG(ERROR) << "The error is " << errMsg;
+                    },
+                    inst_->owner());
+        CHECK_EQ(0, ret.exitStatus());
+    }
+    return ResultCode::OK;
+}
+
+ResultCode RestoreFromCheckpointAction::doRun() {
+    CHECK_NOTNULL(inst_);
+    if (inst_->getState() == NebulaInstance::State::RUNNING) {
+        LOG(ERROR) << "Can't restore data while instance " << inst_->toString()
+                << " is stil running";
+        return ResultCode::OK;
+    }
+    auto dataPaths = inst_->dataDirs();
+    if (!dataPaths.hasValue()) {
+        LOG(ERROR) << "Can't find data path on " << inst_->toString();
+        return ResultCode::ERR_FAILED;
+    }
+    for (const auto& dataPath : dataPaths.value()) {
+        std::string returnMsg;
+        auto rmCmd = "find %s -type d -name \"checkpoints\"";
+        auto cleanCommand = folly::stringPrintf(rmCmd, dataPath.c_str());
+        LOG(INFO) << cleanCommand << " on " << inst_->toString() << " as " << inst_->owner();
+        auto ret = utils::SshHelper::run(
+                    cleanCommand,
+                    inst_->getHost(),
+                    [this, &returnMsg] (const std::string& outMsg) {
+                        returnMsg = outMsg;
+                        VLOG(1) << "The output is " << outMsg;
+                    },
+                    [] (const std::string& errMsg) {
+                        LOG(ERROR) << "The error is " << errMsg;
+                    },
+                    inst_->owner());
+        CHECK_EQ(0, ret.exitStatus());
+        // TODO : replace nebula data from checkpoint
+    }
+    return ResultCode::OK;
+}
+
 }   // namespace nebula
 }   // namespace nebula_chaos
