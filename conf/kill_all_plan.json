@@ -101,6 +101,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 100,
+            "space": "chaos",
             "depends": [10]
         },
         {

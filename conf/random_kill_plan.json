@@ -108,6 +108,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 100,
+            "space": "random_kill",
             "depends": [11]
         },
         {
@@ -126,6 +127,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 100,
+            "space": "random_kill",
             "depends": [14]
         },
         {

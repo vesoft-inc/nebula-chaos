@@ -320,9 +320,10 @@ public:
 
 class CheckLeadersAction : public MetaAction {
 public:
-    CheckLeadersAction(GraphClient* client, int32_t expectedNum)
+    CheckLeadersAction(GraphClient* client, int32_t expectedNum, const std::string& spaceName)
         : MetaAction(client)
-        , expectedNum_(expectedNum) {}
+        , expectedNum_(expectedNum)
+        , spaceName_(spaceName) {}
 
     std::string command() const override {
         return "show hosts";
@@ -332,6 +333,7 @@ public:
 
 private:
     int32_t expectedNum_;
+    std::string spaceName_;
 };
 
 /**

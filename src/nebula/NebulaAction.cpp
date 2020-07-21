@@ -280,12 +280,27 @@ ResultCode CheckLeadersAction::checkResp(const ExecutionResponse& resp) const {
         LOG(ERROR) << "Column number is wrong!";
         return ResultCode::ERR_FAILED;
     }
-    if (row.columns[0].get_str() == "Total"
-            && row.columns[3].get_integer() == expectedNum_) {
-        return ResultCode::OK;
+    if (row.columns[0].get_str() != "Total") {
+        LOG(ERROR) << "Bad format for the response!";
+        return ResultCode::ERR_FAILED;
     }
-    LOG(ERROR) << "row.columns unmatch, col0 is " << row.columns[0].get_str()
-              << ", col3 is " << row.columns[3].get_integer();
+    auto& leaderStr = row.columns[4].get_str();
+    try {
+        std::vector<folly::StringPiece> spaceLeaders;
+        folly::split(",", leaderStr, spaceLeaders);
+        for (auto& sl : spaceLeaders) {
+            std::vector<folly::StringPiece> oneSpaceLeaderPair;
+            folly::split(":", sl, oneSpaceLeaderPair);
+            CHECK_EQ(2, oneSpaceLeaderPair.size());
+            auto spaceName = folly::trimWhitespace(oneSpaceLeaderPair[0]);
+            auto leaderNum = folly::to<int32_t>(folly::trimWhitespace(oneSpaceLeaderPair[1]));
+            if (spaceName == spaceName_ && leaderNum == expectedNum_) {
+                return ResultCode::OK;
+            }
+        }
+    } catch (const std::exception& e) {
+        LOG(ERROR) << "col4 is " <<  leaderStr << ", exception: " << e.what();
+    }
     return ResultCode::ERR_FAILED;
 }
 

@@ -115,6 +115,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
+            "space": "scale_up_and_down",
             "depends": [11]
         },
         {
@@ -150,6 +151,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
+            "space": "scale_up_and_down",
             "depends": [18]
         },
         {
@@ -192,6 +194,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
+            "space": "scale_up_and_down",
             "depends": [26]
         },
         {

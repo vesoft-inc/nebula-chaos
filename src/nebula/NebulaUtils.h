@@ -133,7 +133,8 @@ public:
             return std::make_unique<BalanceDataAction>(ctx.gClient);
         } else if (type == "CheckLeadersAction") {
             auto expectedNum = obj.at("expected_num").asInt();
-            return std::make_unique<CheckLeadersAction>(ctx.gClient, expectedNum);
+            auto spaceName = obj.at("space").asString();
+            return std::make_unique<CheckLeadersAction>(ctx.gClient, expectedNum, spaceName);
         } else if (type == "RandomRestartAction") {
             auto insts = obj.at("insts");
             std::vector<NebulaInstance*> targetInsts;
