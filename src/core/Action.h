@@ -38,6 +38,7 @@ enum class ResultCode {
  * */
 class Action {
     friend class ChaosPlan;
+    friend class LoopAction;
 public:
     enum class Status {
         INIT,
@@ -45,7 +46,8 @@ public:
         SUCCEEDED,
         FAILED,
     };
-    Action() = default;
+    Action()
+        : promise_(std::make_unique<folly::SharedPromise<folly::Unit>>()) {}
 
     virtual ~Action() = default;
 
@@ -60,6 +62,16 @@ public:
         CHECK_NOTNULL(action);
         this->dependees_.emplace_back(action);
         action->dependers_.emplace_back(this);
+    }
+
+    virtual void reset() {
+        if (status_ == Status::INIT
+                || status_ == Status::RUNNING) {
+            LOG(INFO) << "Can't reset action with status " << statusStr();
+            return;
+        }
+        status_ = Status::INIT;
+        promise_.reset(new folly::SharedPromise<folly::Unit>());
     }
 
     void setId(int32_t id) {
@@ -92,6 +104,7 @@ public:
 
     void run() {
         CHECK(Status::INIT == status_);
+        CHECK(promise_ != nullptr);
         status_ = Status::RUNNING;
         TimePoint start = Clock::now();
         LOG(INFO) << "Begin the action " << id_ << ":" << toString();
@@ -102,11 +115,11 @@ public:
         if (rc == ResultCode::OK) {
             status_ = Status::SUCCEEDED;
             LOG(INFO) << "Then action " << id_ << ":" << toString() << " finished!";
-            promise_.setTry(folly::Try<folly::Unit>(folly::Unit()));
+            promise_->setTry(folly::Try<folly::Unit>(folly::Unit()));
         } else {
             status_ = Status::FAILED;
             LOG(ERROR) << "The action " << id_ << ":" << toString() << " failed!";
-            promise_.setException(
+            promise_->setException(
                     std::runtime_error(
                         folly::stringPrintf("run failed, rc %d",
                                             static_cast<int32_t>(rc))));
@@ -115,7 +128,7 @@ public:
 
     void markFailed(folly::exception_wrapper&& ew) {
         status_ = Status::FAILED;
-        promise_.setException(std::move(ew));
+        promise_->setException(std::move(ew));
     }
 
     virtual std::string toString() const = 0;
@@ -132,7 +145,7 @@ protected:
 
 private:
     Status status_{Status::INIT};
-    folly::SharedPromise<folly::Unit> promise_;
+    std::unique_ptr<folly::SharedPromise<folly::Unit>> promise_;
     int32_t     id_ = -1;
 };
 
@@ -140,13 +153,12 @@ using ActionPtr = std::unique_ptr<Action>;
 
 class EmptyAction : public Action {
 public:
-    EmptyAction(const std::string& name = "EmptyAction")
+    explicit EmptyAction(const std::string& name = "EmptyAction")
         : name_(name) {}
 
     ~EmptyAction() = default;
 
     ResultCode doRun() override {
-        LOG(INFO) << toString();
         return ResultCode::OK;
     }
 

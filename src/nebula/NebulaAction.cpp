@@ -188,9 +188,6 @@ ResultCode WriteCircleAction::sendBatch(const std::vector<std::string>& batchCmd
 
 ResultCode WriteCircleAction::doRun() {
     CHECK_NOTNULL(client_);
-    auto insertCmd = folly::stringPrintf("INSERT VERTEX %s (%s) VALUES ",
-                                         tag_.c_str(),
-                                         col_.c_str());
     std::vector<std::string> batchCmds;
     batchCmds.reserve(1024);
     uint64_t row = 1;
