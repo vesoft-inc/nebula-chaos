@@ -43,8 +43,7 @@ TEST(ActionsTest, LoopAction) {
     actions.emplace_back(std::move(action3));
     actions.emplace_back(std::move(action4));
 
-    auto threadsPool = std::make_unique<folly::CPUThreadPoolExecutor>(2);
-    LoopAction loopAction(10, std::move(actions), threadsPool.get());
+    LoopAction loopAction(10, std::move(actions), 2);
     loopAction.doRun();
 }
 

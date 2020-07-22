@@ -9,7 +9,6 @@ namespace nebula_chaos {
 namespace core {
 
 ResultCode LoopAction::doRun() {
-    CHECK_NOTNULL(threadsPool_);
     std::vector<Action*> rootActions;
     std::vector<Action*> leafActions;
     for (auto& action : actions_) {
@@ -43,7 +42,7 @@ ResultCode LoopAction::doRun() {
             }
             auto actionPtr = action.get();
             folly::collect(dependees)
-                        .via(threadsPool_)
+                        .via(threadsPool_.get())
                         .thenValue([this, actionPtr](auto&&) {
                             actionPtr->run();
                             LOG(INFO) << "Run " << actionPtr->toString() << " succeeded!";

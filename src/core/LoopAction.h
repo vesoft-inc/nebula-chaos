@@ -17,10 +17,10 @@ class LoopAction : public Action {
 public:
     LoopAction(int32_t loopTimes,
                std::vector<ActionPtr>&& actions,
-               folly::CPUThreadPoolExecutor* threadsPool)
+               int32_t concurrency)
         : loopTimes_(loopTimes)
         , actions_(std::move(actions))
-        , threadsPool_(threadsPool) {}
+        , threadsPool_(std::make_unique<folly::CPUThreadPoolExecutor>(concurrency)) {}
 
     ResultCode doRun() override;
 
@@ -31,7 +31,7 @@ public:
 private:
     int32_t loopTimes_;
     std::vector<ActionPtr> actions_;
-    folly::CPUThreadPoolExecutor* threadsPool_ = nullptr;
+    std::unique_ptr<folly::CPUThreadPoolExecutor> threadsPool_;
 };
 
 }   // namespace core

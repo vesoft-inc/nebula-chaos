@@ -12,6 +12,7 @@
 #include <folly/Random.h>
 #include "nebula/NebulaAction.h"
 #include "core/WaitAction.h"
+#include "core/LoopAction.h"
 
 namespace nebula_chaos {
 namespace nebula {
@@ -19,10 +20,10 @@ namespace nebula {
 class GraphClient;
 
 struct LoadContext {
-    std::vector<NebulaInstance*> insts;
-    GraphClient*                 gClient;
+    std::vector<NebulaInstance*>  insts;
+    GraphClient*                  gClient = nullptr;
     // whether to rolling table for this plan
-    bool                         rolling;
+    bool                          rolling;
 };
 
 class Utils {
@@ -164,6 +165,38 @@ public:
             CHECK_LT(instIndex, ctx.insts.size());
             auto spaceId = obj.at("space_id").asInt();
             return std::make_unique<CleanWalAction>(ctx.insts[instIndex], spaceId);
+        } else if (type == "LoopAction") {
+            auto loopTimes = obj.at("loop_times").asInt();
+            auto concurrency = obj.at("concurrency").asInt();
+            auto subPlan = obj.at("sub_plan");
+            std::vector<std::unique_ptr<core::Action>> actions;
+            {
+                auto actionIt = subPlan.begin();
+                while (actionIt != subPlan.end()) {
+                    CHECK(actionIt->isObject());
+                    auto action = Utils::loadAction(*actionIt, ctx);
+                    CHECK(action != nullptr);
+                    action->setId(actions.size());
+                    actions.emplace_back(std::move(action));
+                    actionIt++;
+                }
+            }
+            {
+                auto actionIt = subPlan.begin();
+                int32_t index = 0;
+                while (actionIt != subPlan.end()) {
+                    CHECK(actionIt->isObject());
+                    LOG(INFO) << "Load the " << index << " action's in subplan dependees!";
+                    auto depends = actionIt->at("depends");
+                    for (auto& dependeeIndex : depends) {
+                        auto i = dependeeIndex.asInt();
+                        actions[index]->addDependee(actions[i].get());
+                    }
+                    actionIt++;
+                    index++;
+                }
+            }
+            return std::make_unique<core::LoopAction>(loopTimes, std::move(actions), concurrency);
         }
         LOG(FATAL) << "Unknown type " << type;
         return nullptr;

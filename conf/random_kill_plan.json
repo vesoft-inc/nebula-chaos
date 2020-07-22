@@ -1,43 +1,42 @@
 {
     "name": "Nebula random-kill plan",
     "concurrency": 10,
-    "email": "heng.chen@vesoft.com",
     "rolling_table": true,
     "instances": [
         {
-            "host":"192.168.8.210",
-            "install_dir":"/home/vesoft/prog/heng",
-            "conf_dir":"/home/vesoft/prog/heng/conf/nebula-graphd.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "graphd",
-            "user": "heng"
+            "user": ""
         },
         {
-            "host":"192.168.8.210",
-            "install_dir":"/home/vesoft/prog/heng",
-            "conf_dir":"/home/vesoft/prog/heng/conf/nebula-metad.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "metad",
-            "user": "heng"
+            "user": ""
         },
         {
-            "host":"192.168.8.210",
-            "install_dir":"/home/vesoft/prog/heng",
-            "conf_dir":"/home/vesoft/prog/heng/conf/nebula-storaged-1.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "storaged",
-            "user": "heng"
+            "user": ""
         },
         {
-            "host":"192.168.8.210",
-            "install_dir":"/home/vesoft/prog/heng",
-            "conf_dir":"/home/vesoft/prog/heng/conf/nebula-storaged-2.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "storaged",
-            "user": "heng"
+            "user": ""
         },
         {
-            "host":"192.168.8.210",
-            "install_dir":"/home/vesoft/prog/heng",
-            "conf_dir":"/home/vesoft/prog/heng/conf/nebula-storaged-3.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "storaged",
-            "user": "heng"
+            "user": ""
         }
      ],
      "actions" : [
