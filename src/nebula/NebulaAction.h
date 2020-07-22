@@ -340,39 +340,34 @@ private:
  * Random kill the instance and restart it.
  * We could set the loop times.
  * */
-class RandomRestartAction : public core::Action {
+class RandomRestartAction : public core::DisturbAction {
 public:
     RandomRestartAction(const std::vector<NebulaInstance*>& instances,
                         int32_t loopTimes,
-                        int32_t restartInterval,
-                        int32_t nextLoopInterval,
+                        int32_t timeToDisurb,
+                        int32_t timeToRecover,
                         bool graceful = false,
                         bool cleanData = false)
-        : instances_(instances)
-        , loopTimes_(loopTimes)
-        , restartInterval_(restartInterval)
-        , nextLoopInterval_(nextLoopInterval)
+        : DisturbAction(loopTimes, timeToDisurb, timeToRecover)
+        , instances_(instances)
         , graceful_(graceful)
         , cleanData_(cleanData) {}
 
     ~RandomRestartAction() = default;
-
-    ResultCode doRun() override;
 
     std::string toString() const override {
         return folly::stringPrintf("Random kill: loop %d", loopTimes_);
     }
 
 private:
+    ResultCode disturb() override;
+    ResultCode recover() override;
     ResultCode start(NebulaInstance* inst);
-
     ResultCode stop(NebulaInstance* inst);
 
 private:
     std::vector<NebulaInstance*> instances_;
-    int32_t loopTimes_;
-    int32_t restartInterval_;  // seconds
-    int32_t nextLoopInterval_;  // seconds
+    NebulaInstance* picked_;
     bool graceful_;
     bool cleanData_;
 };
@@ -417,6 +412,38 @@ public:
 
 private:
     NebulaInstance* inst_ = nullptr;
+};
+
+/**
+ * Random network partition one storagge instance from the other storage instances
+ * and meta instances using iptables.
+ * */
+class RandomPartitionAction : public core::DisturbAction {
+public:
+    RandomPartitionAction(const std::vector<NebulaInstance*>& metas,
+                          const std::vector<NebulaInstance*>& storages,
+                          int32_t loopTimes,
+                          int32_t timeToDisurb,
+                          int32_t timeToRecover)
+        : DisturbAction(loopTimes, timeToDisurb, timeToRecover)
+        , metas_(metas)
+        , storages_(storages) {}
+
+    ~RandomPartitionAction() = default;
+
+    std::string toString() const override {
+        return folly::stringPrintf("Random partition: loop %d", loopTimes_);
+    }
+
+private:
+    ResultCode disturb() override;
+    ResultCode recover() override;
+
+private:
+    std::vector<NebulaInstance*> metas_;
+    std::vector<NebulaInstance*> storages_;
+    NebulaInstance* picked_;
+    std::vector<std::string> paras_;
 };
 
 }   // namespace nebula

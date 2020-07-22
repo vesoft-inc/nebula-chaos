@@ -170,6 +170,44 @@ private:
     std::string name_;
 };
 
+class DisturbAction : public Action {
+public:
+    DisturbAction(int32_t loopTimes,
+                  int32_t timeToDisurb,
+                  int32_t timeToRecover)
+        : loopTimes_(loopTimes)
+        , timeToDisurb_(timeToDisurb)
+        , timeToRecover_(timeToRecover) {}
+
+    ResultCode doRun() override {
+        int32_t i = 0;
+        while (i++ < loopTimes_) {
+            sleep(timeToDisurb_);
+            auto rc = disturb();
+            if (rc != ResultCode::OK) {
+                LOG(ERROR) << "Disturb failed!";
+                return rc;
+            }
+            sleep(timeToRecover_);
+            rc = recover();
+            if (rc != ResultCode::OK) {
+                LOG(ERROR) << "Recover failed!";
+                return rc;
+            }
+        }
+        return ResultCode::OK;
+    }
+
+protected:
+    virtual ResultCode disturb() = 0;
+
+    virtual ResultCode recover() = 0;
+
+    int32_t loopTimes_;
+    int32_t timeToDisurb_;  // seconds
+    int32_t timeToRecover_; // seconds
+};
+
 }   // namespace core
 }   // namespace nebula_chaos
 

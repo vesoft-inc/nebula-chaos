@@ -38,8 +38,8 @@
             "type": "storaged",
             "user": ""
         }
-     ],
-     "actions" : [
+    ],
+    "actions" : [
         {
             "type": "CleanWalAction",
             "inst_index": 2,
@@ -164,5 +164,5 @@
             "inst_index": 4,
             "depends": [17]
         }
-     ]
+    ]
 }

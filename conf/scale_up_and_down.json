@@ -45,8 +45,8 @@
             "type": "storaged",
             "user": ""
         }
-     ],
-     "actions" : [
+    ],
+    "actions" : [
         {
             "type": "StartAction",
             "inst_index": 0,
