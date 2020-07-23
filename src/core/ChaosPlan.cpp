@@ -70,7 +70,7 @@ void ChaosPlan::schedule() {
         std::vector<folly::Future<folly::Unit>> dependees;
         for (auto* dee : action->dependees_) {
             LOG(INFO) << "Add depender " << action->id() << " for " << dee->id();
-            dependees.emplace_back(dee->promise_.getFuture());
+            dependees.emplace_back(dee->promise_->getFuture());
         }
         auto actionPtr = action.get();
         folly::collect(dependees)
@@ -86,7 +86,7 @@ void ChaosPlan::schedule() {
                         }
                     });
     }
-    sinkAction->promise_.getFuture().wait();
+    sinkAction->promise_->getFuture().wait();
     if (sinkAction->status() == ActionStatus::FAILED) {
         LOG(INFO) << "The plan failed, rerun the last action to ensure the email has been send out!";
         sinkAction->doRun();

@@ -1,50 +1,49 @@
 {
     "name": "Nebula scale-up-and-down plan",
     "concurrency": 10,
-    "email": "doodle.wang@vesoft.com",
     "rolling_table": true,
     "instances": [
         {
-            "host":"192.168.8.210",
-            "install_dir":"/home/doodle.wang/nebula",
-            "conf_dir":"/home/doodle.wang/nebula/etc/nebula-graphd.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "graphd",
-            "user": "doodle.wang"
+            "user": ""
         },
         {
-            "host":"192.168.8.210",
-            "install_dir":"/home/doodle.wang/nebula",
-            "conf_dir":"/home/doodle.wang/nebula/etc/nebula-metad.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "metad",
-            "user": "doodle.wang"
+            "user": ""
         },
         {
-            "host":"192.168.8.210",
-            "install_dir":"/home/doodle.wang/nebula",
-            "conf_dir":"/home/doodle.wang/nebula/etc/nebula-storaged-1.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "storaged",
-            "user": "doodle.wang"
+            "user": ""
         },
         {
-            "host":"192.168.8.210",
-            "install_dir":"/home/doodle.wang/nebula",
-            "conf_dir":"/home/doodle.wang/nebula/etc/nebula-storaged-2.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "storaged",
-            "user": "doodle.wang"
+            "user": ""
         },
         {
-            "host":"192.168.8.210",
-            "install_dir":"/home/doodle.wang/nebula",
-            "conf_dir":"/home/doodle.wang/nebula/etc/nebula-storaged-3.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "storaged",
-            "user": "doodle.wang"
+            "user": ""
         },
         {
-            "host":"192.168.8.210",
-            "install_dir":"/home/doodle.wang/nebula",
-            "conf_dir":"/home/doodle.wang/nebula/etc/nebula-storaged-4.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "storaged",
-            "user": "doodle.wang"
+            "user": ""
         }
      ],
      "actions" : [
@@ -115,6 +114,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
+            "space": "scale_up_and_down",
             "depends": [11]
         },
         {
@@ -150,6 +150,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
+            "space": "scale_up_and_down",
             "depends": [18]
         },
         {
@@ -192,6 +193,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
+            "space": "scale_up_and_down",
             "depends": [26]
         },
         {

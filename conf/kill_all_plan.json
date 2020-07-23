@@ -1,5 +1,5 @@
 {
-    "name": "Nebula random-kill plan",
+    "name": "Nebula kill the whole cluster plan",
     "concurrency": 10,
     "rolling_table": true,
     "instances": [
@@ -43,7 +43,7 @@
         {
             "type": "StartAction",
             "inst_index": 0,
-            "depends": [2, 3, 4]
+            "depends": []
         },
         {
             "type": "StartAction",
@@ -53,125 +53,143 @@
         {
             "type": "StartAction",
             "inst_index": 2,
-            "depends": [1]
+            "depends": []
         },
         {
             "type": "StartAction",
             "inst_index": 3,
-            "depends": [1]
+            "depends": []
         },
         {
             "type": "StartAction",
             "inst_index": 4,
-            "depends": [1]
+            "depends": []
         },
         {
             "type": "WaitAction",
-            "wait_time_ms": 15000,
-            "depends": [0]
+            "wait_time_ms": 20000,
+            "depends": [0, 1, 2, 3, 4]
         },
         {
             "type": "ClientConnectAction",
             "depends": [5]
         },
         {
-            "type": "CreateSpaceAction",
-            "space_name": "random_kill",
-            "replica": 3,
-            "parts": 100,
+            "type": "UseSpaceAction",
+            "space_name": "chaos",
             "depends": [6]
         },
         {
-            "type": "UseSpaceAction",
-            "space_name": "random_kill",
-            "depends": [7]
-        },
-        {
             "type": "CreateSchemaAction",
-            "name": "circle",
+            "name": "circle_kill_all",
             "props": [
                 {"name": "nextId", "type": "int"}
             ],
             "edge_or_tag": false,
-            "depends": [8]
+            "depends": [7]
         },
         {
             "type": "WaitAction",
             "wait_time_ms": 10000,
+            "depends": [8]
+        },
+        {
+            "type": "BalanceLeaderAction",
             "depends": [9]
         },
         {
-            "type": "BalanceLeaderAction",
+            "type": "CheckLeadersAction",
+            "expected_num": 100,
+            "space": "chaos",
             "depends": [10]
         },
         {
-            "type": "CheckLeadersAction",
-            "expected_num": 100,
-            "space": "random_kill",
+            "type": "WriteCircleAction",
+            "tag": "circle_kill_all",
+            "col": "nextId",
+            "total_rows": 100000,
+            "batch_num": 1,
             "depends": [11]
         },
         {
-            "type": "RandomRestartAction",
-            "insts": [2,3,4],
-            "loop_times": 20,
-            "restart_interval": 30,
-            "next_loop_interval": 30,
-            "graceful": false,
-            "depends": [12]
+            "type": "LoopAction",
+            "loop_times": 10,
+            "concurrency": 3,
+            "sub_plan": [
+                {
+                    "type": "WaitAction",
+                    "wait_time_ms": 20000,
+                    "depends": []
+                },
+                {
+                    "type": "CrashAction",
+                    "inst_index": 2,
+                    "depends": [0]
+                },
+                {
+                    "type": "CrashAction",
+                    "inst_index": 3,
+                    "depends": [0]
+                },
+                {
+                    "type": "CrashAction",
+                    "inst_index": 4,
+                    "depends": [0]
+                },
+                {
+                    "type": "StartAction",
+                    "inst_index": 2,
+                    "depends": [1, 2, 3]
+                },
+                {
+                    "type": "StartAction",
+                    "inst_index": 3,
+                    "depends": [1, 2, 3]
+                },
+                {
+                    "type": "StartAction",
+                    "inst_index": 4,
+                    "depends": [1, 2, 3]
+                }
+            ],
+            "depends": [11]
         },
         {
-            "type": "BalanceLeaderAction",
-            "depends": [13]
-        },
-        {
-            "type": "CheckLeadersAction",
-            "expected_num": 100,
-            "space": "random_kill",
-            "depends": [14]
-        },
-        {
-            "type": "WriteCircleAction",
-            "tag": "circle",
-            "col": "nextId",
-            "total_rows": 100000,
-            "depends": [12]
+            "type": "WaitAction",
+            "wait_time_ms": 20000,
+            "depends": [12, 13]
         },
         {
             "type": "WalkThroughAction",
-            "tag": "circle",
+            "tag": "circle_kill_all",
             "col": "nextId",
             "total_rows": 100000,
-            "depends": [16]
-        },
-        {
-            "type": "EmptyAction",
-            "name": "JoinNode",
-            "depends": [17, 15]
+            "depends": [14]
         },
         {
             "type": "StopAction",
             "inst_index": 0,
-            "depends": [18]
+            "depends": [15]
         },
         {
             "type": "StopAction",
             "inst_index": 1,
-            "depends": [18]
+            "depends": [15]
         },
         {
             "type": "StopAction",
             "inst_index": 2,
-            "depends": [18]
+            "depends": [15]
         },
         {
             "type": "StopAction",
             "inst_index": 3,
-            "depends": [18]
+            "depends": [15]
         },
         {
             "type": "StopAction",
             "inst_index": 4,
-            "depends": [18]
+            "depends": [15]
         }
      ]
 }

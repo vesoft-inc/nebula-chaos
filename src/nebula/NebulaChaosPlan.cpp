@@ -9,6 +9,8 @@
 #include <folly/json.h>
 #include "nebula/NebulaUtils.h"
 
+DEFINE_string(email_to, "", "");
+
 namespace nebula_chaos {
 namespace nebula {
 
@@ -77,7 +79,7 @@ NebulaChaosPlan::loadFromFile(const std::string& filename) {
         it++;
     }
     auto concurrency = jsonObj.at("concurrency").asInt();
-    auto emailTo = jsonObj.at("email").asString();
+    auto emailTo = jsonObj.getDefault("email", FLAGS_email_to).asString();
     auto plan = std::make_unique<NebulaChaosPlan>(std::move(ctx), concurrency, emailTo, planName);
     auto actionsItem = jsonObj.at("actions");
     std::vector<std::unique_ptr<core::Action>> actions;
@@ -90,6 +92,7 @@ NebulaChaosPlan::loadFromFile(const std::string& filename) {
         while (actionIt != actionsItem.end()) {
             CHECK(actionIt->isObject());
             auto action = Utils::loadAction(*actionIt, loadCtx);
+            CHECK(action != nullptr);
             action->setId(actions.size());
             actions.emplace_back(std::move(action));
             actionIt++;
