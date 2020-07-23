@@ -147,14 +147,13 @@ ResultCode MetaAction::doRun() {
     LOG(INFO) << "Send " << cmd << " to graphd";
     ExecutionResponse resp;
     int32_t retry = 0;
-    while (++retry < 32) {
-        auto res = client_->execute(cmd, resp);
-        if (res == Code::SUCCEEDED) {
-            LOG(INFO) << "Execute " << cmd << " successfully!";
-            auto ret = checkResp(resp);
-            if (ret == ResultCode::OK) {
-                return ResultCode::OK;
-            }
+    while (++retry < retryTimes_) {
+        client_->execute(cmd, resp);
+        LOG(INFO) << "Execute " << cmd << " successfully!";
+        auto ret = checkResp(resp);
+        if (ret == ResultCode::OK
+                || ret == ResultCode::ERR_FAILED_NO_RETRY) {
+            return ret;
         }
         LOG(ERROR) << "Execute " << cmd << " failed, retry " << retry
                    << " after " << retry << " seconds...";
@@ -178,8 +177,7 @@ ResultCode WriteCircleAction::sendBatch(const std::vector<std::string>& batchCmd
         if (res == Code::SUCCEEDED) {
             return ResultCode::OK;
         }
-        usleep(retryInterval * 1000);
-        retryInterval <<= 1;
+        usleep(retryInterval * 1000 * tryTimes);
         LOG(WARNING) << "Failed to send request, tryTimes " << tryTimes
                      << ", error code " << static_cast<int32_t>(res);
     }
@@ -227,8 +225,7 @@ WalkThroughAction::sendCommand(const std::string& cmd) {
             VLOG(1) << resp.rows.size() << ", " << resp.rows[0].columns.size();
             return resp.rows[0].columns[1].get_integer();
         }
-        usleep(retryInterval * 1000);
-        retryInterval <<= 1;
+        usleep(retryInterval * 1000 * tryTimes);
         LOG(WARNING) << "Failed to send request, tryTimes " << tryTimes
                      << ", error code " << static_cast<int32_t>(res);
     }
@@ -265,6 +262,14 @@ ResultCode WalkThroughAction::doRun() {
         return ResultCode::ERR_FAILED;
     }
     return count == totalRows_ ? ResultCode::OK : ResultCode::ERR_FAILED;
+}
+
+ResultCode BalanceDataAction::checkResp(const ExecutionResponse& resp) const {
+    auto* msg = resp.get_error_msg();
+    if (msg != nullptr && *msg == "The cluster is balanced!") {
+        return ResultCode::OK;
+    }
+    return ResultCode::ERR_NOT_FINISHED;
 }
 
 ResultCode CheckLeadersAction::checkResp(const ExecutionResponse& resp) const {

@@ -185,8 +185,9 @@ private:
  * */
 class MetaAction : public core::Action {
 public:
-    MetaAction(GraphClient* client)
-        : client_(client) {}
+    MetaAction(GraphClient* client, int32_t retryTimes = 32)
+        : client_(client)
+        , retryTimes_(retryTimes) {}
 
     virtual ~MetaAction() = default;
 
@@ -202,6 +203,7 @@ public:
 
 protected:
     GraphClient* client_ = nullptr;
+    int32_t      retryTimes_ = 0;
 };
 
 class CreateSpaceAction : public MetaAction {
@@ -310,8 +312,10 @@ public:
      * Balance data
      * This action must be run after UseSpaceAction
      */
-    explicit BalanceDataAction(GraphClient* client)
-        : MetaAction(client) {}
+    BalanceDataAction(GraphClient* client, int32_t retry)
+        : MetaAction(client, retry) {}
+
+    ResultCode checkResp(const ExecutionResponse& resp) const override;
 
     std::string command() const override {
         return "balance data";

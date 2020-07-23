@@ -30,6 +30,8 @@ enum class ResultCode {
     ERR_NOT_FOUND,
     ERR_BAD_ARGUMENT,
     ERR_FAILED,
+    ERR_FAILED_NO_RETRY,
+    ERR_NOT_FINISHED,
 };
 
 /**
