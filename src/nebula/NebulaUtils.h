@@ -218,6 +218,30 @@ public:
                                                            loopTimes,
                                                            nextDistubInterval,
                                                            recoverInterval);
+        } else if (type == "RandomTrafficControlAction") {
+            auto storageIdxs = obj.at("storages");
+            std::vector<NebulaInstance*> storages;
+            for (auto iter = storageIdxs.begin(); iter != storageIdxs.end(); iter++) {
+                auto index = iter->asInt();
+                storages.emplace_back(ctx.insts[index]);
+            }
+            auto loopTimes = obj.getDefault("loop_times", 20).asInt();
+            auto nextDistubInterval = obj.getDefault("next_loop_interval", 30).asInt();
+            auto recoverInterval = obj.getDefault("restart_interval", 30).asInt();
+            auto device = obj.getDefault("device", "eth0").asString();
+            auto delay = obj.getDefault("delay", "100ms").asString();
+            auto dist = obj.getDefault("delay-distro", "20ms").asString();
+            auto loss = obj.getDefault("loss", 0).asInt();
+            auto duplicate = obj.getDefault("duplicate", 0).asInt();
+            return std::make_unique<RandomTrafficControlAction>(storages,
+                                                                loopTimes,
+                                                                nextDistubInterval,
+                                                                recoverInterval,
+                                                                device,
+                                                                delay,
+                                                                dist,
+                                                                loss,
+                                                                duplicate);
         }
         LOG(FATAL) << "Unknown type " << type;
         return nullptr;

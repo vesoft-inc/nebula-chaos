@@ -456,5 +456,70 @@ ResultCode RandomPartitionAction::recover() {
     return ResultCode::OK;
 }
 
+ResultCode RandomTrafficControlAction::disturb() {
+    picked_ = Utils::randomInstance(storages_, NebulaInstance::State::RUNNING);
+    CHECK_NOTNULL(picked_);
+    auto pickedHost = picked_->getHost();
+    auto pickedPort = picked_->getPort().value();
+    paras_.clear();
+    for (auto* storage : storages_) {
+        auto host = storage->getHost();
+        auto port = storage->getPort().value();
+        if (host == pickedHost && port == pickedPort) {
+            continue;
+        }
+        // traffic control packets from other storage hosts, both data port and raft port
+        paras_.emplace_back(folly::stringPrintf(
+            "--direction incoming --src-network %s --dst-port %d", host.c_str(), pickedPort));
+        paras_.emplace_back(folly::stringPrintf(
+            "--direction incoming --src-network %s --dst-port %d", host.c_str(), pickedPort + 1));
+        // traffic contrl packets to other storage hosts, both data port and raft port
+        paras_.emplace_back(folly::stringPrintf(
+            "--direction outgoing --dst-network %s --dst-port %d", host.c_str(), port));
+        paras_.emplace_back(folly::stringPrintf(
+            "--direction outgoing --dst-network %s --dst-port %d", host.c_str(), port + 1));
+    }
+    std::string tcset;
+    for (const auto& para : paras_) {
+        tcset.append(folly::stringPrintf("tcset %s %s --delay %s --delay-distro %s --loss %d --duplicate %d --add; ",
+                     device_.c_str(), para.c_str(),  delay_.c_str(), dist_.c_str(), loss_, duplicate_));
+    }
+    LOG(INFO) << "Begin traffic control of " << picked_->toString();
+    VLOG(1) << tcset << " on " << picked_->toString();
+    auto ret = utils::SshHelper::run(
+                tcset,
+                picked_->getHost(),
+                [this] (const std::string& outMsg) {
+                    VLOG(1) << "The output is " << outMsg;
+                },
+                [] (const std::string& errMsg) {
+                    LOG(ERROR) << "The error is " << errMsg;
+                },
+                picked_->owner());
+    CHECK_EQ(0, ret.exitStatus());
+    return ResultCode::OK;
+}
+
+ResultCode RandomTrafficControlAction::recover() {
+    std::string tcdel;
+    for (const auto& para : paras_) {
+        tcdel.append(folly::stringPrintf("tcdel %s %s; ", device_.c_str(), para.c_str()));
+    }
+    LOG(INFO) << "Recover traffic control of " << picked_->toString();
+    VLOG(1) << tcdel << " on " << picked_->toString();
+    auto ret = utils::SshHelper::run(
+                tcdel,
+                picked_->getHost(),
+                [this] (const std::string& outMsg) {
+                    VLOG(1) << "The output is " << outMsg;
+                },
+                [] (const std::string& errMsg) {
+                    LOG(ERROR) << "The error is " << errMsg;
+                },
+                picked_->owner());
+    CHECK_EQ(0, ret.exitStatus());
+    return ResultCode::OK;
+}
+
 }   // namespace nebula
 }   // namespace nebula_chaos

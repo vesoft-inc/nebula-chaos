@@ -446,6 +446,51 @@ private:
     std::vector<std::string> paras_;
 };
 
+/**
+ * Random traffic control one storagge instance from the other storage instances using tcconfig.
+ * tcconfig is a wrapper of linux tc.
+ * */
+class RandomTrafficControlAction : public core::DisturbAction {
+public:
+    RandomTrafficControlAction(const std::vector<NebulaInstance*>& storages,
+                               int32_t loopTimes,
+                               int32_t timeToDisurb,
+                               int32_t timeToRecover,
+                               const std::string& device,
+                               const std::string& delay,
+                               const std::string& dist,
+                               int32_t loss,
+                               int32_t duplicate)
+        : DisturbAction(loopTimes, timeToDisurb, timeToRecover)
+        , storages_(storages)
+        , device_(device)
+        , delay_(delay)
+        , dist_(dist)
+        , loss_(loss)
+        , duplicate_(duplicate) {}
+
+    ~RandomTrafficControlAction() = default;
+
+    std::string toString() const override {
+        return folly::stringPrintf("Random traffic control: loop %d delay %s +/- %s",
+                                   loopTimes_, delay_.c_str(), dist_.c_str());
+    }
+
+private:
+    ResultCode disturb() override;
+    ResultCode recover() override;
+
+private:
+    std::vector<NebulaInstance*> storages_;
+    std::string device_;
+    std::string delay_;
+    std::string dist_;
+    int32_t loss_;
+    int32_t duplicate_;
+    NebulaInstance* picked_;
+    std::vector<std::string> paras_;
+};
+
 }   // namespace nebula
 }   // namespace nebula_chaos
 
