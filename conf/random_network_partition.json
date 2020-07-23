@@ -1,43 +1,42 @@
 {
     "name": "Nebula random-network-partition plan",
     "concurrency": 10,
-    "email": "doodle.wang@vesoft.com",
     "rolling_table": true,
     "instances": [
         {
-            "host":"192.168.8.210",
-            "install_dir":"/home/doodle.wang/nebula",
-            "conf_dir":"/home/doodle.wang/nebula/etc/nebula-graphd.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "graphd",
-            "user": "doodle.wang"
+            "user": ""
         },
         {
-            "host":"192.168.8.210",
-            "install_dir":"/home/doodle.wang/nebula",
-            "conf_dir":"/home/doodle.wang/nebula/etc/nebula-metad.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "metad",
-            "user": "doodle.wang"
+            "user": ""
         },
         {
-            "host":"192.168.8.210",
-            "install_dir":"/home/doodle.wang/nebula",
-            "conf_dir":"/home/doodle.wang/nebula/etc/nebula-storaged-1.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "storaged",
-            "user": "doodle.wang"
+            "user": ""
         },
         {
-            "host":"192.168.8.211",
-            "install_dir":"/home/doodle.wang/nebula",
-            "conf_dir":"/home/doodle.wang/nebula/etc/nebula-storaged-1.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "storaged",
-            "user": "doodle.wang"
+            "user": ""
         },
         {
-            "host":"192.168.8.212",
-            "install_dir":"/home/doodle.wang/nebula",
-            "conf_dir":"/home/doodle.wang/nebula/etc/nebula-storaged-1.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "storaged",
-            "user": "doodle.wang"
+            "user": ""
         }
     ],
     "actions": [
