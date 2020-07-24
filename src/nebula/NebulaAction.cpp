@@ -324,43 +324,40 @@ ResultCode RandomRestartAction::start(NebulaInstance* inst) {
     return ResultCode::ERR_FAILED;
 }
 
-ResultCode RandomRestartAction::doRun() {
-    int32_t i = 0;
-    while (i++ < loopTimes_) {
-        sleep(nextLoopInterval_);
-        auto* inst = Utils::randomInstance(instances_, NebulaInstance::State::RUNNING);
-        CHECK_NOTNULL(inst);
-        {
-            LOG(INFO) << "Begin to kill " << inst->toString() << ", graceful " << graceful_;
-            auto rc = stop(inst);
-            if (rc != ResultCode::OK) {
-                LOG(ERROR) << "Stop instance " << inst->toString() << " failed!";
-                return rc;
-            }
-            LOG(INFO) << "Finish to kill " << inst->toString();
+ResultCode RandomRestartAction::disturb() {
+    picked_ = Utils::randomInstance(instances_, NebulaInstance::State::RUNNING);
+    CHECK_NOTNULL(picked_);
+    {
+        LOG(INFO) << "Begin to kill " << picked_->toString() << ", graceful " << graceful_;
+        auto rc = stop(picked_);
+        if (rc != ResultCode::OK) {
+            LOG(ERROR) << "Stop instance " << picked_->toString() << " failed!";
+            return rc;
         }
+        LOG(INFO) << "Finish to kill " << picked_->toString();
+    }
 
-        if (cleanData_) {
-            // plan must make sure that snapshot would be sent within nextLoopInterval_
-            CleanDataAction cleanData(inst);
-            auto rc = cleanData.doRun();
-            if (rc != ResultCode::OK) {
-                LOG(ERROR) << "Clean instance data " << inst->toString() << " failed!";
-                return rc;
-            }
-        }
-
-        sleep(restartInterval_);
-        {
-            LOG(INFO) << "Begin to start " << inst->toString();
-            auto rc = start(inst);
-            if (rc != ResultCode::OK) {
-                LOG(ERROR) << "Start instance " << inst->toString() << " failed!";
-                return rc;
-            }
-            LOG(INFO) << "Finish to start " << inst->toString();
+    if (cleanData_) {
+        // plan must make sure that snapshot would be sent within nextLoopInterval_
+        CleanDataAction cleanData(picked_);
+        auto rc = cleanData.doRun();
+        if (rc != ResultCode::OK) {
+            LOG(ERROR) << "Clean instance data " << picked_->toString() << " failed!";
+            return rc;
         }
     }
+    return ResultCode::OK;
+}
+
+ResultCode RandomRestartAction::recover() {
+    CHECK_NOTNULL(picked_);
+    LOG(INFO) << "Begin to start " << picked_->toString();
+    auto rc = start(picked_);
+    if (rc != ResultCode::OK) {
+        LOG(ERROR) << "Start instance " << picked_->toString() << " failed!";
+        return rc;
+    }
+    LOG(INFO) << "Finish to start " << picked_->toString();
     return ResultCode::OK;
 }
 
@@ -386,6 +383,141 @@ ResultCode CleanWalAction::doRun() {
                     inst_->owner());
         CHECK_EQ(0, ret.exitStatus());
     }
+    return ResultCode::OK;
+}
+
+ResultCode RandomPartitionAction::disturb() {
+    picked_ = Utils::randomInstance(storages_, NebulaInstance::State::RUNNING);
+    CHECK_NOTNULL(picked_);
+    auto pickedHost = picked_->getHost();
+    auto pickedPort = picked_->getPort().value();
+    paras_.clear();
+    for (auto* storage : storages_) {
+        auto host = storage->getHost();
+        auto port = storage->getPort().value();
+        if (host == pickedHost && port == pickedPort) {
+            continue;
+        }
+        // forbid input packets from other storage hosts, both data port and raft port
+        paras_.emplace_back(folly::stringPrintf("INPUT -p tcp -m tcp -s %s --dport %d:%d -j DROP",
+                            host.c_str(), pickedPort, pickedPort + 1));
+        // forbid output packets to other storage hosts, both data port and raft port
+        paras_.emplace_back(folly::stringPrintf("OUTPUT -p tcp -m tcp -d %s --dport %d:%d -j DROP",
+                            host.c_str(), port, port + 1));
+    }
+    for (auto* meta : metas_) {
+        auto host = meta->getHost();
+        auto port = meta->getPort().value();
+        // forbid input packets from meta hosts
+        paras_.emplace_back(folly::stringPrintf("INPUT -p tcp -m tcp -s %s --dport %d -j DROP",
+                            host.c_str(), pickedPort));
+        // forbid output packets to meta hosts
+        paras_.emplace_back(folly::stringPrintf("OUTPUT -p tcp -m tcp -d %s --dport %d -j DROP",
+                            host.c_str(), port));
+    }
+    std::string iptable;
+    for (const auto& para : paras_) {
+        iptable.append(folly::stringPrintf("sudo iptables -I %s; ", para.c_str()));
+    }
+    LOG(INFO) << "Begin network partition of " << picked_->toString();
+    VLOG(1) << iptable << " on " << picked_->toString();
+    auto ret = utils::SshHelper::run(
+                iptable,
+                picked_->getHost(),
+                [this] (const std::string& outMsg) {
+                    VLOG(1) << "The output is " << outMsg;
+                },
+                [] (const std::string& errMsg) {
+                    LOG(ERROR) << "The error is " << errMsg;
+                },
+                picked_->owner());
+    CHECK_EQ(0, ret.exitStatus());
+    return ResultCode::OK;
+}
+
+ResultCode RandomPartitionAction::recover() {
+    std::string iptable;
+    for (const auto& para : paras_) {
+        iptable.append(folly::stringPrintf("sudo iptables -D %s;", para.c_str()));
+    }
+    LOG(INFO) << "Recover network partition of " << picked_->toString();
+    VLOG(1) << iptable << " on " << picked_->toString();
+    auto ret = utils::SshHelper::run(
+                iptable,
+                picked_->getHost(),
+                [this] (const std::string& outMsg) {
+                    VLOG(1) << "The output is " << outMsg;
+                },
+                [] (const std::string& errMsg) {
+                    LOG(ERROR) << "The error is " << errMsg;
+                },
+                picked_->owner());
+    CHECK_EQ(0, ret.exitStatus());
+    return ResultCode::OK;
+}
+
+ResultCode RandomTrafficControlAction::disturb() {
+    picked_ = Utils::randomInstance(storages_, NebulaInstance::State::RUNNING);
+    CHECK_NOTNULL(picked_);
+    auto pickedHost = picked_->getHost();
+    auto pickedPort = picked_->getPort().value();
+    paras_.clear();
+    for (auto* storage : storages_) {
+        auto host = storage->getHost();
+        auto port = storage->getPort().value();
+        if (host == pickedHost && port == pickedPort) {
+            continue;
+        }
+        // traffic control packets from other storage hosts, both data port and raft port
+        paras_.emplace_back(folly::stringPrintf(
+            "--direction incoming --src-network %s --dst-port %d", host.c_str(), pickedPort));
+        paras_.emplace_back(folly::stringPrintf(
+            "--direction incoming --src-network %s --dst-port %d", host.c_str(), pickedPort + 1));
+        // traffic contrl packets to other storage hosts, both data port and raft port
+        paras_.emplace_back(folly::stringPrintf(
+            "--direction outgoing --dst-network %s --dst-port %d", host.c_str(), port));
+        paras_.emplace_back(folly::stringPrintf(
+            "--direction outgoing --dst-network %s --dst-port %d", host.c_str(), port + 1));
+    }
+    std::string tcset;
+    for (const auto& para : paras_) {
+        tcset.append(folly::stringPrintf("tcset %s %s --delay %s --delay-distro %s --loss %d --duplicate %d --add; ",
+                     device_.c_str(), para.c_str(),  delay_.c_str(), dist_.c_str(), loss_, duplicate_));
+    }
+    LOG(INFO) << "Begin traffic control of " << picked_->toString();
+    VLOG(1) << tcset << " on " << picked_->toString();
+    auto ret = utils::SshHelper::run(
+                tcset,
+                picked_->getHost(),
+                [this] (const std::string& outMsg) {
+                    VLOG(1) << "The output is " << outMsg;
+                },
+                [] (const std::string& errMsg) {
+                    LOG(ERROR) << "The error is " << errMsg;
+                },
+                picked_->owner());
+    CHECK_EQ(0, ret.exitStatus());
+    return ResultCode::OK;
+}
+
+ResultCode RandomTrafficControlAction::recover() {
+    std::string tcdel;
+    for (const auto& para : paras_) {
+        tcdel.append(folly::stringPrintf("tcdel %s %s; ", device_.c_str(), para.c_str()));
+    }
+    LOG(INFO) << "Recover traffic control of " << picked_->toString();
+    VLOG(1) << tcdel << " on " << picked_->toString();
+    auto ret = utils::SshHelper::run(
+                tcdel,
+                picked_->getHost(),
+                [this] (const std::string& outMsg) {
+                    VLOG(1) << "The output is " << outMsg;
+                },
+                [] (const std::string& errMsg) {
+                    LOG(ERROR) << "The error is " << errMsg;
+                },
+                picked_->owner());
+    CHECK_EQ(0, ret.exitStatus());
     return ResultCode::OK;
 }
 

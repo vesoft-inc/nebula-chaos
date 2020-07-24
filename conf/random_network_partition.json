@@ -1,5 +1,5 @@
 {
-    "name": "Nebula random-kill plan",
+    "name": "Nebula random-network-partition plan",
     "concurrency": 10,
     "rolling_table": true,
     "instances": [
@@ -39,7 +39,7 @@
             "user": ""
         }
     ],
-    "actions" : [
+    "actions": [
         {
             "type": "StartAction",
             "inst_index": 0,
@@ -76,14 +76,14 @@
         },
         {
             "type": "CreateSpaceAction",
-            "space_name": "random_kill",
+            "space_name": "random_network_partition",
             "replica": 3,
-            "parts": 100,
+            "parts": 10,
             "depends": [6]
         },
         {
             "type": "UseSpaceAction",
-            "space_name": "random_kill",
+            "space_name": "random_network_partition",
             "depends": [7]
         },
         {
@@ -106,72 +106,75 @@
         },
         {
             "type": "CheckLeadersAction",
-            "expected_num": 100,
-            "space": "random_kill",
+            "expected_num": 10,
             "depends": [11]
         },
         {
-            "type": "RandomRestartAction",
-            "insts": [2,3,4],
-            "loop_times": 20,
+            "type": "RandomPartitionAction",
+            "metas": [1],
+            "storages": [2,3,4],
+            "loop_times": 10,
             "restart_interval": 30,
             "next_loop_interval": 30,
-            "graceful": false,
             "depends": [12]
-        },
-        {
-            "type": "BalanceLeaderAction",
-            "depends": [13]
-        },
-        {
-            "type": "CheckLeadersAction",
-            "expected_num": 100,
-            "space": "random_kill",
-            "depends": [14]
         },
         {
             "type": "WriteCircleAction",
             "tag": "circle",
             "col": "nextId",
-            "total_rows": 100000,
+            "total_rows": 400000,
             "depends": [12]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 10000,
+            "depends": [13, 14]
+        },
+        {
+            "type": "BalanceLeaderAction",
+            "depends": [15]
+        },
+        {
+            "type": "CheckLeadersAction",
+            "expected_num": 10,
+            "depends": [16]
         },
         {
             "type": "WalkThroughAction",
             "tag": "circle",
             "col": "nextId",
-            "total_rows": 100000,
-            "depends": [16]
+            "total_rows": 400000,
+            "depends": [17]
         },
         {
             "type": "EmptyAction",
             "name": "JoinNode",
-            "depends": [17, 15]
+            "depends": [18]
         },
         {
             "type": "StopAction",
             "inst_index": 0,
-            "depends": [18]
+            "depends": [19]
         },
         {
             "type": "StopAction",
             "inst_index": 1,
-            "depends": [18]
+            "depends": [19]
         },
         {
             "type": "StopAction",
             "inst_index": 2,
-            "depends": [18]
+            "depends": [19]
         },
         {
             "type": "StopAction",
             "inst_index": 3,
-            "depends": [18]
+            "depends": [19]
         },
         {
             "type": "StopAction",
             "inst_index": 4,
-            "depends": [18]
+            "depends": [19]
         }
     ]
 }
