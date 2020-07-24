@@ -107,6 +107,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
+            "space": "random_traffic_control",
             "depends": [11]
         },
         {
@@ -138,6 +139,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
+            "space": "random_traffic_control",
             "depends": [16]
         },
         {
