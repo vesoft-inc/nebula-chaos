@@ -225,31 +225,51 @@
                 {
                     "type": "StopAction",
                     "inst_index": 2,
-                    "clean_data" : true,
                     "depends": [26]
+                },
+                {
+                    "type": "CleanDataAction",
+                    "inst_index": 2,
+                    "space_name": "loop_scale",
+                    "depends": [27]
                 },
                 {
                     "type": "StopAction",
                     "inst_index": 3,
-                    "clean_data" : true,
                     "depends": [26]
+                },
+                {
+                    "type": "CleanDataAction",
+                    "inst_index": 3,
+                    "space_name": "loop_scale",
+                    "depends": [29]
                 },
                 {
                     "type": "StopAction",
                     "inst_index": 4,
-                    "clean_data" : true,
                     "depends": [26]
+                },
+                {
+                    "type": "CleanDataAction",
+                    "inst_index": 4,
+                    "space_name": "loop_scale",
+                    "depends": [31]
                 },
                 {
                     "type": "StopAction",
                     "inst_index": 5,
-                    "clean_data" : true,
                     "depends": [26]
                 },
                 {
+                    "type": "CleanDataAction",
+                    "inst_index": 5,
+                    "space_name": "loop_scale",
+                    "depends": [33]
+                },
+                {
                     "type": "WaitAction",
-                    "wait_time_ms": 15000,
-                    "depends": [27, 28, 29, 30]
+                    "wait_time_ms": 5000,
+                    "depends": [28, 30, 32, 34]
                 }
             ],
             "depends": [3]

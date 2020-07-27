@@ -51,10 +51,9 @@ public:
             return std::make_unique<StartAction>(ctx.insts[instIndex]);
         } else if (type == "StopAction") {
             auto instIndex = obj.at("inst_index").asInt();
-            auto cleanData = obj.getDefault("clean_data", false).asBool();
             CHECK_GE(instIndex, 0);
             CHECK_LT(instIndex, ctx.insts.size());
-            return std::make_unique<StopAction>(ctx.insts[instIndex], cleanData);
+            return std::make_unique<StopAction>(ctx.insts[instIndex]);
         } else if (type == "WaitAction") {
            auto waitTimeMs = obj.at("wait_time_ms").asInt();
            CHECK_GT(waitTimeMs, 0);
@@ -165,8 +164,16 @@ public:
             auto instIndex = obj.at("inst_index").asInt();
             CHECK_GE(instIndex, 0);
             CHECK_LT(instIndex, ctx.insts.size());
-            auto spaceId = obj.at("space_id").asInt();
-            return std::make_unique<CleanWalAction>(ctx.insts[instIndex], spaceId);
+            auto spaceName = obj.at("space_name").asString();
+            return std::make_unique<CleanWalAction>(ctx.insts[instIndex], ctx.gClient, spaceName);
+        } else if (type == "CleanDataAction") {
+            auto instIndex = obj.at("inst_index").asInt();
+            CHECK_GE(instIndex, 0);
+            CHECK_LT(instIndex, ctx.insts.size());
+            // If space_name is specified, only data of specified space is deleted,
+            // otherwise, the whole data path is deleted.
+            auto spaceName = obj.getDefault("space_name", "").asString();
+            return std::make_unique<CleanDataAction>(ctx.insts[instIndex], ctx.gClient, spaceName);
         } else if (type == "LoopAction") {
             auto loopTimes = obj.at("loop_times").asInt();
             auto concurrency = obj.at("concurrency").asInt();
