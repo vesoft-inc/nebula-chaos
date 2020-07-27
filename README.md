@@ -15,9 +15,15 @@ Start all services, disturb (random kill a storage service, clean the data path,
 #### [random_kill](conf/random_kill_plan.json)
 Start all services, disturb (random kill and restart a storage service) while write and read.
 
+#### [kill_all](conf/kill_all_plan.json)
+Start all services, kill all storage services and restart while writing.
+
 #### [scale_up_and_down](conf/scale_up_and_down.json)
 Start 3 storage servies, add 4th storage service using `balance data` while write a circle, then check data integrity. Then stop 1st storage service, remove it using `balance data` while write a circle then check data integrity. Likewise,
 add 1st storage service back and remove the 4th storage service.
+
+#### [loop_scale_up_and_down](conf/loop_scale_up_and_down.json)
+Similar to `scale_up_and_down`, but loop for serveral times. Loop once takes about 15 mins which may vary according to the environment, you can adjust the loop times by yourself.
 
 #### [random_network_partition](conf/random_network_partition.json)
 Start all services, disturb (random drop all packets of a storage service, recover later) while write a circle, then check data integrity. The network partition is based on iptables. **Make sure the user has sudo authority and can execute iptables without password.**

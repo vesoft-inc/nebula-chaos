@@ -58,8 +58,9 @@ private:
 
 class StopAction : public core::Action {
 public:
-    StopAction(NebulaInstance* inst)
-        : inst_(inst) {}
+    StopAction(NebulaInstance* inst, bool cleanData = false)
+        : inst_(inst)
+        , cleanData_(cleanData) {}
 
     ~StopAction() = default;
 
@@ -73,6 +74,7 @@ public:
 
 private:
     NebulaInstance* inst_ = nullptr;
+    bool cleanData_;
 };
 
 class ClientConnectAction : public core::Action {

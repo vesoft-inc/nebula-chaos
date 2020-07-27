@@ -51,9 +51,10 @@ public:
             return std::make_unique<StartAction>(ctx.insts[instIndex]);
         } else if (type == "StopAction") {
             auto instIndex = obj.at("inst_index").asInt();
+            auto cleanData = obj.getDefault("clean_data", false).asBool();
             CHECK_GE(instIndex, 0);
             CHECK_LT(instIndex, ctx.insts.size());
-            return std::make_unique<StopAction>(ctx.insts[instIndex]);
+            return std::make_unique<StopAction>(ctx.insts[instIndex], cleanData);
         } else if (type == "WaitAction") {
            auto waitTimeMs = obj.at("wait_time_ms").asInt();
            CHECK_GT(waitTimeMs, 0);
@@ -74,7 +75,7 @@ public:
             auto totalRows = obj.getDefault("total_rows", 100000).asInt();
             auto batchNum = obj.getDefault("batch_num", 1).asInt();
             auto tryNum = obj.getDefault("try_num", 32).asInt();
-            auto retryInterval = obj.getDefault("retry_interval_ms", 1).asInt();
+            auto retryInterval = obj.getDefault("retry_interval_ms", 100).asInt();
             return std::make_unique<WriteCircleAction>(ctx.gClient,
                                                        tag,
                                                        col,
@@ -90,7 +91,7 @@ public:
             auto col = obj.at("col").asString();
             auto totalRows = obj.getDefault("total_rows", 100000).asInt();
             auto tryNum = obj.getDefault("try_num", 32).asInt();
-            auto retryInterval = obj.getDefault("retry_interval_ms", 1).asInt();
+            auto retryInterval = obj.getDefault("retry_interval_ms", 100).asInt();
             return std::make_unique<WalkThroughAction>(ctx.gClient,
                                                        tag,
                                                        col,

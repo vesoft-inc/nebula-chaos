@@ -101,6 +101,14 @@ ResultCode StopAction::doRun() {
             LOG(INFO) << "Wait some time, and try again, try times " << tryTimes;
         } else if (res == ResultCode::ERR_NOT_FOUND) {
             inst_->setState(NebulaInstance::State::STOPPED);
+            if (cleanData_) {
+                CleanDataAction cleanData(inst_);
+                auto rc = cleanData.doRun();
+                if (rc != ResultCode::OK) {
+                    LOG(ERROR) << "Clean instance data " << inst_->toString() << " failed!";
+                    return rc;
+                }
+            }
             return ResultCode::OK;
         }
     }
