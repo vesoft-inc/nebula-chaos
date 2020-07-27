@@ -131,7 +131,8 @@ public:
         } else if (type == "BalanceLeaderAction") {
             return std::make_unique<BalanceLeaderAction>(ctx.gClient);
         } else if (type == "BalanceDataAction") {
-            return std::make_unique<BalanceDataAction>(ctx.gClient);
+            auto retry = obj.getDefault("retry", 64).asInt();
+            return std::make_unique<BalanceDataAction>(ctx.gClient, retry);
         } else if (type == "CheckLeadersAction") {
             auto expectedNum = obj.at("expected_num").asInt();
             auto spaceName = obj.at("space").asString();
