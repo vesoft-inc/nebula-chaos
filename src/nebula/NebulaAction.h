@@ -528,6 +528,34 @@ private:
     std::vector<std::string> paras_;
 };
 
+class FillDiskAction : public core::DisturbAction {
+public:
+    FillDiskAction(const std::vector<NebulaInstance*>& storages,
+                   int32_t loopTimes,
+                   int32_t timeToDisurb,
+                   int32_t timeToRecover,
+                   int32_t count)
+        : DisturbAction(loopTimes, timeToDisurb, timeToRecover)
+        , storages_(storages)
+        , count_(count) {}
+
+    ~FillDiskAction() = default;
+
+    std::string toString() const override {
+        return folly::stringPrintf("Fill disk: loop %d", loopTimes_);
+    }
+
+private:
+    ResultCode disturb() override;
+    ResultCode recover() override;
+
+    ResultCode reboot(NebulaInstance* inst);
+
+private:
+    std::vector<NebulaInstance*> storages_;
+    int32_t count_;
+};
+
 }   // namespace nebula
 }   // namespace nebula_chaos
 

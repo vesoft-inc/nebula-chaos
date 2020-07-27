@@ -568,5 +568,86 @@ ResultCode RandomTrafficControlAction::recover() {
     return ResultCode::OK;
 }
 
+ResultCode FillDiskAction::disturb() {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::shuffle(storages_.begin(), storages_.end(), gen);
+
+    for (int32_t i = 0; i < count_; i++) {
+        auto* picked = storages_[i];
+        auto dirs = picked->dataDirs();
+        if (!dirs.hasValue()) {
+            LOG(ERROR) << "Failed to get data_path of " << picked->toString();
+            return ResultCode::ERR_FAILED;
+        }
+        LOG(INFO) << "Begin to fill disk of " << picked->toString();
+        // just use the first data path
+        auto fill = folly::stringPrintf("cat /dev/zero > %s/full", dirs.value().front().c_str());
+        auto ret = utils::SshHelper::run(
+                    fill,
+                    picked->getHost(),
+                    [this] (const std::string& outMsg) {
+                        VLOG(1) << "The output is " << outMsg;
+                    },
+                    [] (const std::string& errMsg) {
+                        LOG(ERROR) << "The error is " << errMsg;
+                    },
+                    picked->owner());
+        CHECK_EQ(1, ret.exitStatus());
+    }
+    return ResultCode::OK;
+}
+
+ResultCode FillDiskAction::recover() {
+    /*
+    1. remove the mock file
+    2. all storage may crashed because of disk is full when data path is under same directory,
+       so try to reboot all of them
+    */
+    for (int32_t i = 0; i < count_; i++) {
+        auto* storage = storages_[i];
+        auto dirs = storage->dataDirs();
+        if (!dirs.hasValue()) {
+            LOG(ERROR) << "Failed to get data_path of " << storage->toString();
+            return ResultCode::ERR_FAILED;
+        }
+        LOG(INFO) << "Clean disk on " << storage->toString();
+        auto clean = folly::stringPrintf("rm -f %s/full", dirs.value().front().c_str());
+        auto rc = utils::SshHelper::run(
+                    clean,
+                    storage->getHost(),
+                    [this] (const std::string& outMsg) {
+                        VLOG(1) << "The output is " << outMsg;
+                    },
+                    [] (const std::string& errMsg) {
+                        LOG(ERROR) << "The error is " << errMsg;
+                    },
+                    storage->owner());
+        CHECK_EQ(0, rc.exitStatus());
+    }
+
+    for (auto* storage : storages_) {
+        LOG(INFO) << "Begin to reboot " << storage->toString();
+        auto rc = reboot(storage);
+        if (rc != ResultCode::OK) {
+            return rc;
+        }
+    }
+    return ResultCode::OK;
+}
+
+ResultCode FillDiskAction::reboot(NebulaInstance* inst) {
+    StartAction start(inst);
+    for (int32_t retry = 0; retry != 32; retry++) {
+        auto ret = start.doRun();
+        if (ret == ResultCode::OK) {
+            return ret;
+        }
+        LOG(ERROR) << "Reboot failed, retry " << retry;
+        sleep(retry);
+    }
+    return ResultCode::ERR_FAILED;
+}
+
 }   // namespace nebula
 }   // namespace nebula_chaos

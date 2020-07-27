@@ -1,0 +1,182 @@
+{
+    "name": "Nebula random-disk-full plan",
+    "concurrency": 10,
+    "rolling_table": true,
+    "instances": [
+        {
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
+            "type": "graphd",
+            "user": ""
+        },
+        {
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
+            "type": "metad",
+            "user": ""
+        },
+        {
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
+            "type": "storaged",
+            "user": ""
+        },
+        {
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
+            "type": "storaged",
+            "user": ""
+        },
+        {
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
+            "type": "storaged",
+            "user": ""
+        }
+    ],
+    "actions": [
+        {
+            "type": "StartAction",
+            "inst_index": 0,
+            "depends": [2, 3, 4]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 1,
+            "depends": []
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 2,
+            "depends": [1]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 3,
+            "depends": [1]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 4,
+            "depends": [1]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 15000,
+            "depends": [0]
+        },
+        {
+            "type": "ClientConnectAction",
+            "depends": [5]
+        },
+        {
+            "type": "CreateSpaceAction",
+            "space_name": "full_disk",
+            "replica": 3,
+            "parts": 10,
+            "depends": [6]
+        },
+        {
+            "type": "UseSpaceAction",
+            "space_name": "full_disk",
+            "depends": [7]
+        },
+        {
+            "type": "CreateSchemaAction",
+            "name": "circle",
+            "props": [
+                {"name": "nextId", "type": "int"}
+            ],
+            "edge_or_tag": false,
+            "depends": [8]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 10000,
+            "depends": [9]
+        },
+        {
+            "type": "BalanceLeaderAction",
+            "depends": [10]
+        },
+        {
+            "type": "CheckLeadersAction",
+            "expected_num": 10,
+            "space": "full_disk",
+            "depends": [11]
+        },
+        {
+            "type": "FillDiskAction",
+            "storages": [2,3,4],
+            "loop_times": 3,
+            "restart_interval": 60,
+            "next_loop_interval": 60,
+            "count": 1,
+            "depends": [12]
+        },
+        {
+            "type": "WriteCircleAction",
+            "tag": "circle",
+            "col": "nextId",
+            "total_rows": 200000,
+            "depends": [12]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 10000,
+            "depends": [13, 14]
+        },
+        {
+            "type": "BalanceLeaderAction",
+            "depends": [15]
+        },
+        {
+            "type": "CheckLeadersAction",
+            "expected_num": 10,
+            "space": "full_disk",
+            "depends": [16]
+        },
+        {
+            "type": "WalkThroughAction",
+            "tag": "circle",
+            "col": "nextId",
+            "total_rows": 200000,
+            "depends": [17]
+        },
+        {
+            "type": "EmptyAction",
+            "name": "JoinNode",
+            "depends": [18]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 0,
+            "depends": [19]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 1,
+            "depends": [19]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 2,
+            "depends": [19]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 3,
+            "depends": [19]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 4,
+            "depends": [19]
+        }
+    ]
+}

@@ -251,6 +251,22 @@ public:
                                                                 dist,
                                                                 loss,
                                                                 duplicate);
+        } else if (type == "FillDiskAction") {
+            auto storageIdxs = obj.at("storages");
+            std::vector<NebulaInstance*> storages;
+            for (auto iter = storageIdxs.begin(); iter != storageIdxs.end(); iter++) {
+                auto index = iter->asInt();
+                storages.emplace_back(ctx.insts[index]);
+            }
+            auto loopTimes = obj.getDefault("loop_times", 1).asInt();
+            auto nextDistubInterval = obj.getDefault("next_loop_interval", 30).asInt();
+            auto recoverInterval = obj.getDefault("restart_interval", 30).asInt();
+            auto count = obj.getDefault("count", 1).asInt();
+            return std::make_unique<FillDiskAction>(storages,
+                                                    loopTimes,
+                                                    nextDistubInterval,
+                                                    recoverInterval,
+                                                    count);
         }
         LOG(FATAL) << "Unknown type " << type;
         return nullptr;
