@@ -43,19 +43,19 @@
         {
             "type": "CleanWalAction",
             "inst_index": 2,
-            "space_id": 1,
+            "space_name": "random_kill",
             "depends": []
         },
         {
             "type": "CleanWalAction",
             "inst_index": 3,
-            "space_id": 1,
+            "space_name": "random_kill",
             "depends": []
         },
         {
             "type": "CleanWalAction",
             "inst_index": 4,
-            "space_id": 1,
+            "space_name": "random_kill",
             "depends": []
         },
         {

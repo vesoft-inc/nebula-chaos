@@ -119,21 +119,34 @@ ResultCode CleanDataAction::doRun() {
         LOG(ERROR) << "Can't find data path on " << inst_->toString();
         return ResultCode::ERR_FAILED;
     }
-    for (const auto& dataPath : dataPaths.value()) {
-        auto cleanCommand = folly::stringPrintf("rm -rf %s", dataPath.c_str());
-        LOG(INFO) << cleanCommand << " on " << inst_->toString() << " as " << inst_->owner();
-        auto ret = utils::SshHelper::run(
-                    cleanCommand,
-                    inst_->getHost(),
-                    [this] (const std::string& outMsg) {
-                        VLOG(1) << "The output is " << outMsg;
-                    },
-                    [] (const std::string& errMsg) {
-                        LOG(ERROR) << "The error is " << errMsg;
-                    },
-                    inst_->owner());
-        CHECK_EQ(0, ret.exitStatus());
+    std::string cleanCommand = "rm -rf ";
+    if (!spaceName_.empty()) {
+        DescSpaceAction desc(client_, spaceName_);
+        auto rc = desc.doRun();
+        if (rc != ResultCode::OK) {
+            LOG(ERROR) << "Failed to desc space " << spaceName_;
+        }
+        auto spaceId = desc.spaceId();
+        for (const auto& dataPath : dataPaths.value()) {
+            cleanCommand.append(folly::stringPrintf("%s/nebula/%ld ", dataPath.c_str(), spaceId));
+        }
+    } else {
+        for (const auto& dataPath : dataPaths.value()) {
+            cleanCommand.append(folly::stringPrintf("%s ", dataPath.c_str()));
+        }
     }
+    LOG(INFO) << cleanCommand << " on " << inst_->toString() << " as " << inst_->owner();
+    auto ret = utils::SshHelper::run(
+                cleanCommand,
+                inst_->getHost(),
+                [this] (const std::string& outMsg) {
+                    VLOG(1) << "The output is " << outMsg;
+                },
+                [] (const std::string& errMsg) {
+                    LOG(ERROR) << "The error is " << errMsg;
+                },
+                inst_->owner());
+    CHECK_EQ(0, ret.exitStatus());
     return ResultCode::OK;
 }
 
@@ -272,6 +285,28 @@ ResultCode BalanceDataAction::checkResp(const ExecutionResponse& resp) const {
     return ResultCode::ERR_NOT_FINISHED;
 }
 
+ResultCode DescSpaceAction::checkResp(const ExecutionResponse& resp) const {
+    if (resp.rows.empty()) {
+        LOG(ERROR) << "Result should not be empty!";
+        return ResultCode::ERR_FAILED;
+    }
+    if (resp.rows.size() != 1) {
+        LOG(ERROR) << "Row number is wrong!";
+        return ResultCode::ERR_FAILED;
+    }
+    auto& row = resp.rows[0];
+    if (row.columns.size() != 6) {
+        LOG(ERROR) << "Column number is wrong!";
+        return ResultCode::ERR_FAILED;
+    }
+    if (row.columns[1].get_str() != spaceName_) {
+        LOG(ERROR) << "Desc a wrong space! Should be " << spaceName_;
+        return ResultCode::ERR_FAILED;
+    }
+    spaceId_ = row.columns[0].get_integer();
+    return ResultCode::OK;
+}
+
 ResultCode CheckLeadersAction::checkResp(const ExecutionResponse& resp) const {
     if (resp.rows.empty()) {
         LOG(ERROR) << "Result should not be empty!";
@@ -343,7 +378,8 @@ ResultCode RandomRestartAction::disturb() {
     }
 
     if (cleanData_) {
-        // plan must make sure that snapshot would be sent within nextLoopInterval_
+        // plan must make sure that snapshot would be sent within nextLoopInterval_,
+        // clean data of all spaces
         CleanDataAction cleanData(picked_);
         auto rc = cleanData.doRun();
         if (rc != ResultCode::OK) {
@@ -368,9 +404,15 @@ ResultCode RandomRestartAction::recover() {
 
 ResultCode CleanWalAction::doRun() {
     CHECK_NOTNULL(inst_);
-    auto wals = inst_->walDirs(spaceId_);
+    DescSpaceAction desc(client_, spaceName_);
+    auto rc = desc.doRun();
+    if (rc != ResultCode::OK) {
+        LOG(ERROR) << "Failed to desc space " << spaceName_;
+    }
+    auto spaceId = desc.spaceId();
+    auto wals = inst_->walDirs(spaceId);
     if (!wals.hasValue()) {
-        LOG(ERROR) << "Can't find wals for space " << spaceId_ << " on " << inst_->toString();
+        LOG(ERROR) << "Can't find wals for space " << spaceName_ << " on " << inst_->toString();
         return ResultCode::ERR_FAILED;
     }
     for (auto& walDir : wals.value()) {

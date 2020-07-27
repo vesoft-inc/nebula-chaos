@@ -74,7 +74,7 @@ public:
             auto totalRows = obj.getDefault("total_rows", 100000).asInt();
             auto batchNum = obj.getDefault("batch_num", 1).asInt();
             auto tryNum = obj.getDefault("try_num", 32).asInt();
-            auto retryInterval = obj.getDefault("retry_interval_ms", 1).asInt();
+            auto retryInterval = obj.getDefault("retry_interval_ms", 100).asInt();
             return std::make_unique<WriteCircleAction>(ctx.gClient,
                                                        tag,
                                                        col,
@@ -90,7 +90,7 @@ public:
             auto col = obj.at("col").asString();
             auto totalRows = obj.getDefault("total_rows", 100000).asInt();
             auto tryNum = obj.getDefault("try_num", 32).asInt();
-            auto retryInterval = obj.getDefault("retry_interval_ms", 1).asInt();
+            auto retryInterval = obj.getDefault("retry_interval_ms", 100).asInt();
             return std::make_unique<WalkThroughAction>(ctx.gClient,
                                                        tag,
                                                        col,
@@ -164,8 +164,16 @@ public:
             auto instIndex = obj.at("inst_index").asInt();
             CHECK_GE(instIndex, 0);
             CHECK_LT(instIndex, ctx.insts.size());
-            auto spaceId = obj.at("space_id").asInt();
-            return std::make_unique<CleanWalAction>(ctx.insts[instIndex], spaceId);
+            auto spaceName = obj.at("space_name").asString();
+            return std::make_unique<CleanWalAction>(ctx.insts[instIndex], ctx.gClient, spaceName);
+        } else if (type == "CleanDataAction") {
+            auto instIndex = obj.at("inst_index").asInt();
+            CHECK_GE(instIndex, 0);
+            CHECK_LT(instIndex, ctx.insts.size());
+            // If space_name is specified, only data of specified space is deleted,
+            // otherwise, the whole data path is deleted.
+            auto spaceName = obj.getDefault("space_name", "").asString();
+            return std::make_unique<CleanDataAction>(ctx.insts[instIndex], ctx.gClient, spaceName);
         } else if (type == "LoopAction") {
             auto loopTimes = obj.at("loop_times").asInt();
             auto concurrency = obj.at("concurrency").asInt();

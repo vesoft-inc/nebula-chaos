@@ -322,6 +322,30 @@ public:
     }
 };
 
+class DescSpaceAction : public MetaAction {
+public:
+    /**
+     * Get space info
+     */
+    DescSpaceAction(GraphClient* client, const std::string& spaceName)
+        : MetaAction(client)
+        , spaceName_(spaceName) {}
+
+    ResultCode checkResp(const ExecutionResponse& resp) const override;
+
+    std::string command() const override {
+        return folly::stringPrintf("desc space %s", spaceName_.c_str());
+    }
+
+    int64_t spaceId() {
+        return spaceId_;
+    }
+
+private:
+    std::string spaceName_;
+    mutable int64_t spaceId_ = -1;
+};
+
 class CheckLeadersAction : public MetaAction {
 public:
     CheckLeadersAction(GraphClient* client, int32_t expectedNum, const std::string& spaceName)
@@ -379,30 +403,37 @@ private:
 // Clean wal of specified space
 class CleanWalAction : public core::Action {
 public:
-    CleanWalAction(NebulaInstance* inst, int64_t spaceId)
+    CleanWalAction(NebulaInstance* inst, GraphClient* client, const std::string& spaceName)
         : inst_(inst)
-        , spaceId_(spaceId) {}
+        , client_(client)
+        , spaceName_(spaceName) {}
 
     ~CleanWalAction() = default;
 
     ResultCode doRun() override;
 
     std::string toString() const override {
-        return folly::stringPrintf("Clean space %ld wal on instance %s",
-                                   spaceId_,
+        return folly::stringPrintf("Clean space %s wal on instance %s",
+                                   spaceName_.c_str(),
                                    inst_->toString().c_str());
     }
 
 private:
     NebulaInstance* inst_;
-    int64_t spaceId_;
+    GraphClient* client_;
+    std::string spaceName_;
 };
 
-// Clean all data path
+// If space name is not empty, only clean data path of specified space,
+// otherwise clean the whole data path
 class CleanDataAction : public core::Action {
 public:
-    CleanDataAction(NebulaInstance* inst)
-        : inst_(inst) {}
+    CleanDataAction(NebulaInstance* inst,
+                    GraphClient* client = nullptr,
+                    const std::string& spaceName = "")
+        : inst_(inst)
+        , client_(client)
+        , spaceName_(spaceName) {}
 
     ~CleanDataAction() = default;
 
@@ -416,6 +447,8 @@ public:
 
 private:
     NebulaInstance* inst_ = nullptr;
+    GraphClient* client_;
+    std::string spaceName_;
 };
 
 /**

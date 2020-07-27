@@ -1,0 +1,288 @@
+{
+    "name": "Nebula loop-scale-up-and-down plan",
+    "concurrency": 10,
+    "rolling_table": true,
+    "instances": [
+        {
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
+            "type": "graphd",
+            "user": ""
+        },
+        {
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
+            "type": "metad",
+            "user": ""
+        },
+        {
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
+            "type": "storaged",
+            "user": ""
+        },
+        {
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
+            "type": "storaged",
+            "user": ""
+        },
+        {
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
+            "type": "storaged",
+            "user": ""
+        },
+        {
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
+            "type": "storaged",
+            "user": ""
+        }
+    ],
+    "actions" : [
+        {
+            "type": "StartAction",
+            "inst_index": 1,
+            "depends": []
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 0,
+            "depends": [0]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 10000,
+            "depends": [1]
+        },
+        {
+            "type": "ClientConnectAction",
+            "depends": [2]
+        },
+        {
+            "type": "LoopAction",
+            "loop_times": 4,
+            "concurrency": 3,
+            "sub_plan": [
+                {
+                    "type": "StartAction",
+                    "inst_index": 2,
+                    "depends": []
+                },
+                {
+                    "type": "StartAction",
+                    "inst_index": 3,
+                    "depends": []
+                },
+                {
+                    "type": "StartAction",
+                    "inst_index": 4,
+                    "depends": []
+                },
+                {
+                    "type": "WaitAction",
+                    "wait_time_ms": 15000,
+                    "depends": [0, 1, 2]
+                },
+                {
+                    "type": "CreateSpaceAction",
+                    "space_name": "loop_scale",
+                    "replica": 3,
+                    "parts": 10,
+                    "depends": [3]
+                },
+                {
+                    "type": "UseSpaceAction",
+                    "space_name": "loop_scale",
+                    "depends": [4]
+                },
+                {
+                    "type": "CreateSchemaAction",
+                    "name": "circle0",
+                    "props": [
+                        {"name": "nextId", "type": "int"}
+                    ],
+                    "edge_or_tag": false,
+                    "depends": [5]
+                },
+                {
+                    "type": "CreateSchemaAction",
+                    "name": "circle1",
+                    "props": [
+                        {"name": "nextId", "type": "int"}
+                    ],
+                    "edge_or_tag": false,
+                    "depends": [6]
+                },
+                {
+                    "type": "WaitAction",
+                    "wait_time_ms": 15000,
+                    "depends": [7]
+                },
+                {
+                    "type": "BalanceLeaderAction",
+                    "depends": [8]
+                },
+                {
+                    "type": "CheckLeadersAction",
+                    "expected_num": 10,
+                    "space": "loop_scale",
+                    "depends": [9]
+                },
+                {
+                    "type": "WriteCircleAction",
+                    "tag": "circle0",
+                    "col": "nextId",
+                    "total_rows": 200000,
+                    "depends": [10]
+                },
+                {
+                    "type": "StartAction",
+                    "inst_index": 5,
+                    "depends": [10]
+                },
+                {
+                    "type": "WaitAction",
+                    "wait_time_ms": 120000,
+                    "depends": [12]
+                },
+                {
+                    "type": "BalanceDataAction",
+                    "depends": [13]
+                },
+                {
+                    "type": "WaitAction",
+                    "wait_time_ms": 30000,
+                    "depends": [11, 14]
+                },
+                {
+                    "type": "BalanceLeaderAction",
+                    "depends": [15]
+                },
+                {
+                    "type": "CheckLeadersAction",
+                    "expected_num": 10,
+                    "space": "loop_scale",
+                    "depends": [16]
+                },
+                {
+                    "type": "WalkThroughAction",
+                    "tag": "circle0",
+                    "col": "nextId",
+                    "total_rows": 200000,
+                    "depends": [17]
+                },
+                {
+                    "type": "WriteCircleAction",
+                    "tag": "circle1",
+                    "col": "nextId",
+                    "total_rows": 200000,
+                    "depends": [18]
+                },
+                {
+                    "type": "StopAction",
+                    "inst_index": 5,
+                    "depends": [18]
+                },
+                {
+                    "type": "WaitAction",
+                    "wait_time_ms": 120000,
+                    "depends": [20]
+                },
+                {
+                    "type": "BalanceDataAction",
+                    "depends": [21]
+                },
+                {
+                    "type": "WaitAction",
+                    "wait_time_ms": 30000,
+                    "depends": [19, 22]
+                },
+                {
+                    "type": "BalanceLeaderAction",
+                    "depends": [23]
+                },
+                {
+                    "type": "CheckLeadersAction",
+                    "expected_num": 10,
+                    "space": "loop_scale",
+                    "depends": [24]
+                },
+                {
+                    "type": "WalkThroughAction",
+                    "tag": "circle1",
+                    "col": "nextId",
+                    "total_rows": 200000,
+                    "depends": [25]
+                },
+                {
+                    "type": "StopAction",
+                    "inst_index": 2,
+                    "depends": [26]
+                },
+                {
+                    "type": "CleanDataAction",
+                    "inst_index": 2,
+                    "space_name": "loop_scale",
+                    "depends": [27]
+                },
+                {
+                    "type": "StopAction",
+                    "inst_index": 3,
+                    "depends": [26]
+                },
+                {
+                    "type": "CleanDataAction",
+                    "inst_index": 3,
+                    "space_name": "loop_scale",
+                    "depends": [29]
+                },
+                {
+                    "type": "StopAction",
+                    "inst_index": 4,
+                    "depends": [26]
+                },
+                {
+                    "type": "CleanDataAction",
+                    "inst_index": 4,
+                    "space_name": "loop_scale",
+                    "depends": [31]
+                },
+                {
+                    "type": "StopAction",
+                    "inst_index": 5,
+                    "depends": [26]
+                },
+                {
+                    "type": "CleanDataAction",
+                    "inst_index": 5,
+                    "space_name": "loop_scale",
+                    "depends": [33]
+                },
+                {
+                    "type": "WaitAction",
+                    "wait_time_ms": 5000,
+                    "depends": [28, 30, 32, 34]
+                }
+            ],
+            "depends": [3]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 0,
+            "depends": [4]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 1,
+            "depends": [5]
+        }
+    ]
+}

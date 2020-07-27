@@ -3,30 +3,42 @@ import json
 import sys
 import os
 
+def parseActions(graph, instances, actions, prefix):
+    # iterate all actions and draw node
+    for i in range(len(actions)):
+        action = actions[i]
+        actionType = action["type"]
+        label = str(i) + ": " + actionType
+
+        # LoopAction need to draw subgraph
+        if actionType == "LoopAction":
+            # the subgraph name needs to begin with 'cluster' (all lowercase)
+            # so that Graphviz recognizes it as a special cluster subgraph
+            with graph.subgraph(name = "cluster" + str(i)) as sub:
+                sub.attr(style = 'filled', color = 'lightgrey', label = label)
+                parseActions(sub, instances, action["sub_plan"], str(i))
+
+        if "inst_index" in action:
+            instance = instances[action["inst_index"]]
+            label += "(" + instance["type"] + ")"
+
+        graph.node(prefix + str(i), label)
+
+
+    # iterate all actions and draw edges
+    for i in range(len(actions)):
+        depends = actions[i]["depends"]
+        for depend in depends:
+            graph.edge(prefix + str(depend), prefix + str(i))
+
+
 def parseJson(path):
     filename, _ = os.path.splitext(path)
     graph = Digraph(name = filename, format = "png", directory = ".")
     with open(path, 'r', encoding="utf-8") as f:
         data = json.load(f)
-
-        # get all instance
-        instances = data["instances"]
-
-        # iterate all actions and draw node
-        for i in range(len(data["actions"])):
-            action = data["actions"][i]
-            label = str(i) + ": " + action["type"]
-            if "inst_index" in action:
-                instance = instances[action["inst_index"]]
-                label += "(" + instance["type"] + ")"
-            graph.node(str(i), label)
-
-        # iterate all actions and draw edges
-        for i in range(len(data["actions"])):
-            depends = data["actions"][i]["depends"]
-            for depend in depends:
-                graph.edge(str(depend), str(i))
-
+        # parse all actions
+        parseActions(graph, data["instances"], data["actions"], "main")
         print(graph.render())
 
 if __name__ == "__main__":
