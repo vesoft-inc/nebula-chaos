@@ -263,6 +263,13 @@ public:
             CHECK_GE(instIndex, 0);
             CHECK_LT(instIndex, ctx.insts.size());
             return std::make_unique<RestoreFromCheckpointAction>(ctx.insts[instIndex]);
+        } else if (type == "RestoreFromDataDirAction") {
+            auto sourceDataPaths = obj.getDefault("sourceDataPaths", "").asString();
+            auto instIndex = obj.at("inst_index").asInt();
+            CHECK_GE(instIndex, 0);
+            CHECK_LT(instIndex, ctx.insts.size());
+            return std::make_unique<RestoreFromDataDirAction>(ctx.insts[instIndex],
+                                                              sourceDataPaths);
         }
     LOG(FATAL) << "Unknown type " << type;
     return nullptr;

@@ -624,7 +624,6 @@ ResultCode RestoreFromCheckpointAction::doRun() {
                     },
                     inst_->owner());
         CHECK_EQ(0, ret.exitStatus());
-        // TODO : replace nebula data from checkpoint
     }
     LOG(INFO) << "check dirs : " << returnMsg;
     std::vector<std::string> checkpoints;
@@ -661,6 +660,62 @@ ResultCode RestoreFromCheckpointAction::doRun() {
             },
             inst_->owner());
         CHECK_EQ(0, ret.exitStatus());
+    }
+    return ResultCode::OK;
+}
+
+ResultCode RestoreFromDataDirAction::doRun() {
+    CHECK_NOTNULL(inst_);
+    if (inst_->getState() == NebulaInstance::State::RUNNING) {
+        LOG(ERROR) << "Can't clean data while instance " << inst_->toString()
+                   << " is stil running";
+        return ResultCode::OK;
+    }
+    auto dataPaths = inst_->dataDirs();
+    if (!dataPaths.hasValue()) {
+        LOG(ERROR) << "Can't find data path on " << inst_->toString();
+        return ResultCode::ERR_FAILED;
+    }
+    if (srcDataPaths_.empty()) {
+        LOG(ERROR) << "Source data path is empty on " << inst_->toString();
+        return ResultCode::ERR_FAILED;
+    }
+    std::vector<std::string> srcPaths;
+    folly::split(",", srcDataPaths_, srcPaths, true);
+    if (dataPaths.value().size() != srcPaths.size()) {
+        LOG(ERROR) << "Data directory mismatch on " << inst_->toString();
+        return ResultCode::ERR_FAILED;
+    }
+    for (size_t i = 0; i < srcPaths.size(); i++) {
+        auto cleanCmd = folly::stringPrintf("rm -fr %s ", dataPaths.value()[i].c_str());
+        LOG(INFO) << cleanCmd << " on " << inst_->toString() << " as " << inst_->owner();
+        auto ret = utils::SshHelper::run(
+                    cleanCmd,
+                    inst_->getHost(),
+                    [this] (const std::string& outMsg) {
+                        VLOG(1) << "The output is " << outMsg;
+                    },
+                    [] (const std::string& errMsg) {
+                        LOG(ERROR) << "The error is " << errMsg;
+                    },
+                    inst_->owner());
+        CHECK_EQ(0, ret.exitStatus());
+        auto cpCmd = folly::stringPrintf("cp -fr %s %s",
+                                         srcPaths[i].c_str(),
+                                         dataPaths.value()[i].c_str());
+        LOG(INFO) << cpCmd << " on " << inst_->toString() << " as " << inst_->owner();
+        ret = utils::SshHelper::run(
+            cpCmd,
+            inst_->getHost(),
+            [this] (const std::string& outMsg) {
+                VLOG(1) << "The output is " << outMsg;
+            },
+            [] (const std::string& errMsg) {
+                LOG(ERROR) << "The error is " << errMsg;
+            },
+            inst_->owner());
+        CHECK_EQ(0, ret.exitStatus());
+
     }
     return ResultCode::OK;
 }

@@ -578,6 +578,25 @@ private:
     NebulaInstance* inst_;
 };
 
+class RestoreFromDataDirAction : public core::Action {
+public:
+    RestoreFromDataDirAction(NebulaInstance* inst, const std::string& srcDataPaths)
+        : inst_(inst)
+        , srcDataPaths_(srcDataPaths) {}
+
+    ~RestoreFromDataDirAction() = default;
+
+    ResultCode doRun() override;
+
+    std::string toString() const override {
+        return folly::stringPrintf("Restore db from data folder on instance %s", 
+                                   inst_->toString().c_str());
+    }
+
+private:
+    NebulaInstance* inst_;
+    std::string     srcDataPaths_;
+};
 }   // namespace nebula
 }   // namespace nebula_chaos
 
