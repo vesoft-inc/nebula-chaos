@@ -606,8 +606,9 @@ ResultCode RestoreFromCheckpointAction::doRun() {
         LOG(ERROR) << "Can't find data path on " << inst_->toString();
         return ResultCode::ERR_FAILED;
     }
+
+    std::string returnMsg;
     for (const auto& dataPath : dataPaths.value()) {
-        std::string returnMsg;
         auto rmCmd = "find %s -type d -name \"checkpoints\"";
         auto cleanCommand = folly::stringPrintf(rmCmd, dataPath.c_str());
         LOG(INFO) << cleanCommand << " on " << inst_->toString() << " as " << inst_->owner();
@@ -624,6 +625,42 @@ ResultCode RestoreFromCheckpointAction::doRun() {
                     inst_->owner());
         CHECK_EQ(0, ret.exitStatus());
         // TODO : replace nebula data from checkpoint
+    }
+    LOG(INFO) << "check dirs : " << returnMsg;
+    std::vector<std::string> checkpoints;
+    folly::split("\n", returnMsg, checkpoints, true);
+    for (const auto& checkpoint : checkpoints) {
+        auto rmCmd = "rm -fr %s/../data %s/../wal";
+        auto cleanCommand = folly::stringPrintf(rmCmd, checkpoint.c_str(), checkpoint.c_str());
+        LOG(INFO) << cleanCommand << " on " << inst_->toString() << " as " << inst_->owner();
+        auto ret = utils::SshHelper::run(
+                    cleanCommand,
+                    inst_->getHost(),
+                    [this, &returnMsg] (const std::string& outMsg) {
+                        returnMsg = outMsg;
+                        VLOG(1) << "The output is " << outMsg;
+                    },
+                    [] (const std::string& errMsg) {
+                        LOG(ERROR) << "The error is " << errMsg;
+                    },
+                    inst_->owner());
+        CHECK_EQ(0, ret.exitStatus());
+
+        auto cpCmd = "cp -fr %s/SNAPSHOT*/* %s/../";
+        auto copyCommand = folly::stringPrintf(cpCmd, checkpoint.c_str(), checkpoint.c_str());
+        LOG(INFO) << copyCommand << " on " << inst_->toString() << " as " << inst_->owner();
+        ret = utils::SshHelper::run(
+            copyCommand,
+            inst_->getHost(),
+            [this, &returnMsg] (const std::string& outMsg) {
+                returnMsg = outMsg;
+                VLOG(1) << "The output is " << outMsg;
+            },
+            [] (const std::string& errMsg) {
+                LOG(ERROR) << "The error is " << errMsg;
+            },
+            inst_->owner());
+        CHECK_EQ(0, ret.exitStatus());
     }
     return ResultCode::OK;
 }

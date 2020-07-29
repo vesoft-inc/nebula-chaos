@@ -84,45 +84,106 @@
             "total_rows": 1000,
             "depends": [8]
         },
+
+        {
+            "type": "CreateSpaceAction",
+            "space_name": "checkpoint_space_2",
+            "replica": 1,
+            "parts": 1,
+            "depends": [9]
+        },
+        {
+            "type": "UseSpaceAction",
+            "space_name": "checkpoint_space_2",
+            "depends": [10]
+        },
+        {
+            "type": "CreateSchemaAction",
+            "name": "cbs_2",
+            "props": [
+                {"name": "nextId", "type": "int"}
+            ],
+            "edge_or_tag": false,
+            "depends": [11]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 5000,
+            "depends": [12]
+        },
+        {
+            "type": "WriteCircleAction",
+            "tag": "cbs_2",
+            "col": "nextId",
+            "total_rows": 1000,
+            "depends": [13]
+        },
         {
             "type": "WaitAction",
             "wait_time_ms": 3000,
-            "depends": [9]
+            "depends": [14]
         },
         {
             "type": "CreateCheckpointAction",
             "wait_time_ms": 3000,
-            "depends": [10]
+            "depends": [15]
         },
         {
             "type": "WaitAction",
             "wait_time_ms": 3000,
-            "depends": [11]
+            "depends": [16]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 2,
+            "depends": [17]
+        },
+        {
+            "type": "RestoreFromCheckpointAction",
+            "inst_index": 2,
+            "depends": [18]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 3000,
+            "depends": [19]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 2,
+            "depends": [20]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 15000,
+            "depends": [21]
+        },
+        {
+            "type": "UseSpaceAction",
+            "space_name": "checkpoint_space_2",
+            "depends": [22]
+        },
+        {
+            "type": "WriteCircleAction",
+            "tag": "cbs_2",
+            "col": "nextId",
+            "total_rows": 1000,
+            "depends": [23]
         },
         {
             "type": "StopAction",
             "inst_index": 0,
-            "depends": [12]
+            "depends": [24]
         },
         {
             "type": "StopAction",
             "inst_index": 1,
-            "depends": [13]
+            "depends": [25]
         },
         {
             "type": "StopAction",
-            "inst_index": 2,
-            "depends": [14]
-        },
-        {
-            "type": "WaitAction",
-            "wait_time_ms": 3000,
-            "depends": [15]
-        },
-        {
-            "type": "CleanCheckpointAction",
-            "inst_index": 2,
-            "depends": [16]
+            "inst_index": 1,
+            "depends": [26]
         }
      ]
 }
