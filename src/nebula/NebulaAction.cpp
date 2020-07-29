@@ -649,5 +649,77 @@ ResultCode FillDiskAction::reboot(NebulaInstance* inst) {
     return ResultCode::ERR_FAILED;
 }
 
+ResultCode SlowDiskAction::disturb() {
+    static std::string script = R"(
+        global cnt, bytes;
+        probe vfs.write.return {
+            if (pid() == target() && dev == MKDEV($1, $2) && $return) {
+                cnt++;
+                bytes += $return;
+                mdelay($3);
+            }
+        }
+        probe begin {
+            printf("Begin slow disk of %d ms\n", $3);
+        }
+        probe timer.s(5), end {
+            printf("(%d) count = %d, bytes = %d\n", target(), cnt, bytes);
+        }
+    )";
+    picked_ = Utils::randomInstance(storages_, NebulaInstance::State::RUNNING);
+    CHECK_NOTNULL(picked_);
+    auto pid = picked_->getPid();
+    if (!pid.hasValue()) {
+        LOG(ERROR) << "Failed to get pid of " << picked_->toString();
+        return ResultCode::ERR_FAILED;
+    }
+    LOG(INFO) << "Begin to slow disk of " << picked_->toString();
+    auto stap = folly::stringPrintf("stap -e \'%s\' -DMAXSKIPPED=1000000 -F -o /tmp/stap_log_%d -g -x %d %d %d %d",
+                                    script.c_str(), pid.value(), pid.value(), major_, minor_, delayMs_);
+    VLOG(1) << "SystemTap script: " << stap;
+    auto ret = utils::SshHelper::run(
+                stap,
+                picked_->getHost(),
+                [this] (const std::string& outMsg) {
+                    try {
+                        stapPid_ = folly::to<int32_t>(outMsg);
+                        LOG(INFO) << "SystemTap has been running as daemon of pid " << stapPid_.value();
+                    } catch (const folly::ConversionError& e) {
+                        LOG(ERROR) << "Failed to get SystemTap pid";
+                    }
+                },
+                [] (const std::string& errMsg) {
+                    LOG(ERROR) << "The error is " << errMsg;
+                },
+                picked_->owner());
+    CHECK_EQ(0, ret.exitStatus());
+    return stapPid_.hasValue() ? ResultCode::OK : ResultCode::ERR_FAILED;
+}
+
+ResultCode SlowDiskAction::recover() {
+    nebula_chaos::core::CheckProcAction action(picked_->getHost(), stapPid_.value(), picked_->owner());
+    auto res = action.doRun();
+    if (res == ResultCode::ERR_NOT_FOUND) {
+        LOG(WARNING) << "SystemTap has quit before we kill it, please check the log";
+        return ResultCode::OK;
+    }
+
+    auto kill = folly::stringPrintf("kill %d", stapPid_.value());
+    LOG(INFO) << "Stop slow disk of " << picked_->toString();
+    auto ret = utils::SshHelper::run(
+                kill,
+                picked_->getHost(),
+                [this] (const std::string& outMsg) {
+                    VLOG(1) << "The output is " << outMsg;
+                },
+                [] (const std::string& errMsg) {
+                    LOG(ERROR) << "The error is " << errMsg;
+                },
+                picked_->owner());
+    CHECK_EQ(0, ret.exitStatus());
+    stapPid_.clear();
+    return ResultCode::OK;
+}
+
 }   // namespace nebula
 }   // namespace nebula_chaos

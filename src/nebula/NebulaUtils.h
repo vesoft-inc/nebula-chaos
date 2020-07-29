@@ -267,6 +267,26 @@ public:
                                                     nextDistubInterval,
                                                     recoverInterval,
                                                     count);
+        } else if (type == "SlowDiskAction") {
+            auto storageIdxs = obj.at("storages");
+            std::vector<NebulaInstance*> storages;
+            for (auto iter = storageIdxs.begin(); iter != storageIdxs.end(); iter++) {
+                auto index = iter->asInt();
+                storages.emplace_back(ctx.insts[index]);
+            }
+            auto loopTimes = obj.getDefault("loop_times", 1).asInt();
+            auto nextDistubInterval = obj.getDefault("next_loop_interval", 30).asInt();
+            auto recoverInterval = obj.getDefault("restart_interval", 30).asInt();
+            auto major = obj.at("major").asInt();
+            auto minor = obj.at("minor").asInt();
+            auto delayMs = obj.at("delay_ms").asInt();
+            return std::make_unique<SlowDiskAction>(storages,
+                                                    loopTimes,
+                                                    nextDistubInterval,
+                                                    recoverInterval,
+                                                    major,
+                                                    minor,
+                                                    delayMs);
         }
         LOG(FATAL) << "Unknown type " << type;
         return nullptr;

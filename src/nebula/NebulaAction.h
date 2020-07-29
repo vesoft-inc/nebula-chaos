@@ -556,6 +556,41 @@ private:
     int32_t count_;
 };
 
+class SlowDiskAction : public core::DisturbAction {
+public:
+    SlowDiskAction(const std::vector<NebulaInstance*>& storages,
+                   int32_t loopTimes,
+                   int32_t timeToDisurb,
+                   int32_t timeToRecover,
+                   int32_t major,
+                   int32_t minor,
+                   int32_t delayMs)
+        : DisturbAction(loopTimes, timeToDisurb, timeToRecover)
+        , storages_(storages)
+        , major_(major)
+        , minor_(minor)
+        , delayMs_(delayMs) {}
+
+    ~SlowDiskAction() = default;
+
+    std::string toString() const override {
+        return folly::stringPrintf("Slow disk: loop %d", loopTimes_);
+    }
+
+private:
+    ResultCode disturb() override;
+    ResultCode recover() override;
+
+private:
+    std::vector<NebulaInstance*> storages_;
+    int32_t major_;
+    int32_t minor_;
+    int32_t delayMs_;
+
+    NebulaInstance* picked_;
+    folly::Optional<int32_t> stapPid_;
+};
+
 }   // namespace nebula
 }   // namespace nebula_chaos
 
