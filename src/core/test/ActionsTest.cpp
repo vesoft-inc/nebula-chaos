@@ -5,6 +5,7 @@
 #include "core/CheckProcAction.h"
 #include "core/SendEmailAction.h"
 #include "core/LoopAction.h"
+#include "core/AssignAction.h"
 
 namespace nebula_chaos {
 namespace core {
@@ -45,6 +46,16 @@ TEST(ActionsTest, LoopAction) {
 
     LoopAction loopAction(10, std::move(actions), 2);
     loopAction.doRun();
+}
+
+TEST(ActionsTest, AssignActionTest) {
+    ActionContext ctx;
+    AssignAction action(&ctx, "a", "1 + 2 * 3");
+    auto ret = action.doRun();
+    CHECK(ResultCode::OK == ret);
+    auto valOrErr = ctx.exprCtx.getVar("a");
+    CHECK(valOrErr);
+    CHECK_EQ(7, asInt(valOrErr.value()));
 }
 
 }  // namespace utils

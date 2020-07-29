@@ -1,4 +1,4 @@
-/* Copyright (c) 2020 nebula inc. All rights reserved.
+/* Copyright (c) 2020 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License,
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
@@ -13,6 +13,7 @@
 #include "nebula/NebulaAction.h"
 #include "core/WaitAction.h"
 #include "core/LoopAction.h"
+#include "nebula/NebulaChaosPlan.h"
 
 namespace nebula_chaos {
 namespace nebula {
@@ -24,6 +25,7 @@ struct LoadContext {
     GraphClient*                  gClient = nullptr;
     // whether to rolling table for this plan
     bool                          rolling;
+    PlanContext*                  planCtx;
 };
 
 class Utils {
