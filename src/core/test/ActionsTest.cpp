@@ -21,15 +21,16 @@ TEST(ActionsTest, SendEmailAction) {
                            "heng.chen@vesoft.com");
     action.doRun();
 }
-
 TEST(ActionsTest, LoopAction) {
+    ActionContext ctx;
+
     auto action1 = std::make_unique<EmptyAction>("action1");
     action1->setId(1);
     auto action2 = std::make_unique<EmptyAction>("action2");
     action2->setId(2);
     auto action3 = std::make_unique<EmptyAction>("action3");
     action3->setId(3);
-    auto action4 = std::make_unique<EmptyAction>("action4");
+    auto action4 = std::make_unique<AssignAction>(&ctx, "i", "$i + 1");
     action4->setId(4);
 
     action4->addDependee(action3.get());
@@ -44,10 +45,14 @@ TEST(ActionsTest, LoopAction) {
     actions.emplace_back(std::move(action3));
     actions.emplace_back(std::move(action4));
 
-    LoopAction loopAction(10, std::move(actions), 2);
+
+    AssignAction action(&ctx, "i", "0");
+    auto ret = action.doRun();
+    CHECK(ResultCode::OK == ret);
+
+    LoopAction loopAction(&ctx, "$i < 10", std::move(actions), 2);
     loopAction.doRun();
 }
-
 TEST(ActionsTest, AssignActionTest) {
     ActionContext ctx;
     AssignAction action(&ctx, "a", "1 + 2 * 3");

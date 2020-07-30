@@ -4,6 +4,7 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 #include "core/LoopAction.h"
+#include "parser/ParserHelper.h"
 
 namespace nebula_chaos {
 namespace core {
@@ -30,9 +31,23 @@ ResultCode LoopAction::doRun() {
     for (auto* action : rootActions) {
         sourceAction->addDependency(action);
     }
-
-    for (int32_t i = 0; i < loopTimes_; i++) {
-        LOG(INFO) << "Loop the " << i << " times...";
+    auto expr = ParserHelper::parse(conditionExpr_);
+    if (expr == nullptr) {
+        return ResultCode::ERR_FAILED;
+    }
+    int32_t loopTimes = 0;
+    while (true) {
+        auto valOrErr = expr->eval(&ctx_->exprCtx);
+        if (!valOrErr) {
+            LOG(ERROR) << "Eval " << conditionExpr_ << " failed!";
+            return ResultCode::ERR_FAILED;
+        }
+        auto val = std::move(valOrErr).value();
+        if (!asBool(val)) {
+            LOG(INFO) << "Stop the loop";
+            break;
+        }
+        LOG(INFO) << "Loop the " << ++loopTimes << " times...";
         ResultCode rc = ResultCode::OK;
         for (auto& action : actions_) {
             action->reset();
@@ -60,6 +75,7 @@ ResultCode LoopAction::doRun() {
             return ResultCode::ERR_FAILED;
         }
     }
+    LOG(INFO) << "Loop total " << loopTimes << " times";
     return ResultCode::OK;
 }
 

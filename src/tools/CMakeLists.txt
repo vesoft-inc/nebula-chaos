@@ -9,6 +9,8 @@ nebula_add_executable(
         $<TARGET_OBJECTS:nebula_plan_obj>
         $<TARGET_OBJECTS:nebula_instance_obj>
         $<TARGET_OBJECTS:actions_obj>
+        $<TARGET_OBJECTS:parser_obj>
+        $<TARGET_OBJECTS:expr_obj>
         $<TARGET_OBJECTS:ssh_helper_obj>
         $<TARGET_OBJECTS:base_obj>
     LIBRARIES

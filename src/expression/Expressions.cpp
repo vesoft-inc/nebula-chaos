@@ -46,6 +46,7 @@ ValueOrErr ConstantExpression::eval(ExprContext*) const {
 
 ValueOrErr VariableExpression::eval(ExprContext* ctx) const {
     if (ctx == nullptr) {
+        LOG(INFO) << "The expr context is nullptr";
         return folly::makeUnexpected(ErrorCode::ERR_BAD_PARAMS);
     }
     return ctx->getVar(varName_);
