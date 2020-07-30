@@ -1,29 +1,28 @@
 {
     "name": "Nebula checkpoint plan",
     "concurrency": 10,
-    "email": "sky.chen@vesoft.com",
     "rolling_table": true,
     "instances": [
         {
-            "host":"192.168.8.50",
-            "install_dir":"/data/nebula_db",
-            "conf_dir":"/data/nebula_db/etc/nebula-graphd.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "graphd",
-            "user": "cbs"
+            "user": ""
         },
         {
-            "host":"192.168.8.50",
-            "install_dir":"/data/nebula_db",
-            "conf_dir":"/data/nebula_db/etc/nebula-metad.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "metad",
-            "user": "cbs"
+            "user": ""
         },
         {
-            "host":"192.168.8.50",
-            "install_dir":"/data/nebula_db",
-            "conf_dir":"/data/nebula_db/etc/nebula-storaged.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "storaged",
-            "user": "cbs"
+            "user": ""
         }
      ],
      "actions" : [
@@ -65,7 +64,7 @@
         },
         {
             "type": "CreateSchemaAction",
-            "name": "cbs",
+            "name": "checkpoint_test",
             "props": [
                 {"name": "nextId", "type": "int"}
             ],
@@ -79,7 +78,7 @@
         },
         {
             "type": "WriteCircleAction",
-            "tag": "cbs",
+            "tag": "checkpoint_test",
             "col": "nextId",
             "total_rows": 1000,
             "depends": [8]
@@ -99,7 +98,7 @@
         },
         {
             "type": "CreateSchemaAction",
-            "name": "cbs_2",
+            "name": "checkpoint_test_2",
             "props": [
                 {"name": "nextId", "type": "int"}
             ],
@@ -113,7 +112,7 @@
         },
         {
             "type": "WriteCircleAction",
-            "tag": "cbs_2",
+            "tag": "checkpoint_test_2",
             "col": "nextId",
             "total_rows": 1000,
             "depends": [13]
@@ -165,7 +164,7 @@
         },
         {
             "type": "WriteCircleAction",
-            "tag": "cbs_2",
+            "tag": "checkpoint_test_2",
             "col": "nextId",
             "total_rows": 1000,
             "depends": [23]
