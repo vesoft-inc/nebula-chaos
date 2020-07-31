@@ -568,5 +568,158 @@ ResultCode RandomTrafficControlAction::recover() {
     return ResultCode::OK;
 }
 
+ResultCode FillDiskAction::disturb() {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::shuffle(storages_.begin(), storages_.end(), gen);
+
+    for (int32_t i = 0; i < count_; i++) {
+        auto* picked = storages_[i];
+        auto dirs = picked->dataDirs();
+        if (!dirs.hasValue()) {
+            LOG(ERROR) << "Failed to get data_path of " << picked->toString();
+            return ResultCode::ERR_FAILED;
+        }
+        LOG(INFO) << "Begin to fill disk of " << picked->toString();
+        // just use the first data path
+        auto fill = folly::stringPrintf("cat /dev/zero > %s/full", dirs.value().front().c_str());
+        auto ret = utils::SshHelper::run(
+                    fill,
+                    picked->getHost(),
+                    [this] (const std::string& outMsg) {
+                        VLOG(1) << "The output is " << outMsg;
+                    },
+                    [] (const std::string& errMsg) {
+                        LOG(ERROR) << "The error is " << errMsg;
+                    },
+                    picked->owner());
+        CHECK_EQ(1, ret.exitStatus());
+    }
+    return ResultCode::OK;
+}
+
+ResultCode FillDiskAction::recover() {
+    /*
+    1. remove the mock file
+    2. all storage may crashed because of disk is full when data path is under same directory,
+       so try to reboot all of them
+    */
+    for (int32_t i = 0; i < count_; i++) {
+        auto* storage = storages_[i];
+        auto dirs = storage->dataDirs();
+        if (!dirs.hasValue()) {
+            LOG(ERROR) << "Failed to get data_path of " << storage->toString();
+            return ResultCode::ERR_FAILED;
+        }
+        LOG(INFO) << "Clean disk on " << storage->toString();
+        auto clean = folly::stringPrintf("rm -f %s/full", dirs.value().front().c_str());
+        auto rc = utils::SshHelper::run(
+                    clean,
+                    storage->getHost(),
+                    [this] (const std::string& outMsg) {
+                        VLOG(1) << "The output is " << outMsg;
+                    },
+                    [] (const std::string& errMsg) {
+                        LOG(ERROR) << "The error is " << errMsg;
+                    },
+                    storage->owner());
+        CHECK_EQ(0, rc.exitStatus());
+    }
+
+    for (auto* storage : storages_) {
+        LOG(INFO) << "Begin to reboot " << storage->toString();
+        auto rc = reboot(storage);
+        if (rc != ResultCode::OK) {
+            return rc;
+        }
+    }
+    return ResultCode::OK;
+}
+
+ResultCode FillDiskAction::reboot(NebulaInstance* inst) {
+    StartAction start(inst);
+    for (int32_t retry = 0; retry != 32; retry++) {
+        auto ret = start.doRun();
+        if (ret == ResultCode::OK) {
+            return ret;
+        }
+        LOG(ERROR) << "Reboot failed, retry " << retry;
+        sleep(retry);
+    }
+    return ResultCode::ERR_FAILED;
+}
+
+ResultCode SlowDiskAction::disturb() {
+    static std::string script = R"(
+        global cnt, bytes;
+        probe vfs.write.return {
+            if (pid() == target() && dev == MKDEV($1, $2) && $return) {
+                cnt++;
+                bytes += $return;
+                mdelay($3);
+            }
+        }
+        probe begin {
+            printf("Begin slow disk of %d ms\n", $3);
+        }
+        probe timer.s(5), end {
+            printf("(%d) count = %d, bytes = %d\n", target(), cnt, bytes);
+        }
+    )";
+    picked_ = Utils::randomInstance(storages_, NebulaInstance::State::RUNNING);
+    CHECK_NOTNULL(picked_);
+    auto pid = picked_->getPid();
+    if (!pid.hasValue()) {
+        LOG(ERROR) << "Failed to get pid of " << picked_->toString();
+        return ResultCode::ERR_FAILED;
+    }
+    LOG(INFO) << "Begin to slow disk of " << picked_->toString();
+    auto stap = folly::stringPrintf("stap -e \'%s\' -DMAXSKIPPED=1000000 -F -o /tmp/stap_log_%d -g -x %d %d %d %d",
+                                    script.c_str(), pid.value(), pid.value(), major_, minor_, delayMs_);
+    VLOG(1) << "SystemTap script: " << stap;
+    auto ret = utils::SshHelper::run(
+                stap,
+                picked_->getHost(),
+                [this] (const std::string& outMsg) {
+                    try {
+                        stapPid_ = folly::to<int32_t>(outMsg);
+                        LOG(INFO) << "SystemTap has been running as daemon of pid " << stapPid_.value();
+                    } catch (const folly::ConversionError& e) {
+                        LOG(ERROR) << "Failed to get SystemTap pid";
+                    }
+                },
+                [] (const std::string& errMsg) {
+                    LOG(ERROR) << "The error is " << errMsg;
+                },
+                picked_->owner());
+    CHECK_EQ(0, ret.exitStatus());
+    return stapPid_.hasValue() ? ResultCode::OK : ResultCode::ERR_FAILED;
+}
+
+ResultCode SlowDiskAction::recover() {
+    nebula_chaos::core::CheckProcAction action(picked_->getHost(), stapPid_.value(), picked_->owner());
+    auto res = action.doRun();
+    if (res == ResultCode::ERR_NOT_FOUND) {
+        LOG(WARNING) << "SystemTap has quit before we kill it, please check the log";
+        return ResultCode::OK;
+    }
+
+    auto kill = folly::stringPrintf("kill %d", stapPid_.value());
+    LOG(INFO) << "Stop slow disk of " << picked_->toString();
+    auto ret = utils::SshHelper::run(
+                kill,
+                picked_->getHost(),
+                [this] (const std::string& outMsg) {
+                    VLOG(1) << "The output is " << outMsg;
+                },
+                [] (const std::string& errMsg) {
+                    LOG(ERROR) << "The error is " << errMsg;
+                },
+                picked_->owner());
+    CHECK_EQ(0, ret.exitStatus());
+    stapPid_.clear();
+    return ResultCode::OK;
+}
+
 }   // namespace nebula
 }   // namespace nebula_chaos

@@ -36,3 +36,16 @@ Start all services, disturb (random delay all packets of a storage service, reco
 setcap cap_net_admin+ep /usr/sbin/tc
 setcap cap_net_raw,cap_net_admin+ep /usr/sbin/ip
 ```
+
+#### [random_disk_full](conf/random_disk_full.json)
+Start all services, disturb (cat /dev/zero until disk is full) while write a circle, the storage services which use the direcory should be crashed, then we clean the mock file and restart, check data integrity at last.
+
+**Use a ramdisk or tmpfs with limited size to test this plan, otherwise the whole disk will be occupied.**
+
+#### [random_slow_disk](conf/random_slow_disk.json)
+Start all services, disturb (simulate slow disk io) while write a circle, then check data integrity. We use [SysytemTap](https://sourceware.org/systemtap/wiki) to simulate slow disk io. The `major` and `minor` field is the MAJOR/MINOR device id of disk where storage serveice's data path mounted.
+
+```
+yum install systemtap
+```
+You may need install `kernel-devel` and `kernel-debuginfo` as well (the version must be same with kernel).
