@@ -322,6 +322,9 @@ ResultCode CheckLeadersAction::checkResp(const ExecutionResponse& resp) const {
         return ResultCode::ERR_FAILED;
     }
     auto& leaderStr = row.columns[4].get_str();
+    if (leaderStr.empty()) {
+        return ResultCode::ERR_FAILED;
+    }
     try {
         std::vector<folly::StringPiece> spaceLeaders;
         folly::split(",", leaderStr, spaceLeaders);
