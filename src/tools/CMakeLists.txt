@@ -14,5 +14,4 @@ nebula_add_executable(
     LIBRARIES
         gtest
         ${THRIFT_LIBRARIES}
-        boost_filesystem
 )
