@@ -102,7 +102,9 @@ folly::Optional<int32_t> NebulaInstance::getPid(bool skipCache) {
                         LOG(ERROR) << "The error is " << errMsg;
                     },
                     owner_);
-    CHECK_EQ(0, ret.exitStatus());
+    if (ret.exitStatus() != 0) {
+        return folly::none;
+    }
     LOG(INFO) << "The pid for current instance is " << pid_;
     return pid_;
 }
