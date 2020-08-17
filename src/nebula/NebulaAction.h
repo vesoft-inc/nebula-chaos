@@ -752,6 +752,38 @@ private:
     std::string     srcDataPaths_;
 };
 
+class TruncateWalAction : public core::Action {
+public:
+    TruncateWalAction(const std::vector<NebulaInstance*>& storages,
+                      GraphClient* client,
+                      const std::string& spaceName,
+                      int32_t partId,
+                      int32_t count,
+                      int32_t bytes)
+        : storages_(storages)
+        , client_(client)
+        , spaceName_(spaceName)
+        , partId_(partId)
+        , count_(count)
+        , bytes_(bytes) {}
+
+    ~TruncateWalAction() = default;
+
+    ResultCode doRun() override;
+
+    std::string toString() const override {
+        return folly::stringPrintf("Truncate space %s wal", spaceName_.c_str());
+    }
+
+private:
+    std::vector<NebulaInstance*> storages_;
+    GraphClient* client_;
+    std::string spaceName_;
+    int32_t partId_;
+    int32_t count_;                     // how many storage to truncate
+    int32_t bytes_;                     // how many bytes to truncate wal
+};
+
 }   // namespace nebula
 }   // namespace nebula_chaos
 

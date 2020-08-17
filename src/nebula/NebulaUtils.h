@@ -342,6 +342,18 @@ public:
             return std::make_unique<ExecutionExpressionAction>(&ctx.planCtx->actionCtx, condition);
         } else if (type == "CompactionAction") {
             return std::make_unique<CompactionAction>(ctx.gClient);
+        } else if (type == "TruncateWalAction") {
+            auto storageIdxs = obj.at("storages");
+            std::vector<NebulaInstance*> storages;
+            for (auto iter = storageIdxs.begin(); iter != storageIdxs.end(); iter++) {
+                auto index = iter->asInt();
+                storages.emplace_back(ctx.insts[index]);
+            }
+            auto spaceName = obj.at("space_name").asString();
+            auto partId = obj.at("part_id").asInt();
+            auto count = obj.getDefault("count", 1).asInt();
+            auto bytes = obj.getDefault("bytes", 10).asInt();
+            return std::make_unique<TruncateWalAction>(storages, ctx.gClient, spaceName, partId, count, bytes);
         }
 
     LOG(FATAL) << "Unknown type " << type;

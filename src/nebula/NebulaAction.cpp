@@ -10,6 +10,7 @@
 #include "core/CheckProcAction.h"
 #include <folly/Random.h>
 #include <folly/GLog.h>
+#include "boost/filesystem/operations.hpp"
 
 namespace nebula_chaos {
 namespace nebula {
@@ -1055,5 +1056,77 @@ ResultCode RestoreFromDataDirAction::doRun() {
     }
     return ResultCode::OK;
 }
+
+ResultCode TruncateWalAction::doRun() {
+    DescSpaceAction desc(client_, spaceName_);
+    auto rc = desc.doRun();
+    if (rc != ResultCode::OK) {
+        LOG(ERROR) << "Failed to desc space " << spaceName_;
+    }
+    auto spaceId = desc.spaceId();
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::shuffle(storages_.begin(), storages_.end(), gen);
+
+    for (int32_t i = 0; i < count_; i++) {
+        auto* storage = storages_[i];
+        auto wals = storage->walDirs(spaceId);
+        if (!wals.hasValue()) {
+            LOG(ERROR) << "Can't find wals for space " << spaceName_ << " on " << storage->toString();
+            return ResultCode::ERR_FAILED;
+        }
+        for (auto& walDir : wals.value()) {
+            // get the latest wal and its size of specified space/part
+            auto path = folly::stringPrintf("%s/%d", walDir.c_str(), partId_);
+            auto cmd = folly::stringPrintf(
+                "ls -lt %s/*.wal | head -n 1 | awk '{print $5, $9}'", path.c_str());
+            int32_t size;
+            std::string lastWal;
+            auto ret = utils::SshHelper::run(
+                cmd,
+                storage->getHost(),
+                [this, &size, &lastWal] (const std::string& outMsg) {
+                    std::vector<std::string> info;
+                    folly::split(" ", outMsg, info);
+                    if (info.size() == 2) {
+                        try {
+                            size = folly::to<int32_t>(info[0]);
+                            lastWal = info[1];
+                        } catch (const folly::ConversionError& e) {
+                            LOG(ERROR) << "Parse wal failed" << e.what();
+                        }
+                    }
+                    VLOG(1) << "The output is " << outMsg;
+                },
+                [] (const std::string& errMsg) {
+                    LOG(ERROR) << "The error is " << errMsg;
+                },
+                storage->owner());
+            CHECK_EQ(0, ret.exitStatus());
+
+            if (lastWal.empty()) {
+                LOG(ERROR) << "Failed to get last wal on " << storage->toString()
+                           << " in path " << path;
+                return ResultCode::ERR_FAILED;
+            }
+            // truncate latest wal of specified bytes
+            auto truncate = folly::stringPrintf("truncate -s %d %s", size - bytes_, lastWal.c_str());
+            ret = utils::SshHelper::run(
+                truncate,
+                storage->getHost(),
+                [this] (const std::string& outMsg) {
+                    VLOG(1) << "The output is " << outMsg;
+                },
+                [] (const std::string& errMsg) {
+                    LOG(ERROR) << "The error is " << errMsg;
+                },
+                storage->owner());
+            CHECK_EQ(0, ret.exitStatus());
+        }
+    }
+    return ResultCode::OK;
+}
+
 }   // namespace nebula
 }   // namespace nebula_chaos

@@ -1,0 +1,208 @@
+{
+    "name": "Nebula kill all and truncate wal plan",
+    "concurrency": 10,
+    "rolling_table": true,
+    "instances": [
+        {
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
+            "type": "graphd",
+            "user": ""
+        },
+        {
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
+            "type": "metad",
+            "user": ""
+        },
+        {
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
+            "type": "storaged",
+            "user": ""
+        },
+        {
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
+            "type": "storaged",
+            "user": ""
+        },
+        {
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
+            "type": "storaged",
+            "user": ""
+        }
+    ],
+    "actions" : [
+        {
+            "type": "StartAction",
+            "inst_index": 0,
+            "depends": []
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 1,
+            "depends": []
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 2,
+            "depends": []
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 3,
+            "depends": []
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 4,
+            "depends": []
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 10000,
+            "depends": [0, 1, 2, 3, 4]
+        },
+        {
+            "type": "ClientConnectAction",
+            "depends": [5]
+        },
+        {
+            "type": "CreateSpaceAction",
+            "space_name": "kill_all_truncate_wal",
+            "replica": 3,
+            "parts": 3,
+            "depends": [6]
+        },
+        {
+            "type": "UseSpaceAction",
+            "space_name": "kill_all_truncate_wal",
+            "depends": [7]
+        },
+        {
+            "type": "CreateSchemaAction",
+            "name": "circle1",
+            "props": [
+                {"name": "nextId", "type": "int"}
+            ],
+            "edge_or_tag": false,
+            "depends": [8]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 10000,
+            "depends": [9]
+        },
+        {
+            "type": "BalanceLeaderAction",
+            "depends": [10]
+        },
+        {
+            "type": "CheckLeadersAction",
+            "expected_num": 3,
+            "space": "kill_all_truncate_wal",
+            "depends": [11]
+        },
+        {
+            "type": "WriteCircleAction",
+            "tag": "circle1",
+            "col": "nextId",
+            "total_rows": 100000,
+            "batch_num": 1,
+            "depends": [12]
+        },
+        {
+            "type": "CrashAction",
+            "inst_index": 2,
+            "depends": [13]
+        },
+        {
+            "type": "CrashAction",
+            "inst_index": 3,
+            "depends": [13]
+        },
+        {
+            "type": "CrashAction",
+            "inst_index": 4,
+            "depends": [13]
+        },
+        {
+            "type": "TruncateWalAction",
+            "storages": [2, 3, 4],
+            "space_name": "kill_all_truncate_wal",
+            "part_id": 1,
+            "count": 3,
+            "bytes": 10,
+            "depends": [14, 15, 16]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 2,
+            "depends": [17]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 3,
+            "depends": [17]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 4,
+            "depends": [17]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 10000,
+            "depends": [18, 19, 20]
+        },
+        {
+            "type": "BalanceLeaderAction",
+            "depends": [21]
+        },
+        {
+            "type": "CheckLeadersAction",
+            "expected_num": 3,
+            "space": "kill_all_truncate_wal",
+            "depends": [22]
+        },
+        {
+            "type": "WalkThroughAction",
+            "tag": "circle1",
+            "col": "nextId",
+            "total_rows": 100000,
+            "depends": [23]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 0,
+            "depends": [24]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 1,
+            "depends": [24]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 2,
+            "depends": [24]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 3,
+            "depends": [24]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 4,
+            "depends": [24]
+        }
+    ]
+}
