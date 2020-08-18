@@ -478,13 +478,12 @@ public:
         return folly::stringPrintf("Random kill: loop %d", loopTimes_);
     }
 
-private:
+protected:
     ResultCode disturb() override;
     ResultCode recover() override;
     ResultCode start(NebulaInstance* inst);
     ResultCode stop(NebulaInstance* inst);
 
-private:
     std::vector<NebulaInstance*> instances_;
     NebulaInstance* picked_;
     bool graceful_;
@@ -777,6 +776,43 @@ public:
 
 private:
     std::vector<NebulaInstance*> storages_;
+    GraphClient* client_;
+    std::string spaceName_;
+    int32_t partId_;
+    int32_t count_;                     // how many storage to truncate
+    int32_t bytes_;                     // how many bytes to truncate wal
+};
+
+/**
+ * Random kill the instance, truncate last wal, then restart it.
+ * We could set the loop times.
+ * */
+class RandomTruncateRestartAction : public RandomRestartAction {
+public:
+    RandomTruncateRestartAction(const std::vector<NebulaInstance*>& instances,
+                                int32_t loopTimes,
+                                int32_t timeToDisurb,
+                                int32_t timeToRecover,
+                                GraphClient* client,
+                                const std::string& spaceName,
+                                int32_t partId,
+                                int32_t bytes)
+        : RandomRestartAction(instances, loopTimes, timeToDisurb, timeToRecover, false, false)
+        , client_(client)
+        , spaceName_(spaceName)
+        , partId_(partId)
+        , bytes_(bytes) {}
+
+    ~RandomTruncateRestartAction() = default;
+
+    std::string toString() const override {
+        return folly::stringPrintf("Random restart and truncate wal: loop %d", loopTimes_);
+    }
+
+protected:
+    ResultCode disturb() override;
+
+private:
     GraphClient* client_;
     std::string spaceName_;
     int32_t partId_;

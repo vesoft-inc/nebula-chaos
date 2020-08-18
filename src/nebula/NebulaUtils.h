@@ -342,6 +342,29 @@ public:
             return std::make_unique<ExecutionExpressionAction>(&ctx.planCtx->actionCtx, condition);
         } else if (type == "CompactionAction") {
             return std::make_unique<CompactionAction>(ctx.gClient);
+        } else if (type == "RandomTruncateRestartAction") {
+            auto insts = obj.at("insts");
+            std::vector<NebulaInstance*> targetInsts;
+            auto it = insts.begin();
+            while (it != insts.end()) {
+                auto index = it->asInt();
+                targetInsts.emplace_back(ctx.insts[index]);
+                it++;
+            }
+            auto loopTimes = obj.getDefault("loop_times", 20).asInt();
+            auto nextDistubInterval = obj.getDefault("next_loop_interval", 30).asInt();
+            auto recoverInterval = obj.getDefault("restart_interval", 30).asInt();
+            auto spaceName = obj.at("space_name").asString();
+            auto partId = obj.at("part_id").asInt();
+            auto bytes = obj.getDefault("bytes", 10).asInt();
+            return std::make_unique<RandomTruncateRestartAction>(targetInsts,
+                                                                 loopTimes,
+                                                                 nextDistubInterval,
+                                                                 recoverInterval,
+                                                                 ctx.gClient,
+                                                                 spaceName,
+                                                                 partId,
+                                                                 bytes);
         } else if (type == "TruncateWalAction") {
             auto storageIdxs = obj.at("storages");
             std::vector<NebulaInstance*> storages;

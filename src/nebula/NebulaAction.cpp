@@ -1128,5 +1128,30 @@ ResultCode TruncateWalAction::doRun() {
     return ResultCode::OK;
 }
 
+ResultCode RandomTruncateRestartAction::disturb() {
+    picked_ = Utils::randomInstance(instances_, NebulaInstance::State::RUNNING);
+    CHECK_NOTNULL(picked_);
+    {
+        LOG(INFO) << "Begin to kill " << picked_->toString() << ", graceful " << graceful_;
+        auto rc = stop(picked_);
+        if (rc != ResultCode::OK) {
+            LOG(ERROR) << "Stop instance " << picked_->toString() << " failed!";
+            return rc;
+        }
+        LOG(INFO) << "Finish to kill " << picked_->toString();
+    }
+
+    {
+        // Truncate last wal of specified space and part
+        TruncateWalAction truncate({picked_}, client_, spaceName_, partId_, 1, bytes_);
+        auto rc = truncate.doRun();
+        if (rc != ResultCode::OK) {
+            LOG(ERROR) << "Truncate wal of " << picked_->toString() << " failed!";
+            return rc;
+        }
+    }
+    return ResultCode::OK;
+}
+
 }   // namespace nebula
 }   // namespace nebula_chaos
