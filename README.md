@@ -45,6 +45,11 @@ Start all services, disturb (cat /dev/zero until disk is full) while write a cir
 #### [random_slow_disk](conf/random_slow_disk.json)
 Start all services, disturb (simulate slow disk io) while write a circle, then check data integrity. We use [SysytemTap](https://sourceware.org/systemtap/wiki) to simulate slow disk io. The `major` and `minor` field is the MAJOR/MINOR device id of disk where storage serveice's data path mounted.
 
+#### [random_fiu_injection](conf/random_fiu_injection.json)
+Start all services, inject fault with [libfiu](https://blitiri.com.ar/p/libfiu/) while write a circle, then check data integrity.
+Here are some injection would make storage crash `posix/io/oc/open`, `posix/io/oc/close`, `posix/io/rw/write`, `posix/io/sync/fsync`.
+> Be sure to compile nebula with flag `-DENABLE_JEMALLOC=OFF`, otherwise, libfiu won't be able to preload.
+
 ```
 yum install systemtap
 ```

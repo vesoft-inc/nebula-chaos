@@ -46,6 +46,9 @@ ResultCode CrashAction::doRun() {
 ResultCode StartAction::doRun() {
     CHECK_NOTNULL(inst_);
     auto startCommand = inst_->startCommand();
+    if (loadFiu_) {
+        startCommand = "fiu-run -x " + startCommand;
+    }
     LOG(INFO) << startCommand << " on " << inst_->toString() << " as " << inst_->owner();
     auto ret = utils::SshHelper::run(
                 startCommand,
@@ -875,5 +878,66 @@ ResultCode RestoreFromDataDirAction::doRun() {
     }
     return ResultCode::OK;
 }
+
+ResultCode RandomFiuAction::disturb() {
+    picked_ = Utils::randomInstance(storages_, NebulaInstance::State::RUNNING);
+    CHECK_NOTNULL(picked_);
+    auto pid = picked_->getPid();
+    if (!pid.hasValue()) {
+        LOG(ERROR) << "Failed to get pid of " << picked_->toString();
+        return ResultCode::ERR_FAILED;
+    }
+    pid_ = pid.value();
+    LOG(INFO) << "Begin to fiu injection of " << picked_->toString();
+    std::string inject;
+    if (probability_ < 1) {
+        inject = folly::stringPrintf("fiu-ctrl -c 'enable_random name=%s,probability=%lf' %d",
+            name_.c_str(), probability_, pid_);
+    } else {
+        inject = folly::stringPrintf("fiu-ctrl -c 'enable name=%s' %d", name_.c_str(), pid_);
+    }
+    LOG(INFO) << "Fiu cmd: " << inject << " on " << picked_->toString();
+
+    auto ret = utils::SshHelper::run(
+                inject,
+                picked_->getHost(),
+                [this] (const std::string& outMsg) {
+                    VLOG(1) << "The output is " << outMsg;
+                },
+                [] (const std::string& errMsg) {
+                    LOG(ERROR) << "The error is " << errMsg;
+                },
+                picked_->owner());
+    CHECK_EQ(0, ret.exitStatus());
+    return ResultCode::OK;
+}
+
+ResultCode RandomFiuAction::recover() {
+    auto recover = folly::stringPrintf("fiu-ctrl -c 'disable name=%s' %d", name_.c_str(), pid_);
+    auto ret = utils::SshHelper::run(
+                recover,
+                picked_->getHost(),
+                [this] (const std::string& outMsg) {
+                    VLOG(1) << "The output is " << outMsg;
+                },
+                [] (const std::string& errMsg) {
+                    LOG(ERROR) << "The error is " << errMsg;
+                },
+                picked_->owner());
+    CHECK_EQ(0, ret.exitStatus());
+
+    // storage could have been crashed because of fault injection, try reboot it.
+    StartAction start(picked_, true);
+    for (int32_t retry = 0; retry != 32; retry++) {
+        auto rc = start.doRun();
+        if (rc == ResultCode::OK) {
+            return rc;
+        }
+        LOG(ERROR) << "Reboot failed, retry " << retry;
+        sleep(retry);
+    }
+    return ResultCode::ERR_FAILED;
+}
+
 }   // namespace nebula
 }   // namespace nebula_chaos
