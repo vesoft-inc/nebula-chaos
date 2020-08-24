@@ -885,12 +885,13 @@ ResultCode SlowDiskAction::recover() {
     auto res = action.doRun();
     if (res == ResultCode::ERR_NOT_FOUND) {
         LOG(WARNING) << "SystemTap has quit before we kill it, please check the log";
+        stapPid_.clear();
         return ResultCode::OK;
     }
 
     auto kill = folly::stringPrintf("kill %d", stapPid_.value());
     LOG(INFO) << "Stop slow disk of " << picked_->toString();
-    auto ret = utils::SshHelper::run(
+    utils::SshHelper::run(
                 kill,
                 picked_->getHost(),
                 [this] (const std::string& outMsg) {
@@ -900,7 +901,6 @@ ResultCode SlowDiskAction::recover() {
                     LOG(ERROR) << "The error is " << errMsg;
                 },
                 picked_->owner());
-    CHECK_EQ(0, ret.exitStatus());
     stapPid_.clear();
     return ResultCode::OK;
 }
