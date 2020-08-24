@@ -646,6 +646,15 @@ ResultCode RandomPartitionAction::disturb() {
         paras_.emplace_back(folly::stringPrintf("OUTPUT -p tcp -m tcp -d %s --dport %d -j DROP",
                             host.c_str(), port));
     }
+    for (auto* graph : graphs_) {
+        auto host = graph->getHost();
+        // forbid input packets from graph hosts
+        paras_.emplace_back(folly::stringPrintf("INPUT -p tcp -m tcp -s %s --dport %d -j DROP",
+                            host.c_str(), pickedPort));
+        // since we don't know graph port, just forbid all output packets to graph hosts
+        paras_.emplace_back(folly::stringPrintf("OUTPUT -p tcp -m tcp -d %s -j DROP",
+                            host.c_str()));
+    }
     std::string iptable;
     for (const auto& para : paras_) {
         iptable.append(folly::stringPrintf("sudo iptables -I %s; ", para.c_str()));

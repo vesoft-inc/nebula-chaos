@@ -224,6 +224,12 @@ public:
                                                       std::move(actions),
                                                       concurrency);
         } else if (type == "RandomPartitionAction") {
+            auto graphIdxs = obj.at("graphs");
+            std::vector<NebulaInstance*> graphs;
+            for (auto iter = graphIdxs.begin(); iter != graphIdxs.end(); iter++) {
+                auto index = iter->asInt();
+                graphs.emplace_back(ctx.insts[index]);
+            }
             auto metaIdxs = obj.at("metas");
             std::vector<NebulaInstance*> metas;
             for (auto iter = metaIdxs.begin(); iter != metaIdxs.end(); iter++) {
@@ -239,7 +245,8 @@ public:
             auto loopTimes = obj.getDefault("loop_times", 20).asInt();
             auto nextDistubInterval = obj.getDefault("next_loop_interval", 30).asInt();
             auto recoverInterval = obj.getDefault("restart_interval", 30).asInt();
-            return std::make_unique<RandomPartitionAction>(metas,
+            return std::make_unique<RandomPartitionAction>(graphs,
+                                                           metas,
                                                            storages,
                                                            loopTimes,
                                                            nextDistubInterval,
