@@ -547,14 +547,14 @@ private:
  * */
 class RandomPartitionAction : public core::DisturbAction {
 public:
-    RandomPartitionAction(const std::vector<NebulaInstance*>& graphs,
+    RandomPartitionAction(NebulaInstance* graph,
                           const std::vector<NebulaInstance*>& metas,
                           const std::vector<NebulaInstance*>& storages,
                           int32_t loopTimes,
                           int32_t timeToDisurb,
                           int32_t timeToRecover)
         : DisturbAction(loopTimes, timeToDisurb, timeToRecover)
-        , graphs_(graphs)
+        , graph_(graph)
         , metas_(metas)
         , storages_(storages) {}
 
@@ -569,7 +569,7 @@ private:
     ResultCode recover() override;
 
 private:
-    std::vector<NebulaInstance*> graphs_;
+    NebulaInstance* graph_;
     std::vector<NebulaInstance*> metas_;
     std::vector<NebulaInstance*> storages_;
     NebulaInstance* picked_;

@@ -646,8 +646,8 @@ ResultCode RandomPartitionAction::disturb() {
         paras_.emplace_back(folly::stringPrintf("OUTPUT -p tcp -m tcp -d %s --dport %d -j DROP",
                             host.c_str(), port));
     }
-    for (auto* graph : graphs_) {
-        auto host = graph->getHost();
+    {
+        auto host = graph_->getHost();
         // forbid input packets from graph hosts
         paras_.emplace_back(folly::stringPrintf("INPUT -p tcp -m tcp -s %s --dport %d -j DROP",
                             host.c_str(), pickedPort));
