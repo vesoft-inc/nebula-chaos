@@ -16,7 +16,7 @@
 #include <folly/executors/GlobalExecutor.h>
 #include <folly/futures/SharedPromise.h>
 #include <folly/String.h>
-
+#include "expression/Expressions.h"
 
 namespace nebula_chaos {
 namespace core {
@@ -34,6 +34,11 @@ enum class ResultCode {
     ERR_NOT_FINISHED,
 };
 
+// all actions share the same context
+struct ActionContext {
+    ExprContext exprCtx;
+};
+
 /**
  * This is the basic action class.
  * It is not thread-safe
@@ -48,8 +53,9 @@ public:
         SUCCEEDED,
         FAILED,
     };
-    Action()
-        : promise_(std::make_unique<folly::SharedPromise<folly::Unit>>()) {}
+    Action(ActionContext* ctx = nullptr)
+        : ctx_(ctx)
+        , promise_(std::make_unique<folly::SharedPromise<folly::Unit>>()) {}
 
     virtual ~Action() = default;
 
@@ -144,6 +150,7 @@ protected:
     // other actions on which this action depends
     std::vector<Action*>    dependees_;
     Duration                timeSpent_;
+    ActionContext*          ctx_ = nullptr;
 
 private:
     Status status_{Status::INIT};

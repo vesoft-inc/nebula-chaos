@@ -67,8 +67,14 @@
             "depends": [2]
         },
         {
+            "type": "AssignAction",
+            "var_name": "index",
+            "value_expr": "0",
+            "depends": [3]
+        },
+        {
             "type": "LoopAction",
-            "loop_times": 4,
+            "condition": "$index < 3",
             "concurrency": 3,
             "sub_plan": [
                 {
@@ -270,14 +276,20 @@
                     "type": "WaitAction",
                     "wait_time_ms": 5000,
                     "depends": [28, 30, 32, 34]
+                },
+                {
+                    "type": "AssignAction",
+                    "var_name": "index",
+                    "value_expr": "$index + 1",
+                    "depends": [35]
                 }
             ],
-            "depends": [3]
+            "depends": [4]
         },
         {
             "type": "StopAction",
             "inst_index": 0,
-            "depends": [4]
+            "depends": [5]
         },
         {
             "type": "StopAction",

@@ -15,21 +15,23 @@ namespace core {
 
 class LoopAction : public Action {
 public:
-    LoopAction(int32_t loopTimes,
+    LoopAction(ActionContext* ctx,
+               const std::string& conditionExpr,
                std::vector<ActionPtr>&& actions,
                int32_t concurrency)
-        : loopTimes_(loopTimes)
+        : Action(ctx)
+        , conditionExpr_(conditionExpr)
         , actions_(std::move(actions))
         , threadsPool_(std::make_unique<folly::CPUThreadPoolExecutor>(concurrency)) {}
 
     ResultCode doRun() override;
 
     std::string toString() const override {
-        return folly::stringPrintf("Run loop %d times", loopTimes_);
+        return folly::stringPrintf("Run action, the condition is %s", conditionExpr_.c_str());
     }
 
 private:
-    int32_t loopTimes_;
+    std::string conditionExpr_;
     std::vector<ActionPtr> actions_;
     std::unique_ptr<folly::CPUThreadPoolExecutor> threadsPool_;
 };

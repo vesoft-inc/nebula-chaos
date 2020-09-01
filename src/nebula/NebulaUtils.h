@@ -1,4 +1,4 @@
-/* Copyright (c) 2020 nebula inc. All rights reserved.
+/* Copyright (c) 2020 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License,
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
@@ -13,6 +13,8 @@
 #include "nebula/NebulaAction.h"
 #include "core/WaitAction.h"
 #include "core/LoopAction.h"
+#include "core/AssignAction.h"
+#include "nebula/NebulaChaosPlan.h"
 
 namespace nebula_chaos {
 namespace nebula {
@@ -24,6 +26,7 @@ struct LoadContext {
     GraphClient*                  gClient = nullptr;
     // whether to rolling table for this plan
     bool                          rolling;
+    PlanContext*                  planCtx;
 };
 
 class Utils {
@@ -175,7 +178,7 @@ public:
             auto spaceName = obj.getDefault("space_name", "").asString();
             return std::make_unique<CleanDataAction>(ctx.insts[instIndex], ctx.gClient, spaceName);
         } else if (type == "LoopAction") {
-            auto loopTimes = obj.at("loop_times").asInt();
+            auto condition = obj.at("condition").asString();
             auto concurrency = obj.at("concurrency").asInt();
             auto subPlan = obj.at("sub_plan");
             std::vector<std::unique_ptr<core::Action>> actions;
@@ -205,7 +208,10 @@ public:
                     index++;
                 }
             }
-            return std::make_unique<core::LoopAction>(loopTimes, std::move(actions), concurrency);
+            return std::make_unique<core::LoopAction>(&ctx.planCtx->actionCtx,
+                                                      condition,
+                                                      std::move(actions),
+                                                      concurrency);
         } else if (type == "RandomPartitionAction") {
             auto metaIdxs = obj.at("metas");
             std::vector<NebulaInstance*> metas;
@@ -306,6 +312,12 @@ public:
             CHECK_LT(instIndex, ctx.insts.size());
             return std::make_unique<RestoreFromDataDirAction>(ctx.insts[instIndex],
                                                               sourceDataPaths);
+        } else if (type == "AssignAction") {
+            auto varName = obj.at("var_name").asString();
+            auto valExpr = obj.at("value_expr").asString();
+            return std::make_unique<core::AssignAction>(&ctx.planCtx->actionCtx,
+                                                        varName,
+                                                        valExpr);
         }
     LOG(FATAL) << "Unknown type " << type;
     return nullptr;
