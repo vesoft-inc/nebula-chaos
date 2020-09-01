@@ -90,7 +90,7 @@
             "type": "CreateSchemaAction",
             "name": "checkpoint_test",
             "props": [
-                {"name": "nextId", "type": "int"}
+                {"name": "nextId", "type": "string"}
             ],
             "edge_or_tag": false,
             "depends": [8]

@@ -4,39 +4,39 @@
     "rolling_table": true,
     "instances": [
         {
-            "host":"192.168.8.6",
-            "install_dir":"/home/pandasheep.yue/nebula-2.0/nebula-chaos/pro",
-            "conf_dir":"/home/pandasheep.yue/nebula-2.0/nebula-chaos/pro/etc/nebula-graphd.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "graphd",
-            "user": "pandasheep.yue"
+            "user": ""
         },
         {
-            "host":"192.168.8.6",
-            "install_dir":"/home/pandasheep.yue/nebula-2.0/nebula-chaos/pro",
-            "conf_dir":"/home/pandasheep.yue/nebula-2.0/nebula-chaos/pro/etc/nebula-metad.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "metad",
-            "user": "pandasheep.yue"
+            "user": ""
         },
         {
-            "host":"192.168.8.6",
-            "install_dir":"/home/pandasheep.yue/nebula-2.0/nebula-chaos/pro",
-            "conf_dir":"/home/pandasheep.yue/nebula-2.0/nebula-chaos/pro/etc/nebula-storaged-1.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "storaged",
-            "user": "pandasheep.yue"
+            "user": ""
         },
         {
-            "host":"192.168.8.6",
-            "install_dir":"/home/pandasheep.yue/nebula-2.0/nebula-chaos/pro",
-            "conf_dir":"/home/pandasheep.yue/nebula-2.0/nebula-chaos/pro/etc/nebula-storaged-2.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "storaged",
-            "user": "pandasheep.yue"
+            "user": ""
         },
         {
-            "host":"192.168.8.6",
-            "install_dir":"/home/pandasheep.yue/nebula-2.0/nebula-chaos/pro",
-            "conf_dir":"/home/pandasheep.yue/nebula-2.0/nebula-chaos/pro/etc/nebula-storaged-3.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "storaged",
-            "user": "pandasheep.yue"
+            "user": ""
         }
     ],
     "actions" : [
@@ -90,7 +90,7 @@
             "type": "CreateSchemaAction",
             "name": "circle",
             "props": [
-                {"name": "nextId", "type": "int"}
+                {"name": "nextId", "type": "string"}
             ],
             "edge_or_tag": false,
             "depends": [8]

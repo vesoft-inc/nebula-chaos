@@ -76,6 +76,8 @@ public:
             auto col = obj.at("col").asString();
             auto totalRows = obj.getDefault("total_rows", 100000).asInt();
             auto batchNum = obj.getDefault("batch_num", 1).asInt();
+            auto rowSize = obj.getDefault("row_size", 10).asInt();
+            auto startId = obj.getDefault("start_id", 1).asInt();
             auto tryNum = obj.getDefault("try_num", 32).asInt();
             auto retryInterval = obj.getDefault("retry_interval_ms", 100).asInt();
             return std::make_unique<WriteCircleAction>(ctx.gClient,
@@ -83,6 +85,8 @@ public:
                                                        col,
                                                        totalRows,
                                                        batchNum,
+                                                       rowSize,
+                                                       startId,
                                                        tryNum,
                                                        retryInterval);
         } else if (type == "WalkThroughAction") {
@@ -139,7 +143,14 @@ public:
         } else if (type == "CheckLeadersAction") {
             auto expectedNum = obj.at("expected_num").asInt();
             auto spaceName = obj.at("space").asString();
-            return std::make_unique<CheckLeadersAction>(ctx.gClient, expectedNum, spaceName);
+            // If result_var_name is specified, it is used to store the result
+            // of the leader distribution. If not specified, do not check leader distribution.
+            auto resultVarName = obj.getDefault("result_var_name", "").asString();
+            return std::make_unique<CheckLeadersAction>(ctx.gClient,
+                                                        &ctx.planCtx->actionCtx,
+                                                        expectedNum,
+                                                        spaceName,
+                                                        resultVarName);
         } else if (type == "RandomRestartAction") {
             auto insts = obj.at("insts");
             std::vector<NebulaInstance*> targetInsts;
@@ -318,14 +329,21 @@ public:
             return std::make_unique<core::AssignAction>(&ctx.planCtx->actionCtx,
                                                         varName,
                                                         valExpr);
-        } else if (type == "CheckLeaderDistributionAction") {
-            auto resultVarName = obj.at("result_var_name").asString();
-            auto spaceName = obj.at("space_name").asString();
-            return std::make_unique<CheckLeaderDistributionAction>(ctx.gClient,
-                                                                   &ctx.planCtx->actionCtx,
-                                                                   resultVarName,
-                                                                   spaceName);
+        } else if (type == "SetFlagAction") {
+            auto layer = obj.at("layer").asString();
+            auto name = obj.at("name").asString();
+            auto value = obj.at("value").asString();
+            return std::make_unique<SetFlagAction>(ctx.gClient,
+                                                   layer,
+                                                   name,
+                                                   value);
+        } else if (type == "ExecutionExpressionAction") {
+            auto condition = obj.at("condition").asString();
+            return std::make_unique<ExecutionExpressionAction>(&ctx.planCtx->actionCtx, condition);
+        } else if (type == "CompactionAction") {
+            return std::make_unique<CompactionAction>(ctx.gClient);
         }
+
     LOG(FATAL) << "Unknown type " << type;
     return nullptr;
 }

@@ -1,42 +1,42 @@
 {
-    "name": "Nebula scale-up-and-down plan",
+    "name": "Nebula check-leader-stability-in-compaction plan",
     "concurrency": 10,
-    "rolling_table": true,
+    "rolling_table": false,
     "instances": [
         {
-            "host":"192.168.8.6",
-            "install_dir":"/home/pandasheep.yue/nebula-2.0/nebula-chaos/pro",
-            "conf_dir":"/home/pandasheep.yue/nebula-2.0/nebula-chaos/pro/etc/nebula-graphd.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "graphd",
-            "user": "pandasheep.yue"
+            "user": ""
         },
         {
-            "host":"192.168.8.6",
-            "install_dir":"/home/pandasheep.yue/nebula-2.0/nebula-chaos/pro",
-            "conf_dir":"/home/pandasheep.yue/nebula-2.0/nebula-chaos/pro/etc/nebula-metad.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "metad",
-            "user": "pandasheep.yue"
+            "user": ""
         },
         {
-            "host":"192.168.8.6",
-            "install_dir":"/home/pandasheep.yue/nebula-2.0/nebula-chaos/pro",
-            "conf_dir":"/home/pandasheep.yue/nebula-2.0/nebula-chaos/pro/etc/nebula-storaged-1.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "storaged",
-            "user": "pandasheep.yue"
+            "user": ""
         },
         {
-            "host":"192.168.8.6",
-            "install_dir":"/home/pandasheep.yue/nebula-2.0/nebula-chaos/pro",
-            "conf_dir":"/home/pandasheep.yue/nebula-2.0/nebula-chaos/pro/etc/nebula-storaged-2.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "storaged",
-            "user": "pandasheep.yue"
+            "user": ""
         },
         {
-            "host":"192.168.8.6",
-            "install_dir":"/home/pandasheep.yue/nebula-2.0/nebula-chaos/pro",
-            "conf_dir":"/home/pandasheep.yue/nebula-2.0/nebula-chaos/pro/etc/nebula-storaged-3.conf",
+            "host":"",
+            "install_dir":"",
+            "conf_dir":"",
             "type": "storaged",
-            "user": "pandasheep.yue"
+            "user": ""
         }
     ],
     "actions" : [
@@ -67,7 +67,7 @@
         },
         {
             "type": "WaitAction",
-            "wait_time_ms": 15000,
+            "wait_time_ms": 30000,
             "depends": [0]
         },
         {
@@ -78,7 +78,7 @@
             "type": "CreateSpaceAction",
             "space_name": "check_leader_stability_in_compaction",
             "replica": 3,
-            "parts": 10,
+            "parts": 100,
             "depends": [6]
         },
         {
@@ -101,90 +101,138 @@
             "depends": [9]
         },
         {
-            "type": "BalanceLeaderAction",
+            "type": "SetFlagAction",
+            "layer": "storage",
+            "name": "disable_auto_compactions",
+            "value": "true",
             "depends": [10]
         },
         {
-            "type": "CheckLeaderDistributionAction",
-            "result_var_name": "leaderDis1",
-            "space": "check_leader_stability_in_compaction",
+            "type": "SetFlagAction",
+            "layer": "storage",
+            "name": "wal_ttl",
+            "value": "60",
             "depends": [11]
         },
         {
-            "type": "WriteCircleStringAction",
-            "tag": "t",
-            "col": "name",
-            "total_rows": 7000000,
+            "type": "BalanceLeaderAction",
             "depends": [12]
         },
         {
-            "type": "WriteCircleStringAction",
-            "tag": "t",
-            "col": "name",
-            "total_rows": 7000000,
-            "depends": [12]
+            "type": "CheckLeadersAction",
+            "expected_num": 100,
+            "space": "check_leader_stability_in_compaction",
+            "depends": [13]
         },
         {
-            "type": "WriteCircleStringAction",
+            "type": "WriteCircleAction",
             "tag": "t",
             "col": "name",
-            "total_rows": 7000000,
-            "depends": [12]
+            "total_rows": 3000000,
+            "row_size": 1000,
+            "start_id": 1,
+            "depends": [14]
+        },
+        {
+            "type": "WriteCircleAction",
+            "tag": "t",
+            "col": "name",
+            "total_rows": 3000000,
+            "row_size": 1000,
+            "start_id": 3000001,
+            "depends": [14]
+        },
+        {
+            "type": "WriteCircleAction",
+            "tag": "t",
+            "col": "name",
+            "total_rows": 3000000,
+            "row_size": 1000,
+            "start_id": 6000001,
+            "depends": [14]
+        },
+        {
+            "type": "WriteCircleAction",
+            "tag": "t",
+            "col": "name",
+            "total_rows": 3000000,
+            "row_size": 1000,
+            "start_id": 9000001,
+            "depends": [14]
+        },
+        {
+            "type": "WriteCircleAction",
+            "tag": "t",
+            "col": "name",
+            "total_rows": 3000000,
+            "row_size": 1000,
+            "start_id": 12000001,
+            "depends": [14]
         },
         {
             "type": "WaitAction",
             "wait_time_ms": 120000,
-            "depends": [13, 14, 15]
+            "depends": [15, 16, 17, 18, 19]
         },
         {
-            "type": "CheckWalttlFileAction",
-            "depends": [16]
+            "type": "CheckLeadersAction",
+            "expected_num": 100,
+            "space": "check_leader_stability_in_compaction",
+            "result_var_name": "leaderDis1",
+            "depends": [20]
         },
         {
-            "type": "OpenCompactionAction",
-            "depends": [17]
+            "type": "CompactionAction",
+            "depends": [21]
+        },
+        {
+            "type": "SetFlagAction",
+            "layer": "storage",
+            "name": "disable_auto_compactions",
+            "value": "false",
+            "depends": [22]
         },
         {
             "type": "WaitAction",
-            "wait_time_ms": 2000,
-            "depends": [18]
+            "wait_time_ms": 120000,
+            "depends": [23]
         },
         {
-            "type": "CheckLeaderDistributionAction",
-            "result_var_name": "leaderDis2",
+            "type": "CheckLeadersAction",
+            "expected_num": 100,
             "space": "check_leader_stability_in_compaction",
-            "depends": [19]
+            "result_var_name": "leaderDis2",
+            "depends": [24]
         },
         {
-            "type": "CompareLeaderDistributionAction",
-            "para1": "$leaderDis1",
-            "para2": "$leaderDis2",
-            "depends": [20]
+            "type": "ExecutionExpressionAction",
+            "condition": "$leaderDis1 == $leaderDis2",
+            "depends": [25]
         },
         {
             "type": "StopAction",
             "inst_index": 0,
-            "depends": [21]
+            "depends": [26]
         },
         {
             "type": "StopAction",
             "inst_index": 1,
-            "depends": [21]
+            "depends": [26]
         },
         {
             "type": "StopAction",
             "inst_index": 2,
-            "depends": [21]
+            "depends": [26]
         },
         {
             "type": "StopAction",
             "inst_index": 3,
-            "depends": [21]
+            "depends": [26]
         },
         {
             "type": "StopAction",
             "inst_index": 4,
-            "depends": [21]
+            "depends": [26]
         }
     ]
 }

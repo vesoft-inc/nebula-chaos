@@ -26,7 +26,7 @@ NebulaChaosPlan::loadFromFile(const std::string& filename) {
     VLOG(1) << folly::toPrettyJson(jsonObj);
     auto planName = jsonObj.at("name").asString();
     auto instances = jsonObj.at("instances");
-    auto rolling = jsonObj.getDefault("rollling_table", true).asBool();
+    auto rolling = jsonObj.getDefault("rolling_table", true).asBool();
     CHECK(instances.isArray());
     auto it = instances.begin();
     auto ctx = std::make_unique<PlanContext>();

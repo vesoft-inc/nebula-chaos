@@ -52,3 +52,6 @@ Start all services, disturb (simulate slow disk io) while write a circle, then c
 yum install systemtap
 ```
 You may need install `kernel-devel` and `kernel-debuginfo` as well (the version must be same with kernel).
+
+#### [check_leader_stability_in_compaction](conf/check_leader_stability_in_compaction.json)
+Start all services, balance leader, turn off auto_compactions, set wal_ttl to 60s, five concurrent threads write about 10G of data, view the leaders distribution of the current space, enable forced compression, turn on auto_compactions, wait a while, view the leaders distribution of the current space again, compare the results of checking the leaders distribution to see if the leaders have changed.
