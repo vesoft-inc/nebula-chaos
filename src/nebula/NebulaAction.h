@@ -364,6 +364,34 @@ private:
     std::string spaceName_;
 };
 
+class CheckLeaderDistributionAction : public MetaAction {
+public:
+    CheckLeaderDistributionAction(GraphClient* client,
+                                  core::ActionContext* ctx,
+                                  const std::string& resultVarName,
+                                  const std::string& spaceName = "")
+        : MetaAction(client)
+        , ctx_(ctx)
+        , resultVarName_(resultVarName)
+        , spaceName_(spaceName) {}
+
+    ~CheckLeaderDistributionAction() = default;
+
+    ResultCode doRun() override;
+
+    ResultCode checkResp(const ExecutionResponse& resp);
+
+    std::string command() const override {
+        return "show hosts";
+    }
+
+private:
+    core::ActionContext*    ctx_{nullptr};
+    std::string             resultVarName_;
+    std::string             spaceName_;
+    std::string             restult_;
+};
+
 /**
  * Random kill the instance and restart it.
  * We could set the loop times.
@@ -614,7 +642,7 @@ public:
     ResultCode doRun() override;
 
     std::string toString() const override {
-        return folly::stringPrintf("Clean snapshot on instance %s", 
+        return folly::stringPrintf("Clean snapshot on instance %s",
                                    inst_->toString().c_str());
     }
 
@@ -633,7 +661,7 @@ public:
     ResultCode doRun() override;
 
     std::string toString() const override {
-        return folly::stringPrintf("Restore db from snapshot on instance %s", 
+        return folly::stringPrintf("Restore db from snapshot on instance %s",
                                    inst_->toString().c_str());
     }
 
@@ -652,7 +680,7 @@ public:
     ResultCode doRun() override;
 
     std::string toString() const override {
-        return folly::stringPrintf("Restore db from data folder on instance %s", 
+        return folly::stringPrintf("Restore db from data folder on instance %s",
                                    inst_->toString().c_str());
     }
 
@@ -660,6 +688,7 @@ private:
     NebulaInstance* inst_;
     std::string     srcDataPaths_;
 };
+
 }   // namespace nebula
 }   // namespace nebula_chaos
 

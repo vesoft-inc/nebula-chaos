@@ -106,7 +106,7 @@
         },
         {
             "type": "CheckLeaderDistributionAction",
-            "expected_num": 10,
+            "result_var_name": "leaderDis1",
             "space": "check_leader_stability_in_compaction",
             "depends": [11]
         },
@@ -137,43 +137,54 @@
             "depends": [13, 14, 15]
         },
         {
-            "type": "OpenCompactionAction",
+            "type": "CheckWalttlFileAction",
             "depends": [16]
         },
         {
-            "type": "CheckLeaderDistributionAction",
-            "expected_num": 10,
-            "space": "check_leader_stability_in_compaction",
+            "type": "OpenCompactionAction",
             "depends": [17]
         },
         {
-            "type": "CompareLeaderDistributionAction",
+            "type": "WaitAction",
+            "wait_time_ms": 2000,
             "depends": [18]
+        },
+        {
+            "type": "CheckLeaderDistributionAction",
+            "result_var_name": "leaderDis2",
+            "space": "check_leader_stability_in_compaction",
+            "depends": [19]
+        },
+        {
+            "type": "CompareLeaderDistributionAction",
+            "para1": "$leaderDis1",
+            "para2": "$leaderDis2",
+            "depends": [20]
         },
         {
             "type": "StopAction",
             "inst_index": 0,
-            "depends": [19]
+            "depends": [21]
         },
         {
             "type": "StopAction",
             "inst_index": 1,
-            "depends": [19]
+            "depends": [21]
         },
         {
             "type": "StopAction",
             "inst_index": 2,
-            "depends": [19]
+            "depends": [21]
         },
         {
             "type": "StopAction",
             "inst_index": 3,
-            "depends": [19]
+            "depends": [21]
         },
         {
             "type": "StopAction",
             "inst_index": 4,
-            "depends": [19]
+            "depends": [21]
         }
     ]
 }

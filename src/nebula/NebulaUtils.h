@@ -318,6 +318,13 @@ public:
             return std::make_unique<core::AssignAction>(&ctx.planCtx->actionCtx,
                                                         varName,
                                                         valExpr);
+        } else if (type == "CheckLeaderDistributionAction") {
+            auto resultVarName = obj.at("result_var_name").asString();
+            auto spaceName = obj.at("space_name").asString();
+            return std::make_unique<CheckLeaderDistributionAction>(ctx.gClient,
+                                                                   &ctx.planCtx->actionCtx,
+                                                                   resultVarName,
+                                                                   spaceName);
         }
     LOG(FATAL) << "Unknown type " << type;
     return nullptr;

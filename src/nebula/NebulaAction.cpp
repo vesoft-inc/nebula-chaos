@@ -8,6 +8,7 @@
 #include "nebula/NebulaUtils.h"
 #include "utils/SshHelper.h"
 #include "core/CheckProcAction.h"
+#include "core/AssignAction.h"
 #include <folly/Random.h>
 #include <folly/GLog.h>
 
@@ -340,6 +341,76 @@ ResultCode CheckLeadersAction::checkResp(const ExecutionResponse& resp) const {
         }
     } catch (const std::exception& e) {
         LOG(ERROR) << "col4 is " <<  leaderStr << ", exception: " << e.what();
+    }
+    return ResultCode::ERR_FAILED;
+}
+
+ResultCode CheckLeaderDistributionAction::checkResp(const ExecutionResponse& resp) {
+    restult_.clear();
+    if (resp.rows.empty()) {
+        LOG(ERROR) << "Result should not be empty!";
+        return ResultCode::ERR_FAILED;
+    }
+
+    bool first = true;
+    for (uint32_t i = 0; i < resp.rows.size() - 1; i++) {
+        auto& row = resp.rows[i];
+        if (row.columns.size() != 6) {
+            LOG(ERROR) << "Column number is wrong!";
+            return ResultCode::ERR_FAILED;
+        }
+
+        auto& ipStr = row.columns[0].get_str();
+        if (ipStr.empty()) {
+            return ResultCode::ERR_FAILED;
+        }
+        auto& leaderStr = row.columns[4].get_str();
+        if (leaderStr.empty()) {
+            return ResultCode::ERR_FAILED;
+        }
+
+        std::vector<folly::StringPiece> spaceLeaders;
+        folly::split(",", leaderStr, spaceLeaders);
+        for (auto& sl : spaceLeaders) {
+            std::vector<folly::StringPiece> oneSpaceLeaderPair;
+            folly::split(":", sl, oneSpaceLeaderPair);
+            CHECK_EQ(2, oneSpaceLeaderPair.size());
+            auto spaceName = folly::trimWhitespace(oneSpaceLeaderPair[0]);
+            if (spaceName.str() == spaceName_) {
+                auto leaderNum = folly::trimWhitespace(oneSpaceLeaderPair[1]);
+                if (!first) {
+                    restult_ += ",";
+                }
+                restult_ += ipStr;
+                restult_ += ":";
+                restult_ += leaderNum.str();
+                break;
+            }
+        }
+    }
+    return ResultCode::OK;
+}
+
+ResultCode CheckLeaderDistributionAction::doRun() {
+    CHECK_NOTNULL(client_);
+    auto cmd = command();
+    LOG(INFO) << "Send " << cmd << " to graphd";
+    ExecutionResponse resp;
+    int32_t retry = 0;
+    while (++retry < retryTimes_) {
+        client_->execute(cmd, resp);
+        LOG(INFO) << "Execute " << cmd << " successfully!";
+        auto ret = checkResp(resp);
+        if (ret == ResultCode::ERR_FAILED_NO_RETRY) {
+            return ret;
+        }
+        if (ret == ResultCode::OK) {
+            nebula_chaos::core::AssignAction action(ctx_, resultVarName_, restult_);
+            return action.doRun();
+        }
+        LOG(ERROR) << "Execute " << cmd << " failed, retry " << retry
+                   << " after " << retry << " seconds...";
+        sleep(retry);
     }
     return ResultCode::ERR_FAILED;
 }
