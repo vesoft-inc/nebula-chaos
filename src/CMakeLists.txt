@@ -1,4 +1,6 @@
 nebula_add_subdirectory(common)
+nebula_add_subdirectory(expression)
+nebula_add_subdirectory(parser)
 nebula_add_subdirectory(utils)
 nebula_add_subdirectory(core)
 nebula_add_subdirectory(nebula)

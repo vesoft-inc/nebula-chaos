@@ -233,6 +233,7 @@ add_compile_options(-Wunused-parameter)
 add_compile_options(-Wshadow)
 add_compile_options(-Wno-invalid-pch)
 add_compile_options(-Wno-strict-aliasing)
+add_compile_options(-Wno-unused-function)
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     # This requries GCC 5.1+
@@ -352,6 +353,7 @@ endmacro()
 
 include_directories(AFTER ${NEBULA_CHAOS_HOME}/src)
 include_directories(AFTER ${CMAKE_CURRENT_BINARY_DIR}/src)
+include_directories(AFTER ${CMAKE_CURRENT_BINARY_DIR}/src/parser)
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L ${NEBULA_THIRDPARTY_ROOT}/lib")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L ${NEBULA_THIRDPARTY_ROOT}/lib64")

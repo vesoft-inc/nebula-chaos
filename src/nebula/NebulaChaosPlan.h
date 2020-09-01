@@ -21,6 +21,7 @@ struct PlanContext {
     std::vector<NebulaInstance>  storageds;
     std::vector<NebulaInstance>  metads;
     NebulaInstance               graphd;
+    core::ActionContext          actionCtx;
 };
 
 class NebulaChaosPlan : public nebula_chaos::core::ChaosPlan {

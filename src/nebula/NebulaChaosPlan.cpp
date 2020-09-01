@@ -87,6 +87,7 @@ NebulaChaosPlan::loadFromFile(const std::string& filename) {
     loadCtx.insts = std::move(insts);
     loadCtx.gClient = plan->getGraphClient();
     loadCtx.rolling = rolling;
+    loadCtx.planCtx = plan->getContext();
     {
         auto actionIt = actionsItem.begin();
         while (actionIt != actionsItem.end()) {

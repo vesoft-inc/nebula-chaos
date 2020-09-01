@@ -119,8 +119,14 @@
             "depends": [12]
         },
         {
+            "type": "AssignAction",
+            "var_name": "index",
+            "value_expr": "0",
+            "depends": [11]
+        },
+        {
             "type": "LoopAction",
-            "loop_times": 10,
+            "condition": "$index < 10",
             "concurrency": 3,
             "sub_plan": [
                 {
@@ -157,9 +163,15 @@
                     "type": "StartAction",
                     "inst_index": 4,
                     "depends": [1, 2, 3]
+                },
+                {
+                    "type": "AssignAction",
+                    "var_name": "index",
+                    "value_expr": "$index + 1",
+                    "depends": [4, 5, 6]
                 }
             ],
-            "depends": [12]
+            "depends": [13]
         },
         {
             "type": "WaitAction",
