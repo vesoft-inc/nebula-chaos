@@ -1,5 +1,5 @@
 {
-    "name": "Nebula random-kill-clean plan",
+    "name": "Nebula random-kill-truncate-wal plan",
     "concurrency": 10,
     "rolling_table": true,
     "instances": [

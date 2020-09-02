@@ -111,18 +111,18 @@
             "depends": [11]
         },
         {
+            "type": "AssignAction",
+            "var_name": "index",
+            "value_expr": "0",
+            "depends": [12]
+        },
+        {
             "type": "WriteCircleAction",
             "tag": "circle_kill_all",
             "col": "nextId",
             "total_rows": 100000,
             "batch_num": 1,
-            "depends": [12]
-        },
-        {
-            "type": "AssignAction",
-            "var_name": "index",
-            "value_expr": "0",
-            "depends": [11]
+            "depends": [13]
         },
         {
             "type": "LoopAction",
@@ -176,39 +176,39 @@
         {
             "type": "WaitAction",
             "wait_time_ms": 20000,
-            "depends": [13, 14]
+            "depends": [14, 15]
         },
         {
             "type": "WalkThroughAction",
             "tag": "circle_kill_all",
             "col": "nextId",
             "total_rows": 100000,
-            "depends": [15]
+            "depends": [16]
         },
         {
             "type": "StopAction",
             "inst_index": 0,
-            "depends": [16]
+            "depends": [17]
         },
         {
             "type": "StopAction",
             "inst_index": 1,
-            "depends": [16]
+            "depends": [17]
         },
         {
             "type": "StopAction",
             "inst_index": 2,
-            "depends": [16]
+            "depends": [17]
         },
         {
             "type": "StopAction",
             "inst_index": 3,
-            "depends": [16]
+            "depends": [17]
         },
         {
             "type": "StopAction",
             "inst_index": 4,
-            "depends": [16]
+            "depends": [17]
         }
      ]
 }

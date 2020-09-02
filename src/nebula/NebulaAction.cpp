@@ -126,6 +126,7 @@ ResultCode CleanDataAction::doRun() {
         auto rc = desc.doRun();
         if (rc != ResultCode::OK) {
             LOG(ERROR) << "Failed to desc space " << spaceName_;
+            return rc;
         }
         auto spaceId = desc.spaceId();
         for (const auto& dataPath : dataPaths.value()) {
@@ -592,6 +593,7 @@ ResultCode CleanWalAction::doRun() {
     auto rc = desc.doRun();
     if (rc != ResultCode::OK) {
         LOG(ERROR) << "Failed to desc space " << spaceName_;
+        return rc;
     }
     auto spaceId = desc.spaceId();
     auto wals = inst_->walDirs(spaceId);
@@ -1071,6 +1073,7 @@ ResultCode TruncateWalAction::doRun() {
     auto rc = desc.doRun();
     if (rc != ResultCode::OK) {
         LOG(ERROR) << "Failed to desc space " << spaceName_;
+        return rc;
     }
     auto spaceId = desc.spaceId();
 
@@ -1153,6 +1156,8 @@ ResultCode RandomTruncateRestartAction::disturb() {
     {
         // Truncate last wal of specified space and part
         TruncateWalAction truncate({picked_}, client_, spaceName_, partId_, 1, bytes_);
+        LOG(INFO) << "Truncate wal of space " << spaceName_ << ", part " << partId_
+                  << " on " << picked_->toString();
         auto rc = truncate.doRun();
         if (rc != ResultCode::OK) {
             LOG(ERROR) << "Truncate wal of " << picked_->toString() << " failed!";
