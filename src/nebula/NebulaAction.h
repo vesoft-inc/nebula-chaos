@@ -37,8 +37,10 @@ private:
 
 class StartAction : public core::Action {
 public:
-    StartAction(NebulaInstance* inst)
-        : inst_(inst) {
+    StartAction(NebulaInstance* inst,
+                bool loadFiu = false)
+        : inst_(inst)
+        , loadFiu_(loadFiu) {
         VLOG(1) << "Construct StartAction for " << inst_->toString();
     }
 
@@ -54,6 +56,7 @@ public:
 
 private:
     NebulaInstance* inst_ = nullptr;
+    bool loadFiu_ = false;
 };
 
 class StopAction : public core::Action {
@@ -660,6 +663,46 @@ private:
     NebulaInstance* inst_;
     std::string     srcDataPaths_;
 };
+
+/**
+ * Random pick one storage and start fiu injection. If probability is less than 1, this action
+ * will inject fault $like "fiu-ctrl -c 'enable_random name=posix/io/rw/write' pid". Otherwise,
+ * this action will inject fault like "fiu-ctrl -c 'enable name=posix/io/rw/write' pid"
+ * */
+class RandomFiuAction : public core::DisturbAction {
+public:
+    RandomFiuAction(const std::vector<NebulaInstance*>& storages,
+              int32_t loopTimes,
+              int32_t timeToDisurb,
+              int32_t timeToRecover,
+              const std::string& name,
+              double probability = 1)
+        : DisturbAction(loopTimes, timeToDisurb, timeToRecover)
+        , storages_(storages)
+        , name_(name)
+        , probability_(probability) {
+        CHECK_GE(probability_, 0);
+        CHECK_LE(probability_, 1);
+    }
+
+    ~RandomFiuAction() = default;
+
+    std::string toString() const override {
+        return folly::stringPrintf("Fiu injection %s: loop %d", name_.c_str(), loopTimes_);
+    }
+
+private:
+    ResultCode disturb() override;
+    ResultCode recover() override;
+
+private:
+    std::vector<NebulaInstance*> storages_;
+    std::string name_;
+    double probability_;
+    NebulaInstance* picked_;
+    int32_t pid_;
+};
+
 }   // namespace nebula
 }   // namespace nebula_chaos
 
