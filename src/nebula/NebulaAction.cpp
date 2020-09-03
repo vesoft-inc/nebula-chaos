@@ -801,8 +801,8 @@ ResultCode RestoreFromCheckpointAction::doRun() {
                     inst_->owner());
         CHECK_EQ(0, ret.exitStatus());
 
-        auto cpCmd = "cp -fr %s/SNAPSHOT*/* %s/../";
-        auto copyCommand = folly::stringPrintf(cpCmd, checkpoint.c_str(), checkpoint.c_str());
+        auto cpCmd = "cp -fr %s/`ls -t %s | head -n 1`/* %s/../";
+        auto copyCommand = folly::stringPrintf(cpCmd, checkpoint.c_str(), checkpoint.c_str(), checkpoint.c_str());
         LOG(INFO) << copyCommand << " on " << inst_->toString() << " as " << inst_->owner();
         ret = utils::SshHelper::run(
             copyCommand,

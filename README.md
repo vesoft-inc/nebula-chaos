@@ -6,6 +6,9 @@ There are some built-in plans in nebula-chaos. Each plan is a json in [conf](con
 
 A utils to draw a flow chart of the plan is included, use it like this: `python3 src/tools/FlowChart.py conf/scale_up_and_down.json`.
 
+#### [checkpoint_create_restore](conf/checkpoint_create_restore_plan.json)
+Start all services, write data, then create a check point, write some more data, restore from check point. In the end, we check the validity by checking whether data is the same as the one when we create check point.
+
 #### [clean_wals_restart](conf/clean_wals_restart.json)
 Clean all wals of specified space, then start all services, write a circle, then check data integrity.
 
