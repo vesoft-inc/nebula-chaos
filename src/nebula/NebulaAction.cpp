@@ -175,6 +175,30 @@ ResultCode MetaAction::doRun() {
     return ResultCode::ERR_FAILED;
 }
 
+ResultCode WriteVerticesAction::doRun() {
+    CHECK_NOTNULL(this->client_);
+    std::vector<std::string> batchCmds;
+    batchCmds.reserve(1024);
+    uint64_t vid = startVid_;
+    while (vid < totalRows_ + startVid_) {
+        if (batchCmds.size() == batchNum_) {
+            auto res = sendBatch(batchCmds);
+            if (res != ResultCode::OK) {
+                LOG(ERROR) << "Send request failed!";
+                return res;
+            }
+            FB_LOG_EVERY_MS(INFO, 3000) << "Send requests successfully, row "
+                                        << vid;
+            batchCmds.clear();
+        }
+        batchCmds.emplace_back(folly::stringPrintf("%ld:(\"%s%ld\")", vid, strValPrefix_.c_str(), vid));
+        vid++;
+    }
+    auto res = sendBatch(batchCmds);
+    LOG(INFO) << "Send all requests successfully, rows count : " << totalRows_;
+    return res;
+}
+
 ResultCode WriteCircleAction::sendBatch(const std::vector<std::string>& batchCmds) {
     auto joinStr = folly::join(",", batchCmds);
     auto cmd = folly::stringPrintf("INSERT VERTEX %s (%s) VALUES %s",
@@ -874,6 +898,47 @@ ResultCode RestoreFromDataDirAction::doRun() {
 
     }
     return ResultCode::OK;
+}
+
+bool VerifyVerticesAction::verifyVertex(const std::string& cmd, int64_t vid) {
+    VLOG(1) << cmd;
+    ExecutionResponse resp;
+    uint32_t tryTimes = 0;
+    uint32_t retryInterval = retryIntervalMs_;
+    while (++tryTimes < try_) {
+        auto res = client_->execute(cmd, resp);
+        if (res == Code::SUCCEEDED) {
+            if (resp.__isset.rows && !resp.rows.empty() && resp.rows.size() > 0) {
+                auto val = folly::stringPrintf("%s%ld", strValPrefix_.c_str(), vid);
+                return resp.rows[0].columns[1].get_str() == val;
+            }
+        } else {
+            usleep(retryInterval * 1000 * tryTimes);
+            LOG(WARNING) << "Failed to send request, tryTimes " << tryTimes
+                         << ", error code " << static_cast<int32_t>(res);
+        }
+    }
+    return false;
+}
+
+ResultCode VerifyVerticesAction::doRun() {
+    CHECK_NOTNULL(client_);
+    uint64_t id = startVid_;
+    while (id < totalRows_ + startVid_) {
+        auto cmd = folly::stringPrintf("FETCH PROP ON %s %ld YIELD %s.%s",
+                                       tag_.c_str(),
+                                       id,
+                                       tag_.c_str(),
+                                       col_.c_str());
+        FB_LOG_EVERY_MS(INFO, 3000) << cmd;
+        auto res = verifyVertex(cmd, id);
+        if ((res && expectedFail_) || (!res && !expectedFail_)) {
+            LOG(ERROR) << "verify vertex fail : " << id;
+            return ResultCode::ERR_FAILED;
+        }
+        id++;
+    }
+    return id == totalRows_ + startVid_ ? ResultCode::OK : ResultCode::ERR_FAILED;
 }
 }   // namespace nebula
 }   // namespace nebula_chaos

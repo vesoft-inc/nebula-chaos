@@ -1,6 +1,7 @@
 {
     "name": "Nebula checkpoint plan",
     "concurrency": 10,
+    "email": "",
     "rolling_table": true,
     "instances": [
         {
@@ -41,40 +42,48 @@
     ],
     "actions" : [
         {
+            "action_num" : 0,
             "type": "StartAction",
             "inst_index": 0,
             "depends": [2, 3, 4]
         },
         {
+            "action_num" : 1,
             "type": "StartAction",
             "inst_index": 1,
             "depends": []
         },
         {
+            "action_num" : 2,
             "type": "StartAction",
             "inst_index": 2,
             "depends": [1]
         },
         {
+            "action_num" : 3,
             "type": "StartAction",
             "inst_index": 3,
             "depends": [1]
         },
         {
+            "action_num" : 4,
             "type": "StartAction",
             "inst_index": 4,
             "depends": [1]
         },
         {
+            "action_num" : 5,
             "type": "WaitAction",
             "wait_time_ms": 15000,
             "depends": [0]
         },
         {
+            "action_num" : 6,
             "type": "ClientConnectAction",
             "depends": [5]
         },
         {
+            "action_num" : 7,
             "type": "CreateSpaceAction",
             "space_name": "checkpoint_space",
             "replica": 3,
@@ -82,149 +91,215 @@
             "depends": [6]
         },
         {
+            "action_num" : 8,
             "type": "UseSpaceAction",
             "space_name": "checkpoint_space",
             "depends": [7]
         },
         {
+            "action_num" : 9,
             "type": "CreateSchemaAction",
             "name": "checkpoint_test",
             "props": [
-                {"name": "nextId", "type": "int"}
+                {"name": "nextId", "type": "string"}
             ],
             "edge_or_tag": false,
             "depends": [8]
         },
         {
+            "action_num" : 10,
             "type": "WaitAction",
             "wait_time_ms": 5000,
             "depends": [9]
         },
         {
+            "action_num" : 11,
             "type": "BalanceLeaderAction",
             "depends": [10]
         },
         {
+            "action_num" : 12,
             "type": "CheckLeadersAction",
             "expected_num": 10,
             "space": "checkpoint_space",
             "depends": [11]
         },
         {
-            "type": "WriteCircleAction",
+            "action_num" : 13,
+            "type": "WriteVerticesAction",
             "tag": "checkpoint_test",
             "col": "nextId",
-            "total_rows": 100000,
+            "total_rows": 50000,
+            "str_val_prefix": "row_",
             "depends": [12]
         },
         {
+            "action_num" : 14,
             "type": "CreateCheckpointAction",
             "wait_time_ms": 3000,
             "depends": [13]
         },
         {
+            "action_num" : 15,
             "type": "WaitAction",
             "wait_time_ms": 3000,
             "depends": [14]
         },
         {
-            "type": "WriteCircleAction",
+            "action_num" : 16,
+            "type": "WriteVerticesAction",
             "tag": "checkpoint_test",
             "col": "nextId",
-            "total_rows": 200000,
+            "total_rows": 60000,
+            "str_val_prefix": "new_row_",
             "depends": [15]
         },
         {
-            "type": "StopAction",
-            "inst_index": 2,
-            "depends": [16]
-        },
-        {
-            "type": "StopAction",
-            "inst_index": 3,
-            "depends": [16]
-        },
-        {
-            "type": "StopAction",
-            "inst_index": 4,
-            "depends": [16]
-        },
-        {
-            "type": "WaitAction",
-            "wait_time_ms": 3000,
-            "depends": [17, 18, 19]
-        },
-        {
-            "type": "RestoreFromCheckpointAction",
-            "inst_index": 2,
-            "depends": [20]
-        },
-        {
-            "type": "RestoreFromCheckpointAction",
-            "inst_index": 3,
-            "depends": [20]
-        },
-        {
-            "type": "RestoreFromCheckpointAction",
-            "inst_index": 4,
-            "depends": [20]
-        },
-        {
-            "type": "WaitAction",
-            "wait_time_ms": 3000,
-            "depends": [21, 22, 23]
-        },
-        {
-            "type": "StartAction",
-            "inst_index": 2,
-            "depends": [24]
-        },
-        {
-            "type": "StartAction",
-            "inst_index": 3,
-            "depends": [24]
-        },
-        {
-            "type": "StartAction",
-            "inst_index": 4,
-            "depends": [24]
-        },
-        {
-            "type": "WaitAction",
-            "wait_time_ms": 15000,
-            "depends": [25, 26, 27]
-        },
-        {
-            "type": "WalkThroughAction",
-            "tag": "checkpoint_test",
-            "col": "nextId",
-            "total_rows": 100000,
-            "depends": [28]
-        },
-        {
-            "type": "StopAction",
-            "inst_index": 0,
-            "depends": [29]
-        },
-        {
+            "action_num" : 17,
             "type": "StopAction",
             "inst_index": 1,
-            "depends": [29]
+            "depends": [16]
         },
         {
+            "action_num" : 18,
             "type": "StopAction",
             "inst_index": 2,
-            "depends": [29]
+            "depends": [16]
         },
         {
+            "action_num" : 19,
             "type": "StopAction",
             "inst_index": 3,
-            "depends": [29]
+            "depends": [16]
         },
         {
+            "action_num" : 20,
             "type": "StopAction",
             "inst_index": 4,
-            "depends": [29]
+            "depends": [16]
+        },
+        {
+            "action_num" : 21,
+            "type": "WaitAction",
+            "wait_time_ms": 3000,
+            "depends": [17, 18, 19, 20]
+        },
+        {
+            "action_num" : 22,
+            "type": "RestoreFromCheckpointAction",
+            "inst_index": 1,
+            "depends": [21]
+        },
+        {
+            "action_num" : 23,
+            "type": "RestoreFromCheckpointAction",
+            "inst_index": 2,
+            "depends": [21]
+        },
+        {
+            "action_num" : 24,
+            "type": "RestoreFromCheckpointAction",
+            "inst_index": 3,
+            "depends": [20]
+        },
+        {
+            "action_num" : 25,
+            "type": "RestoreFromCheckpointAction",
+            "inst_index": 4,
+            "depends": [20]
+        },
+        {
+            "action_num" : 26,
+            "type": "WaitAction",
+            "wait_time_ms": 3000,
+            "depends": [22, 23, 24, 25]
+        },
+        {
+            "action_num" : 27,
+            "type": "StartAction",
+            "inst_index": 1,
+            "depends": [26]
+        },
+        {
+            "action_num" : 28,
+            "type": "StartAction",
+            "inst_index": 2,
+            "depends": [26]
+        },
+        {
+            "action_num" : 29,
+            "type": "StartAction",
+            "inst_index": 3,
+            "depends": [26]
+        },
+        {
+            "action_num" : 30,
+            "type": "StartAction",
+            "inst_index": 4,
+            "depends": [26]
+        },
+        {
+            "action_num" : 31,
+            "type": "WaitAction",
+            "wait_time_ms": 15000,
+            "depends": [27, 28, 29, 30]
+        },
+        {
+            "action_num" : 32,
+            "type": "CheckLeadersAction",
+            "expected_num": 10,
+            "space": "checkpoint_space",
+            "depends": [31]
+        },
+        {
+            "action_num" : 33,
+            "type": "VerifyVerticesAction",
+            "tag": "checkpoint_test",
+            "col": "nextId",
+            "total_rows": 50000,
+            "str_val_prefix": "row_",
+            "depends": [32]
+        },
+        {
+            "action_num" : 34,
+            "type": "VerifyVerticesAction",
+            "tag": "checkpoint_test",
+            "col": "nextId",
+            "total_rows": 10000,
+            "start_vid": 60001,
+            "str_val_prefix": "new_row_",
+            "expected_fail": true,
+            "depends": [33]
+        },
+        {
+            "action_num" : 35,
+            "type": "StopAction",
+            "inst_index": 0,
+            "depends": [34]
+        },
+        {
+            "action_num" : 36,
+            "type": "StopAction",
+            "inst_index": 1,
+            "depends": [34]
+        },
+        {
+            "action_num" : 37,
+            "type": "StopAction",
+            "inst_index": 2,
+            "depends": [34]
+        },
+        {
+            "action_num" : 38,
+            "type": "StopAction",
+            "inst_index": 3,
+            "depends": [34]
+        },
+        {
+            "action_num" : 39,
+            "type": "StopAction",
+            "inst_index": 4,
+            "depends": [34]
         }
     ]
 }

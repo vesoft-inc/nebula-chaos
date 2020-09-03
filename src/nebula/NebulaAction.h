@@ -129,10 +129,10 @@ public:
         return folly::stringPrintf("Write data to %s", client_->serverAddress().c_str());
     }
 
-private:
+protected:
    ResultCode sendBatch(const std::vector<std::string>& batchCmds);
 
-private:
+protected:
     GraphClient* client_ = nullptr;
     std::string tag_;
     std::string col_;
@@ -140,6 +140,38 @@ private:
     uint32_t    batchNum_;
     uint32_t    try_;
     uint32_t    retryIntervalMs_;
+};
+
+class WriteVerticesAction : public WriteCircleAction {
+public:
+    WriteVerticesAction(GraphClient* client,
+                        const std::string& tag,
+                        const std::string& col,
+                        uint64_t totalRows = 10000,
+                        uint32_t batchNum = 1,
+                        uint32_t tryNum = 32,
+                        uint32_t retryIntervalMs = 1,
+                        uint64_t startVid = 1,
+                        const std::string& strValPrefix = "row_")
+        : WriteCircleAction(client,
+                            tag,
+                            col,
+                            totalRows,
+                            batchNum,
+                            tryNum,
+                            retryIntervalMs)
+        , client_(client)
+        , startVid_(startVid)
+        , strValPrefix_(strValPrefix) {};
+
+    virtual ~WriteVerticesAction() = default;
+
+    ResultCode doRun() override;
+
+private:
+    GraphClient*             client_ = nullptr;
+    uint64_t                 startVid_;
+    std::string              strValPrefix_;
 };
 
 class WalkThroughAction : public core::Action {
@@ -660,6 +692,53 @@ private:
     NebulaInstance* inst_;
     std::string     srcDataPaths_;
 };
+
+class VerifyVerticesAction : public core::Action {
+public:
+    VerifyVerticesAction(GraphClient* client,
+                         const std::string& tag,
+                         const std::string& col,
+                         uint64_t totalRows,
+                         uint32_t tryNum = 32,
+                         uint32_t retryIntervalMs = 1,
+                         uint64_t startVid = 1,
+                         const std::string& strValPrefix = "row_",
+                         bool expectedFail = false)
+        : client_(client)
+        , tag_(tag)
+        , col_(col)
+        , totalRows_(totalRows)
+        , try_(tryNum)
+        , retryIntervalMs_(retryIntervalMs)
+        , startVid_(startVid)
+        , strValPrefix_(strValPrefix)
+        , expectedFail_(expectedFail) {}
+
+    ~VerifyVerticesAction() = default;
+
+    ResultCode doRun() override;
+
+    std::string toString() const override {
+        return folly::stringPrintf("Verify vertices, from %ld, total %ld",
+                                   startVid_,
+                                   totalRows_);
+    }
+
+private:
+    bool verifyVertex(const std::string& cmd, int64_t vid);
+
+private:
+    GraphClient* client_ = nullptr;
+    std::string  tag_;
+    std::string  col_;
+    uint64_t     totalRows_;
+    uint32_t     try_;
+    uint32_t     retryIntervalMs_;
+    uint64_t     startVid_ = 1;
+    std::string  strValPrefix_;
+    bool         expectedFail_;
+};
+
 }   // namespace nebula
 }   // namespace nebula_chaos
 

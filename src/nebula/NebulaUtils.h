@@ -85,6 +85,27 @@ public:
                                                        batchNum,
                                                        tryNum,
                                                        retryInterval);
+        } else if (type == "WriteVerticesAction") {
+            auto tag = obj.at("tag").asString();
+            if (ctx.rolling) {
+                tag = Utils::getOperatingTable(tag);
+            }
+            auto col = obj.at("col").asString();
+            auto totalRows = obj.getDefault("total_rows", 100000).asInt();
+            auto batchNum = obj.getDefault("batch_num", 1).asInt();
+            auto tryNum = obj.getDefault("try_num", 32).asInt();
+            auto retryInterval = obj.getDefault("retry_interval_ms", 100).asInt();
+            auto startVid = obj.getDefault("start_vid", 1).asInt();
+            auto strValPrefix = obj.getDefault("str_val_prefix", "row_").asString();
+            return std::make_unique<WriteVerticesAction>(ctx.gClient,
+                                                         tag,
+                                                         col,
+                                                         totalRows,
+                                                         batchNum,
+                                                         tryNum,
+                                                         retryInterval,
+                                                         startVid,
+                                                         strValPrefix);
         } else if (type == "WalkThroughAction") {
             auto tag = obj.at("tag").asString();
             if (ctx.rolling) {
@@ -318,6 +339,27 @@ public:
             return std::make_unique<core::AssignAction>(&ctx.planCtx->actionCtx,
                                                         varName,
                                                         valExpr);
+        } else if (type == "VerifyVerticesAction") {
+            auto tag = obj.at("tag").asString();
+            if (ctx.rolling) {
+                tag = Utils::getOperatingTable(tag);
+            }
+            auto col = obj.at("col").asString();
+            auto totalRows = obj.getDefault("total_rows", 100000).asInt();
+            auto tryNum = obj.getDefault("try_num", 32).asInt();
+            auto retryInterval = obj.getDefault("retry_interval_ms", 100).asInt();
+            auto startVid = obj.getDefault("start_vid", 1).asInt();
+            auto strValPrefix = obj.getDefault("str_val_prefix", "row_").asString();
+            auto expectedFail = obj.getDefault("expected_fail", false).asBool();
+            return std::make_unique<VerifyVerticesAction>(ctx.gClient,
+                                                          tag,
+                                                          col,
+                                                          totalRows,
+                                                          tryNum,
+                                                          retryInterval,
+                                                          startVid,
+                                                          strValPrefix,
+                                                          expectedFail);
         }
     LOG(FATAL) << "Unknown type " << type;
     return nullptr;
