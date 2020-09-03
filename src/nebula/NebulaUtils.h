@@ -87,6 +87,9 @@ public:
                                                        retryInterval);
         } else if (type == "WriteVerticesAction") {
             auto tag = obj.at("tag").asString();
+            if (ctx.rolling) {
+                tag = Utils::getOperatingTable(tag);
+            }
             auto col = obj.at("col").asString();
             auto totalRows = obj.getDefault("total_rows", 100000).asInt();
             auto batchNum = obj.getDefault("batch_num", 1).asInt();
@@ -338,6 +341,9 @@ public:
                                                         valExpr);
         } else if (type == "VerifyVerticesAction") {
             auto tag = obj.at("tag").asString();
+            if (ctx.rolling) {
+                tag = Utils::getOperatingTable(tag);
+            }
             auto col = obj.at("col").asString();
             auto totalRows = obj.getDefault("total_rows", 100000).asInt();
             auto tryNum = obj.getDefault("try_num", 32).asInt();

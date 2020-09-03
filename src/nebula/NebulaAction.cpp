@@ -180,7 +180,7 @@ ResultCode WriteVerticesAction::doRun() {
     std::vector<std::string> batchCmds;
     batchCmds.reserve(1024);
     uint64_t vid = startVid_;
-    while (vid <= totalRows_ + startVid_) {
+    while (vid < totalRows_ + startVid_) {
         if (batchCmds.size() == batchNum_) {
             auto res = sendBatch(batchCmds);
             if (res != ResultCode::OK) {
@@ -191,7 +191,7 @@ ResultCode WriteVerticesAction::doRun() {
                                         << vid;
             batchCmds.clear();
         }
-        auto val = folly::stringPrintf("%ld:%s%ld", vid, strValPrefix_.c_str(), vid);
+        batchCmds.emplace_back(folly::stringPrintf("%ld:(\"%s%ld\")", vid, strValPrefix_.c_str(), vid));
         vid++;
     }
     auto res = sendBatch(batchCmds);
@@ -908,13 +908,10 @@ bool VerifyVerticesAction::verifyVertex(const std::string& cmd, int64_t vid) {
     while (++tryTimes < try_) {
         auto res = client_->execute(cmd, resp);
         if (res == Code::SUCCEEDED) {
-            if (!resp.__isset.rows || resp.rows.empty() || resp.rows[0].columns.empty()) {
-                LOG(ERROR) << "Bad result, resp.rows size " << resp.rows.size();
-                return false;
+            if (resp.__isset.rows && !resp.rows.empty() && resp.rows.size() > 0) {
+                auto val = folly::stringPrintf("%s%ld", strValPrefix_.c_str(), vid);
+                return resp.rows[0].columns[1].get_str() == val;
             }
-            VLOG(1) << resp.rows.size() << ", " << resp.rows[0].columns.size();
-            auto val = folly::stringPrintf("%s%ld", strValPrefix_.c_str(), vid);
-            return resp.rows[0].columns[1].get_str() == val;
         } else {
             usleep(retryInterval * 1000 * tryTimes);
             LOG(WARNING) << "Failed to send request, tryTimes " << tryTimes
@@ -927,7 +924,7 @@ bool VerifyVerticesAction::verifyVertex(const std::string& cmd, int64_t vid) {
 ResultCode VerifyVerticesAction::doRun() {
     CHECK_NOTNULL(client_);
     uint64_t id = startVid_;
-    while (id++ <= totalRows_ + startVid_) {
+    while (id < totalRows_ + startVid_) {
         auto cmd = folly::stringPrintf("FETCH PROP ON %s %ld YIELD %s.%s",
                                        tag_.c_str(),
                                        id,
@@ -939,6 +936,7 @@ ResultCode VerifyVerticesAction::doRun() {
             LOG(ERROR) << "verify vertex fail : " << id;
             return ResultCode::ERR_FAILED;
         }
+        id++;
     }
     return id == totalRows_ + startVid_ ? ResultCode::OK : ResultCode::ERR_FAILED;
 }
