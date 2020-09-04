@@ -136,23 +136,23 @@ public:
     }
 
 private:
-   ResultCode sendBatch(const std::vector<std::string>& batchCmds);
+    ResultCode sendBatch(const std::vector<std::string>& batchCmds);
 
-   std::string genData();
+    std::string genData();
 
 private:
-    GraphClient* client_ = nullptr;
-    std::string tag_;
-    std::string col_;
-    uint64_t    totalRows_;
-    uint32_t    batchNum_;
-    uint32_t    rowSize_;
-    uint64_t    startId_;
+    GraphClient* client_{nullptr};
+    std::string  tag_;
+    std::string  col_;
+    uint64_t     totalRows_;
+    uint32_t     batchNum_;
+    uint32_t     rowSize_;
+    uint64_t     startId_;
 
     // Only when randomVal_ is true, startId_ is valid
-    bool        randomVal_;
-    uint32_t    try_;
-    uint32_t    retryIntervalMs_;
+    bool         randomVal_;
+    uint32_t     try_;
+    uint32_t     retryIntervalMs_;
 };
 
 class WalkThroughAction : public core::Action {
@@ -188,9 +188,44 @@ private:
     std::string  tag_;
     std::string  col_;
     uint64_t     totalRows_;
-    uint64_t     start_ = 0;
     uint32_t     try_;
     uint32_t     retryIntervalMs_;
+    uint64_t     start_ = 0;
+};
+
+class LookUpAction : public core::Action {
+public:
+    LookUpAction(GraphClient* client,
+                 const std::string& tag,
+                 const std::string& col,
+                 uint64_t totalRows = 3000,
+                 uint32_t tryNum = 32,
+                 uint32_t retryIntervalMs = 1)
+        : client_(client)
+        , tag_(tag)
+        , col_(col)
+        , totalRows_(totalRows)
+        , try_(tryNum)
+        , retryIntervalMs_(retryIntervalMs) {}
+
+    ~LookUpAction() = default;
+
+    folly::Expected<uint64_t, ResultCode> sendCommand(const std::string& cmd);
+    
+    ResultCode doRun() override;
+
+    std::string toString() const override {
+        return folly::stringPrintf("LookUp the circle from %ld, total %ld", start_, totalRows_);
+    }
+
+private:
+    GraphClient* client_ = nullptr;
+    std::string  tag_;
+    std::string  col_;
+    uint64_t     totalRows_;
+    uint32_t     try_;
+    uint32_t     retryIntervalMs_;
+    uint64_t     start_ = 0;
 };
 
 /**
@@ -892,6 +927,56 @@ private:
     std::string     edgeName_;
     bool            randomMsg_;
     uint64_t        exeTime_;
+};
+
+class CreateIndexAction : public MetaAction {
+public:
+    CreateIndexAction(GraphClient* client,
+                      const std::string& schemaName,
+                      const std::string& indexName,
+                      const std::string& field,
+                      bool isEdge = false)
+        : MetaAction(client)
+        , schema_(schemaName)
+        , index_(indexName)
+        , field_(field)
+        , isEdge_(isEdge) {}
+
+    ~CreateIndexAction() = default;
+
+    std::string command() const override {
+        return folly::stringPrintf("CREATE TAG INDEX %s ON %s(%s)", index_.c_str(), 
+                                   schema_.c_str(), field_.c_str());
+    }
+
+private:
+    std::string schema_;
+    std::string index_;
+    std::string field_;
+    bool isEdge_;
+};
+
+class RebuildIndexAction : public MetaAction {
+public:
+    RebuildIndexAction(GraphClient* client,
+                       const std::string& indexName,
+                       bool isEdge = false)
+        : MetaAction(client)
+        , index_(indexName)
+        , isEdge_(isEdge) {}
+
+    ~RebuildIndexAction() = default;
+
+    std::string command() const override {
+        return folly::stringPrintf("REBUILD %s INDEX %s OFFLINE",
+                                   (isEdge_ ? "EDGE" : "TAG"),
+                                   index_.c_str());
+    }
+
+private:
+    GraphClient* client_{nullptr};
+    std::string index_;
+    bool isEdge_;
 };
 
 }   // namespace nebula
