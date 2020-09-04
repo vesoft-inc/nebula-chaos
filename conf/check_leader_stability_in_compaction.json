@@ -67,7 +67,7 @@
         },
         {
             "type": "WaitAction",
-            "wait_time_ms": 30000,
+            "wait_time_ms": 120000,
             "depends": [0]
         },
         {
@@ -97,7 +97,7 @@
         },
         {
             "type": "WaitAction",
-            "wait_time_ms": 10000,
+            "wait_time_ms": 90000,
             "depends": [9]
         },
         {
@@ -120,7 +120,7 @@
         },
         {
             "type": "WaitAction",
-            "wait_time_ms": 60000,
+            "wait_time_ms": 90000,
             "depends": [13]
         },
         {
@@ -133,7 +133,7 @@
             "type": "WriteCircleAction",
             "tag": "t",
             "col": "name",
-            "total_rows": 3000000,
+            "total_rows": 4000000,
             "row_size": 1000,
             "start_id": 1,
             "depends": [15]
@@ -142,36 +142,36 @@
             "type": "WriteCircleAction",
             "tag": "t",
             "col": "name",
-            "total_rows": 3000000,
+            "total_rows": 4000000,
             "row_size": 1000,
-            "start_id": 3000001,
+            "start_id": 4000001,
             "depends": [15]
         },
         {
             "type": "WriteCircleAction",
             "tag": "t",
             "col": "name",
-            "total_rows": 3000000,
+            "total_rows": 4000000,
             "row_size": 1000,
-            "start_id": 6000001,
+            "start_id": 8000001,
             "depends": [15]
         },
         {
             "type": "WriteCircleAction",
             "tag": "t",
             "col": "name",
-            "total_rows": 3000000,
-            "row_size": 1000,
-            "start_id": 9000001,
-            "depends": [15]
-        },
-        {
-            "type": "WriteCircleAction",
-            "tag": "t",
-            "col": "name",
-            "total_rows": 3000000,
+            "total_rows": 4000000,
             "row_size": 1000,
             "start_id": 12000001,
+            "depends": [15]
+        },
+        {
+            "type": "WriteCircleAction",
+            "tag": "t",
+            "col": "name",
+            "total_rows": 4000000,
+            "row_size": 1000,
+            "start_id": 16000001,
             "depends": [15]
         },
         {
