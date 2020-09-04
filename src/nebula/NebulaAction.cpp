@@ -439,7 +439,7 @@ ResultCode CheckLeadersAction::doRun() {
     return ResultCode::ERR_FAILED;
 }
 
-ResultCode SetFlagAction::buildCmd() {
+ResultCode UpdateConfigsAction::buildCmd() {
     folly::toLowerAscii(layer_);
     folly::toLowerAscii(name_);
     folly::toLowerAscii(value_);
@@ -460,8 +460,7 @@ ResultCode SetFlagAction::buildCmd() {
         cmd_ += " } ";
     } else if (name_ == "wal_ttl") {
         try {
-            auto ttlVal = folly::to<int32_t>(value_);
-            value_ = folly::to<std::string>(ttlVal);
+            folly::to<int32_t>(value_);
         } catch (const folly::ConversionError& e) {
             LOG(ERROR) << "Failed to get wal_ttl value";
             return ResultCode::ERR_FAILED;
@@ -473,7 +472,7 @@ ResultCode SetFlagAction::buildCmd() {
     return ResultCode::OK;
 }
 
-ResultCode SetFlagAction::doRun() {
+ResultCode UpdateConfigsAction::doRun() {
     CHECK_NOTNULL(client_);
     auto ret = buildCmd();
     if (ret != ResultCode::OK) {

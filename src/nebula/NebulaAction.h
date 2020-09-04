@@ -389,18 +389,18 @@ private:
     std::string             restult_;
 };
 
-class SetFlagAction : public MetaAction {
+class UpdateConfigsAction : public MetaAction {
 public:
-    SetFlagAction(GraphClient* client,
-                  const std::string& layer,
-                  const std::string& name,
-                  const std::string& value)
+    UpdateConfigsAction(GraphClient* client,
+                        const std::string& layer,
+                        const std::string& name,
+                        const std::string& value)
         : MetaAction(client)
         , layer_(layer)
         , name_(name)
         , value_(value) {}
 
-    ~SetFlagAction() = default;
+    ~UpdateConfigsAction() = default;
 
     ResultCode doRun() override;
 

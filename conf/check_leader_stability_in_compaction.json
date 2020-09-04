@@ -101,14 +101,14 @@
             "depends": [9]
         },
         {
-            "type": "SetFlagAction",
+            "type": "UpdateConfigsAction",
             "layer": "storage",
             "name": "disable_auto_compactions",
             "value": "true",
             "depends": [10]
         },
         {
-            "type": "SetFlagAction",
+            "type": "UpdateConfigsAction",
             "layer": "storage",
             "name": "wal_ttl",
             "value": "60",
@@ -119,10 +119,15 @@
             "depends": [12]
         },
         {
+            "type": "WaitAction",
+            "wait_time_ms": 60000,
+            "depends": [13]
+        },
+        {
             "type": "CheckLeadersAction",
             "expected_num": 100,
             "space": "check_leader_stability_in_compaction",
-            "depends": [13]
+            "depends": [14]
         },
         {
             "type": "WriteCircleAction",
@@ -131,7 +136,7 @@
             "total_rows": 3000000,
             "row_size": 1000,
             "start_id": 1,
-            "depends": [14]
+            "depends": [15]
         },
         {
             "type": "WriteCircleAction",
@@ -140,7 +145,7 @@
             "total_rows": 3000000,
             "row_size": 1000,
             "start_id": 3000001,
-            "depends": [14]
+            "depends": [15]
         },
         {
             "type": "WriteCircleAction",
@@ -149,7 +154,7 @@
             "total_rows": 3000000,
             "row_size": 1000,
             "start_id": 6000001,
-            "depends": [14]
+            "depends": [15]
         },
         {
             "type": "WriteCircleAction",
@@ -158,7 +163,7 @@
             "total_rows": 3000000,
             "row_size": 1000,
             "start_id": 9000001,
-            "depends": [14]
+            "depends": [15]
         },
         {
             "type": "WriteCircleAction",
@@ -167,72 +172,72 @@
             "total_rows": 3000000,
             "row_size": 1000,
             "start_id": 12000001,
-            "depends": [14]
+            "depends": [15]
         },
         {
             "type": "WaitAction",
             "wait_time_ms": 120000,
-            "depends": [15, 16, 17, 18, 19]
+            "depends": [16, 17, 18, 19, 20]
         },
         {
             "type": "CheckLeadersAction",
             "expected_num": 100,
             "space": "check_leader_stability_in_compaction",
             "result_var_name": "leaderDis1",
-            "depends": [20]
-        },
-        {
-            "type": "CompactionAction",
             "depends": [21]
         },
         {
-            "type": "SetFlagAction",
+            "type": "CompactionAction",
+            "depends": [22]
+        },
+        {
+            "type": "UpdateConfigsAction",
             "layer": "storage",
             "name": "disable_auto_compactions",
             "value": "false",
-            "depends": [22]
+            "depends": [23]
         },
         {
             "type": "WaitAction",
             "wait_time_ms": 120000,
-            "depends": [23]
+            "depends": [24]
         },
         {
             "type": "CheckLeadersAction",
             "expected_num": 100,
             "space": "check_leader_stability_in_compaction",
             "result_var_name": "leaderDis2",
-            "depends": [24]
+            "depends": [25]
         },
         {
             "type": "ExecutionExpressionAction",
             "condition": "$leaderDis1 == $leaderDis2",
-            "depends": [25]
+            "depends": [26]
         },
         {
             "type": "StopAction",
             "inst_index": 0,
-            "depends": [26]
+            "depends": [27]
         },
         {
             "type": "StopAction",
             "inst_index": 1,
-            "depends": [26]
+            "depends": [27]
         },
         {
             "type": "StopAction",
             "inst_index": 2,
-            "depends": [26]
+            "depends": [27]
         },
         {
             "type": "StopAction",
             "inst_index": 3,
-            "depends": [26]
+            "depends": [27]
         },
         {
             "type": "StopAction",
             "inst_index": 4,
-            "depends": [26]
+            "depends": [27]
         }
     ]
 }

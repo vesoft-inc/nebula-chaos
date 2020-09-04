@@ -329,14 +329,14 @@ public:
             return std::make_unique<core::AssignAction>(&ctx.planCtx->actionCtx,
                                                         varName,
                                                         valExpr);
-        } else if (type == "SetFlagAction") {
+        } else if (type == "UpdateConfigsAction") {
             auto layer = obj.at("layer").asString();
             auto name = obj.at("name").asString();
             auto value = obj.at("value").asString();
-            return std::make_unique<SetFlagAction>(ctx.gClient,
-                                                   layer,
-                                                   name,
-                                                   value);
+            return std::make_unique<UpdateConfigsAction>(ctx.gClient,
+                                                         layer,
+                                                         name,
+                                                         value);
         } else if (type == "ExecutionExpressionAction") {
             auto condition = obj.at("condition").asString();
             return std::make_unique<ExecutionExpressionAction>(&ctx.planCtx->actionCtx, condition);
