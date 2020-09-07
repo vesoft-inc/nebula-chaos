@@ -115,7 +115,7 @@ public:
                       uint64_t startId = 1,
                       bool     randomVal = false,
                       uint32_t tryNum = 32,
-                      uint32_t retryIntervalMs = 100)
+                      uint32_t retryIntervalMs = 500)
         : client_(client)
         , tag_(tag)
         , col_(col)

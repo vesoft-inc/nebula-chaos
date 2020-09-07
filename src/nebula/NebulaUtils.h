@@ -80,7 +80,7 @@ public:
             auto startId = obj.getDefault("start_id", 1).asInt();
             auto randomVal = obj.getDefault("random_value", false).asBool();
             auto tryNum = obj.getDefault("try_num", 32).asInt();
-            auto retryInterval = obj.getDefault("retry_interval_ms", 100).asInt();
+            auto retryInterval = obj.getDefault("retry_interval_ms", 500).asInt();
             return std::make_unique<WriteCircleAction>(ctx.gClient,
                                                        tag,
                                                        col,
