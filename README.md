@@ -15,11 +15,17 @@ Clean all wals of specified space, then start all services, write a circle, then
 #### [random_kill_clean_data](conf/random_kill_clean_data_plan.json)
 Start all services, disturb (random kill a storage service, clean the data path, restart) while write a circle, then check data integrity.
 
+#### [random_kill_truncate_wal](conf/random_kill_truncate_wal.json)
+Start all services, disturb (random kill a storage service, truncate some bytes from last wal of specified space and part, restart) while write a circle, then check data integrity.
+
 #### [random_kill](conf/random_kill_plan.json)
 Start all services, disturb (random kill and restart a storage service) while write and read.
 
 #### [kill_all](conf/kill_all_plan.json)
 Start all services, kill all storage services and restart while writing.
+
+#### [kill_all_and_truncate_wal](conf/kill_all_and_truncate_wal.json)
+Start all services, kill all storage services while writing, truncate last wal of specified space and part from all storage services, then restart.
 
 #### [scale_up_and_down](conf/scale_up_and_down.json)
 Start 3 storage servies, add 4th storage service using `balance data` while write a circle, then check data integrity. Then stop 1st storage service, remove it using `balance data` while write a circle then check data integrity. Likewise,

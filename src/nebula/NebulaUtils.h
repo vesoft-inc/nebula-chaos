@@ -224,6 +224,8 @@ public:
                                                       std::move(actions),
                                                       concurrency);
         } else if (type == "RandomPartitionAction") {
+            auto graphIdxs = obj.at("graphs").asInt();
+            NebulaInstance* graph = ctx.insts[graphIdxs];
             auto metaIdxs = obj.at("metas");
             std::vector<NebulaInstance*> metas;
             for (auto iter = metaIdxs.begin(); iter != metaIdxs.end(); iter++) {
@@ -239,7 +241,8 @@ public:
             auto loopTimes = obj.getDefault("loop_times", 20).asInt();
             auto nextDistubInterval = obj.getDefault("next_loop_interval", 30).asInt();
             auto recoverInterval = obj.getDefault("restart_interval", 30).asInt();
-            return std::make_unique<RandomPartitionAction>(metas,
+            return std::make_unique<RandomPartitionAction>(graph,
+                                                           metas,
                                                            storages,
                                                            loopTimes,
                                                            nextDistubInterval,
@@ -342,6 +345,41 @@ public:
             return std::make_unique<ExecutionExpressionAction>(&ctx.planCtx->actionCtx, condition);
         } else if (type == "CompactionAction") {
             return std::make_unique<CompactionAction>(ctx.gClient);
+        } else if (type == "RandomTruncateRestartAction") {
+            auto insts = obj.at("insts");
+            std::vector<NebulaInstance*> targetInsts;
+            auto it = insts.begin();
+            while (it != insts.end()) {
+                auto index = it->asInt();
+                targetInsts.emplace_back(ctx.insts[index]);
+                it++;
+            }
+            auto loopTimes = obj.getDefault("loop_times", 20).asInt();
+            auto nextDistubInterval = obj.getDefault("next_loop_interval", 30).asInt();
+            auto recoverInterval = obj.getDefault("restart_interval", 30).asInt();
+            auto spaceName = obj.at("space_name").asString();
+            auto partId = obj.at("part_id").asInt();
+            auto bytes = obj.getDefault("bytes", 10).asInt();
+            return std::make_unique<RandomTruncateRestartAction>(targetInsts,
+                                                                 loopTimes,
+                                                                 nextDistubInterval,
+                                                                 recoverInterval,
+                                                                 ctx.gClient,
+                                                                 spaceName,
+                                                                 partId,
+                                                                 bytes);
+        } else if (type == "TruncateWalAction") {
+            auto storageIdxs = obj.at("storages");
+            std::vector<NebulaInstance*> storages;
+            for (auto iter = storageIdxs.begin(); iter != storageIdxs.end(); iter++) {
+                auto index = iter->asInt();
+                storages.emplace_back(ctx.insts[index]);
+            }
+            auto spaceName = obj.at("space_name").asString();
+            auto partId = obj.at("part_id").asInt();
+            auto count = obj.getDefault("count", 1).asInt();
+            auto bytes = obj.getDefault("bytes", 10).asInt();
+            return std::make_unique<TruncateWalAction>(storages, ctx.gClient, spaceName, partId, count, bytes);
         }
 
     LOG(FATAL) << "Unknown type " << type;

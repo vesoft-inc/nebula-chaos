@@ -73,9 +73,9 @@ void GraphClient::disconnect() {
 
     auto f = folly::via(evb_, [this]() -> auto {
         client_->future_signout(sessionId_);
+        client_.reset();
     });
     f.wait();
-    client_.reset();
 }
 
 

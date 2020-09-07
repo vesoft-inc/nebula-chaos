@@ -10,6 +10,7 @@
 #include "core/CheckProcAction.h"
 #include <folly/Random.h>
 #include <folly/GLog.h>
+#include "boost/filesystem/operations.hpp"
 
 namespace nebula_chaos {
 namespace nebula {
@@ -125,6 +126,7 @@ ResultCode CleanDataAction::doRun() {
         auto rc = desc.doRun();
         if (rc != ResultCode::OK) {
             LOG(ERROR) << "Failed to desc space " << spaceName_;
+            return rc;
         }
         auto spaceId = desc.spaceId();
         for (const auto& dataPath : dataPaths.value()) {
@@ -591,6 +593,7 @@ ResultCode CleanWalAction::doRun() {
     auto rc = desc.doRun();
     if (rc != ResultCode::OK) {
         LOG(ERROR) << "Failed to desc space " << spaceName_;
+        return rc;
     }
     auto spaceId = desc.spaceId();
     auto wals = inst_->walDirs(spaceId);
@@ -644,6 +647,15 @@ ResultCode RandomPartitionAction::disturb() {
         // forbid output packets to meta hosts
         paras_.emplace_back(folly::stringPrintf("OUTPUT -p tcp -m tcp -d %s --dport %d -j DROP",
                             host.c_str(), port));
+    }
+    {
+        auto host = graph_->getHost();
+        // forbid input packets from graph hosts
+        paras_.emplace_back(folly::stringPrintf("INPUT -p tcp -m tcp -s %s --dport %d -j DROP",
+                            host.c_str(), pickedPort));
+        // since we don't know graph port, just forbid all output packets to graph hosts
+        paras_.emplace_back(folly::stringPrintf("OUTPUT -p tcp -m tcp -d %s -j DROP",
+                            host.c_str()));
     }
     std::string iptable;
     for (const auto& para : paras_) {
@@ -884,12 +896,13 @@ ResultCode SlowDiskAction::recover() {
     auto res = action.doRun();
     if (res == ResultCode::ERR_NOT_FOUND) {
         LOG(WARNING) << "SystemTap has quit before we kill it, please check the log";
+        stapPid_.clear();
         return ResultCode::OK;
     }
 
     auto kill = folly::stringPrintf("kill %d", stapPid_.value());
     LOG(INFO) << "Stop slow disk of " << picked_->toString();
-    auto ret = utils::SshHelper::run(
+    utils::SshHelper::run(
                 kill,
                 picked_->getHost(),
                 [this] (const std::string& outMsg) {
@@ -899,7 +912,6 @@ ResultCode SlowDiskAction::recover() {
                     LOG(ERROR) << "The error is " << errMsg;
                 },
                 picked_->owner());
-    CHECK_EQ(0, ret.exitStatus());
     stapPid_.clear();
     return ResultCode::OK;
 }
@@ -1055,5 +1067,105 @@ ResultCode RestoreFromDataDirAction::doRun() {
     }
     return ResultCode::OK;
 }
+
+ResultCode TruncateWalAction::doRun() {
+    DescSpaceAction desc(client_, spaceName_);
+    auto rc = desc.doRun();
+    if (rc != ResultCode::OK) {
+        LOG(ERROR) << "Failed to desc space " << spaceName_;
+        return rc;
+    }
+    auto spaceId = desc.spaceId();
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::shuffle(storages_.begin(), storages_.end(), gen);
+
+    for (int32_t i = 0; i < count_; i++) {
+        auto* storage = storages_[i];
+        auto wals = storage->walDirs(spaceId);
+        if (!wals.hasValue()) {
+            LOG(ERROR) << "Can't find wals for space " << spaceName_ << " on " << storage->toString();
+            return ResultCode::ERR_FAILED;
+        }
+        for (auto& walDir : wals.value()) {
+            // get the latest wal and its size of specified space/part
+            auto path = folly::stringPrintf("%s/%d", walDir.c_str(), partId_);
+            auto cmd = folly::stringPrintf(
+                "ls -lt %s/*.wal | head -n 1 | awk '{print $5, $9}'", path.c_str());
+            int32_t size;
+            std::string lastWal;
+            auto ret = utils::SshHelper::run(
+                cmd,
+                storage->getHost(),
+                [this, &size, &lastWal] (const std::string& outMsg) {
+                    std::vector<std::string> info;
+                    folly::split(" ", outMsg, info);
+                    if (info.size() == 2) {
+                        try {
+                            size = folly::to<int32_t>(info[0]);
+                            lastWal = info[1];
+                        } catch (const folly::ConversionError& e) {
+                            LOG(ERROR) << "Parse wal failed" << e.what();
+                        }
+                    }
+                    VLOG(1) << "The output is " << outMsg;
+                },
+                [] (const std::string& errMsg) {
+                    LOG(ERROR) << "The error is " << errMsg;
+                },
+                storage->owner());
+            CHECK_EQ(0, ret.exitStatus());
+
+            if (lastWal.empty()) {
+                LOG(ERROR) << "Failed to get last wal on " << storage->toString()
+                           << " in path " << path;
+                return ResultCode::ERR_FAILED;
+            }
+            // truncate latest wal of specified bytes
+            auto truncate = folly::stringPrintf("truncate -s %d %s", size - bytes_, lastWal.c_str());
+            ret = utils::SshHelper::run(
+                truncate,
+                storage->getHost(),
+                [this] (const std::string& outMsg) {
+                    VLOG(1) << "The output is " << outMsg;
+                },
+                [] (const std::string& errMsg) {
+                    LOG(ERROR) << "The error is " << errMsg;
+                },
+                storage->owner());
+            CHECK_EQ(0, ret.exitStatus());
+        }
+    }
+    return ResultCode::OK;
+}
+
+ResultCode RandomTruncateRestartAction::disturb() {
+    picked_ = Utils::randomInstance(instances_, NebulaInstance::State::RUNNING);
+    CHECK_NOTNULL(picked_);
+    {
+        LOG(INFO) << "Begin to kill " << picked_->toString() << ", graceful " << graceful_;
+        auto rc = stop(picked_);
+        if (rc != ResultCode::OK) {
+            LOG(ERROR) << "Stop instance " << picked_->toString() << " failed!";
+            return rc;
+        }
+        LOG(INFO) << "Finish to kill " << picked_->toString();
+    }
+
+    {
+        // Truncate last wal of specified space and part
+        TruncateWalAction truncate({picked_}, client_, spaceName_, partId_, 1, bytes_);
+        LOG(INFO) << "Truncate wal of space " << spaceName_ << ", part " << partId_
+                  << " on " << picked_->toString();
+        auto rc = truncate.doRun();
+        if (rc != ResultCode::OK) {
+            LOG(ERROR) << "Truncate wal of " << picked_->toString() << " failed!";
+            return rc;
+        }
+    }
+    return ResultCode::OK;
+}
+
 }   // namespace nebula
 }   // namespace nebula_chaos

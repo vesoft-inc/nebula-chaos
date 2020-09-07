@@ -32,6 +32,7 @@ int run() {
         LOG(INFO) << "\n============= run the plan =================\n";
         plan->schedule();
         LOG(INFO) << "\n" << plan->toString();
+        plan->getGraphClient()->disconnect();
         return 0;
     } catch (const std::out_of_range& e) {
         LOG(ERROR) << "Load plan failed, err " << e.what();

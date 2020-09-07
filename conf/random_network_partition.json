@@ -112,9 +112,10 @@
         },
         {
             "type": "RandomPartitionAction",
+            "graphs": [0],
             "metas": [1],
             "storages": [2,3,4],
-            "loop_times": 10,
+            "loop_times": 3,
             "restart_interval": 30,
             "next_loop_interval": 30,
             "depends": [12]
