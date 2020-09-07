@@ -229,16 +229,24 @@ ResultCode WriteCircleAction::doRun() {
                                         << row;
             batchCmds.clear();
         }
-        batchCmds.emplace_back(folly::stringPrintf("%lu:(\"%s\")", startId_++, genData().c_str()));
+        if (randomVal_) {
+            batchCmds.emplace_back(folly::stringPrintf("%lu:(\"%s\")", startId_++, genData().c_str()));
+        } else {
+            batchCmds.emplace_back(folly::stringPrintf("%lu:(\"%lu\")", row, row + 1));
+        }
         row++;
     }
-    batchCmds.emplace_back(folly::stringPrintf("%lu:(\"%s\")", startId_++, genData().c_str()));
+    if (randomVal_) {
+        batchCmds.emplace_back(folly::stringPrintf("%lu:(\"%s\")", startId_++, genData().c_str()));
+    } else {
+        batchCmds.emplace_back(folly::stringPrintf("%lu:(\"%lu\")", row, 1L));
+    }
     auto res = sendBatch(batchCmds);
     LOG(INFO) << "Send all requests successfully, row " << row;
     return res;
 }
 
-folly::Expected<uint64_t, ResultCode>
+folly::Expected<std::string, ResultCode>
 WalkThroughAction::sendCommand(const std::string& cmd) {
     VLOG(1) << cmd;
     ExecutionResponse resp;
@@ -252,7 +260,7 @@ WalkThroughAction::sendCommand(const std::string& cmd) {
                 break;
             }
             VLOG(1) << resp.rows.size() << ", " << resp.rows[0].columns.size();
-            return resp.rows[0].columns[1].get_integer();
+            return resp.rows[0].columns[1].get_str();
         }
         usleep(retryInterval * 1000 * tryTimes);
         LOG(WARNING) << "Failed to send request, tryTimes " << tryTimes
@@ -264,12 +272,12 @@ WalkThroughAction::sendCommand(const std::string& cmd) {
 ResultCode WalkThroughAction::doRun() {
     CHECK_NOTNULL(client_);
     start_ = folly::Random::rand64(totalRows_);
-    auto id = start_;
+    auto id = std::to_string(start_);
     uint64_t count = 0;
     while (++count <= totalRows_) {
-        auto cmd = folly::stringPrintf("FETCH PROP ON %s %ld YIELD %s.%s",
+        auto cmd = folly::stringPrintf("FETCH PROP ON %s %s YIELD %s.%s",
                                        tag_.c_str(),
-                                       id,
+                                       id.c_str(),
                                        tag_.c_str(),
                                        col_.c_str());
         FB_LOG_EVERY_MS(INFO, 3000) << cmd;
@@ -280,14 +288,14 @@ ResultCode WalkThroughAction::doRun() {
             LOG(ERROR) << "Send command failed!";
             return ResultCode::ERR_FAILED;
         }
-        if (id == start_) {
+        if (id == std::to_string(start_)) {
             LOG(INFO) << "We are back to " << start_
                       << ", total count " << count;
             break;
         }
     }
-    if (id != start_) {
-        LOG(ERROR) << "Wrong value, id = " << id << ", start = " << start_;
+    if (id != std::to_string(start_)) {
+        LOG(ERROR) << "Wrong value, id = " << id.c_str() << ", start = " << start_;
         return ResultCode::ERR_FAILED;
     }
     return count == totalRows_ ? ResultCode::OK : ResultCode::ERR_FAILED;
