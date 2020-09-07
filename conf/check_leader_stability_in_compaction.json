@@ -136,6 +136,7 @@
             "total_rows": 4000000,
             "row_size": 1000,
             "start_id": 1,
+            "random_value": true,
             "depends": [15]
         },
         {
@@ -145,6 +146,7 @@
             "total_rows": 4000000,
             "row_size": 1000,
             "start_id": 4000001,
+            "random_value": true,
             "depends": [15]
         },
         {
@@ -154,6 +156,7 @@
             "total_rows": 4000000,
             "row_size": 1000,
             "start_id": 8000001,
+            "random_value": true,
             "depends": [15]
         },
         {
@@ -163,6 +166,7 @@
             "total_rows": 4000000,
             "row_size": 1000,
             "start_id": 12000001,
+            "random_value": true,
             "depends": [15]
         },
         {
@@ -172,6 +176,7 @@
             "total_rows": 4000000,
             "row_size": 1000,
             "start_id": 16000001,
+            "random_value": true,
             "depends": [15]
         },
         {

@@ -113,6 +113,7 @@ public:
                       uint32_t batchNum = 1,
                       uint32_t rowSize = 10,
                       uint64_t startId = 1,
+                      bool     randomVal = false,
                       uint32_t tryNum = 32,
                       uint32_t retryIntervalMs = 100)
         : client_(client)
@@ -122,6 +123,7 @@ public:
         , batchNum_(batchNum)
         , rowSize_(rowSize)
         , startId_(startId)
+        , randomVal_(randomVal)
         , try_(tryNum)
         , retryIntervalMs_(retryIntervalMs) {}
 
@@ -146,6 +148,9 @@ private:
     uint32_t    batchNum_;
     uint32_t    rowSize_;
     uint64_t    startId_;
+
+    // Only when randomVal_ is true, startId_ is valid
+    bool        randomVal_;
     uint32_t    try_;
     uint32_t    retryIntervalMs_;
 };
@@ -176,7 +181,7 @@ public:
     }
 
 private:
-    folly::Expected<uint64_t, ResultCode> sendCommand(const std::string& cmd);
+    folly::Expected<std::string, ResultCode> sendCommand(const std::string& cmd);
 
 private:
     GraphClient* client_ = nullptr;

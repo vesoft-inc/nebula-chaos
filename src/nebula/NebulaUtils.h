@@ -78,6 +78,7 @@ public:
             auto batchNum = obj.getDefault("batch_num", 1).asInt();
             auto rowSize = obj.getDefault("row_size", 10).asInt();
             auto startId = obj.getDefault("start_id", 1).asInt();
+            auto randomVal = obj.getDefault("random_value", false).asBool();
             auto tryNum = obj.getDefault("try_num", 32).asInt();
             auto retryInterval = obj.getDefault("retry_interval_ms", 100).asInt();
             return std::make_unique<WriteCircleAction>(ctx.gClient,
@@ -87,6 +88,7 @@ public:
                                                        batchNum,
                                                        rowSize,
                                                        startId,
+                                                       randomVal,
                                                        tryNum,
                                                        retryInterval);
         } else if (type == "WalkThroughAction") {
