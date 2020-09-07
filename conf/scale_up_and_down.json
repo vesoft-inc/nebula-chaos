@@ -97,7 +97,7 @@
             "type": "CreateSchemaAction",
             "name": "circle0",
             "props": [
-                {"name": "nextId", "type": "int"}
+                {"name": "nextId", "type": "string"}
             ],
             "edge_or_tag": false,
             "depends": [8]
@@ -106,7 +106,7 @@
             "type": "CreateSchemaAction",
             "name": "circle1",
             "props": [
-                {"name": "nextId", "type": "int"}
+                {"name": "nextId", "type": "string"}
             ],
             "edge_or_tag": false,
             "depends": [8]
@@ -115,7 +115,7 @@
             "type": "CreateSchemaAction",
             "name": "circle2",
             "props": [
-                {"name": "nextId", "type": "int"}
+                {"name": "nextId", "type": "string"}
             ],
             "edge_or_tag": false,
             "depends": [8]
@@ -124,7 +124,7 @@
             "type": "CreateSchemaAction",
             "name": "circle3",
             "props": [
-                {"name": "nextId", "type": "int"}
+                {"name": "nextId", "type": "string"}
             ],
             "edge_or_tag": false,
             "depends": [8]

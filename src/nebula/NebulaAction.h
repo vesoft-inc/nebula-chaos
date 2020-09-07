@@ -109,15 +109,19 @@ public:
     WriteCircleAction(GraphClient* client,
                       const std::string& tag,
                       const std::string& col,
-                      uint64_t totalRows = 10000,
+                      uint64_t totalRows = 100000,
                       uint32_t batchNum = 1,
+                      uint32_t rowSize = 10,
+                      uint64_t startId = 1,
                       uint32_t tryNum = 32,
-                      uint32_t retryIntervalMs = 1)
+                      uint32_t retryIntervalMs = 100)
         : client_(client)
         , tag_(tag)
         , col_(col)
         , totalRows_(totalRows)
         , batchNum_(batchNum)
+        , rowSize_(rowSize)
+        , startId_(startId)
         , try_(tryNum)
         , retryIntervalMs_(retryIntervalMs) {}
 
@@ -132,12 +136,16 @@ public:
 private:
    ResultCode sendBatch(const std::vector<std::string>& batchCmds);
 
+   std::string genData();
+
 private:
     GraphClient* client_ = nullptr;
     std::string tag_;
     std::string col_;
     uint64_t    totalRows_;
     uint32_t    batchNum_;
+    uint32_t    rowSize_;
+    uint64_t    startId_;
     uint32_t    try_;
     uint32_t    retryIntervalMs_;
 };
@@ -348,10 +356,20 @@ private:
 
 class CheckLeadersAction : public MetaAction {
 public:
-    CheckLeadersAction(GraphClient* client, int32_t expectedNum, const std::string& spaceName)
+    CheckLeadersAction(GraphClient* client,
+                       core::ActionContext* ctx,
+                       int32_t expectedNum,
+                       const std::string& spaceName,
+                       const std::string& resultVarName)
         : MetaAction(client)
+        , ctx_(ctx)
         , expectedNum_(expectedNum)
-        , spaceName_(spaceName) {}
+        , spaceName_(spaceName)
+        , resultVarName_(resultVarName) {}
+
+    ~CheckLeadersAction() = default;
+
+    ResultCode doRun() override;
 
     std::string command() const override {
         return "show hosts";
@@ -359,9 +377,82 @@ public:
 
     ResultCode checkResp(const ExecutionResponse& resp) const override;
 
+    ResultCode checkLeaderDis(const ExecutionResponse& resp);
+
 private:
-    int32_t expectedNum_;
-    std::string spaceName_;
+    core::ActionContext*    ctx_{nullptr};
+    int32_t                 expectedNum_;
+    std::string             spaceName_;
+
+    // If resultVarName_ is empty, not check leader distribution
+    std::string             resultVarName_;
+    std::string             restult_;
+};
+
+class UpdateConfigsAction : public MetaAction {
+public:
+    UpdateConfigsAction(GraphClient* client,
+                        const std::string& layer,
+                        const std::string& name,
+                        const std::string& value)
+        : MetaAction(client)
+        , layer_(layer)
+        , name_(name)
+        , value_(value) {}
+
+    ~UpdateConfigsAction() = default;
+
+    ResultCode doRun() override;
+
+    ResultCode buildCmd();
+
+    std::string command() const override {
+        return cmd_;
+    }
+
+    std::string toString() const override {
+        return "update configs";
+    }
+
+private:
+    std::string             layer_;
+    std::string             name_;
+    std::string             value_;
+    std::string             cmd_;
+};
+
+class CompactionAction : public MetaAction {
+public:
+    CompactionAction(GraphClient* client)
+        : MetaAction(client){}
+
+    ~CompactionAction() = default;
+
+    ResultCode checkResp(const ExecutionResponse& resp) const override;
+
+    std::string command() const override {
+        return "submit job compact";
+    }
+};
+
+class ExecutionExpressionAction : public core::Action {
+public:
+    ExecutionExpressionAction(core::ActionContext* ctx,
+                              const std::string& condition)
+        : Action(ctx)
+        , condition_(condition) {}
+
+    ~ExecutionExpressionAction() = default;
+
+    ResultCode doRun() override;
+
+    std::string toString() const override {
+        return folly::stringPrintf("Execution expression %s",
+                                   condition_.c_str());
+    }
+
+private:
+    std::string             condition_;
 };
 
 /**
@@ -614,7 +705,7 @@ public:
     ResultCode doRun() override;
 
     std::string toString() const override {
-        return folly::stringPrintf("Clean snapshot on instance %s", 
+        return folly::stringPrintf("Clean snapshot on instance %s",
                                    inst_->toString().c_str());
     }
 
@@ -633,7 +724,7 @@ public:
     ResultCode doRun() override;
 
     std::string toString() const override {
-        return folly::stringPrintf("Restore db from snapshot on instance %s", 
+        return folly::stringPrintf("Restore db from snapshot on instance %s",
                                    inst_->toString().c_str());
     }
 
@@ -652,7 +743,7 @@ public:
     ResultCode doRun() override;
 
     std::string toString() const override {
-        return folly::stringPrintf("Restore db from data folder on instance %s", 
+        return folly::stringPrintf("Restore db from data folder on instance %s",
                                    inst_->toString().c_str());
     }
 
@@ -660,6 +751,7 @@ private:
     NebulaInstance* inst_;
     std::string     srcDataPaths_;
 };
+
 }   // namespace nebula
 }   // namespace nebula_chaos
 

@@ -197,6 +197,20 @@ ResultCode WriteCircleAction::sendBatch(const std::vector<std::string>& batchCmd
     return ResultCode::ERR_FAILED;
 }
 
+std::string WriteCircleAction::genData() {
+    auto randchar = []() -> char {
+        const char charset[] =
+            "0123456789"
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            "abcdefghijklmnopqrstuvwxyz";
+        const size_t maxIndex = (sizeof(charset) - 1);
+        return charset[folly::Random::rand32(maxIndex)];
+    };
+    std::string str(rowSize_, 0);
+    std::generate_n(str.begin(), rowSize_, randchar);
+    return str;
+}
+
 ResultCode WriteCircleAction::doRun() {
     CHECK_NOTNULL(client_);
     std::vector<std::string> batchCmds;
@@ -213,10 +227,10 @@ ResultCode WriteCircleAction::doRun() {
                                         << row;
             batchCmds.clear();
         }
-        batchCmds.emplace_back(folly::stringPrintf("%ld:(%ld)", row, row + 1));
+        batchCmds.emplace_back(folly::stringPrintf("%lu:(\"%s\")", startId_++, genData().c_str()));
         row++;
     }
-    batchCmds.emplace_back(folly::stringPrintf("%ld:(%ld)", row, 1L));
+    batchCmds.emplace_back(folly::stringPrintf("%lu:(\"%s\")", startId_++, genData().c_str()));
     auto res = sendBatch(batchCmds);
     LOG(INFO) << "Send all requests successfully, row " << row;
     return res;
@@ -342,6 +356,172 @@ ResultCode CheckLeadersAction::checkResp(const ExecutionResponse& resp) const {
         LOG(ERROR) << "col4 is " <<  leaderStr << ", exception: " << e.what();
     }
     return ResultCode::ERR_FAILED;
+}
+
+ResultCode CheckLeadersAction::checkLeaderDis(const ExecutionResponse& resp) {
+    restult_.clear();
+    if (resp.rows.empty()) {
+        LOG(ERROR) << "Result should not be empty!";
+        return ResultCode::ERR_FAILED;
+    }
+
+    bool first = true;
+    for (uint32_t i = 0; i < resp.rows.size() - 1; i++) {
+        auto& row = resp.rows[i];
+        if (row.columns.size() != 6) {
+            LOG(ERROR) << "Column number is wrong!";
+            return ResultCode::ERR_FAILED;
+        }
+
+        auto& ipStr = row.columns[0].get_str();
+        if (ipStr.empty()) {
+            return ResultCode::ERR_FAILED;
+        }
+        auto& leaderStr = row.columns[4].get_str();
+        if (leaderStr.empty()) {
+            return ResultCode::ERR_FAILED;
+        }
+
+        std::vector<folly::StringPiece> spaceLeaders;
+        folly::split(",", leaderStr, spaceLeaders);
+        for (auto& sl : spaceLeaders) {
+            std::vector<folly::StringPiece> oneSpaceLeaderPair;
+            folly::split(":", sl, oneSpaceLeaderPair);
+            CHECK_EQ(2, oneSpaceLeaderPair.size());
+            auto spaceName = folly::trimWhitespace(oneSpaceLeaderPair[0]);
+            if (spaceName.str() == spaceName_) {
+                auto leaderNum = folly::trimWhitespace(oneSpaceLeaderPair[1]);
+                if (!first) {
+                    restult_ += ",";
+                }
+                restult_ += ipStr;
+                restult_ += ":";
+                restult_ += leaderNum.str();
+                first = false;
+                break;
+            }
+        }
+    }
+    return ResultCode::OK;
+}
+
+ResultCode CheckLeadersAction::doRun() {
+    CHECK_NOTNULL(client_);
+    auto cmd = command();
+    LOG(INFO) << "Send " << cmd << " to graphd";
+    ExecutionResponse resp;
+    int32_t retry = 0;
+    while (++retry < retryTimes_) {
+        client_->execute(cmd, resp);
+        LOG(INFO) << "Execute " << cmd << " successfully!";
+        auto ret = checkResp(resp);
+        if (ret == ResultCode::ERR_FAILED_NO_RETRY) {
+            return ret;
+        }
+        if (ret == ResultCode::OK) {
+            if (resultVarName_.empty()) {
+                return ResultCode::OK;
+            } else {
+                ret = checkLeaderDis(resp);
+                if (ret == ResultCode::ERR_FAILED_NO_RETRY) {
+                    return ret;
+                }
+                if (ret == ResultCode::OK) {
+                    ctx_->exprCtx.setVar(resultVarName_, std::move(restult_));
+                    return ret;
+                }
+            }
+        }
+        LOG(ERROR) << "Execute " << cmd << " failed, retry " << retry
+                   << " after " << retry << " seconds...";
+        sleep(retry);
+    }
+    return ResultCode::ERR_FAILED;
+}
+
+ResultCode UpdateConfigsAction::buildCmd() {
+    folly::toLowerAscii(layer_);
+    folly::toLowerAscii(name_);
+    folly::toLowerAscii(value_);
+    if (layer_ != "storage" && layer_ != "meta" && layer_ != "graph") {
+       return ResultCode::ERR_FAILED;
+    }
+
+    cmd_ ="update configs ";
+    cmd_ += layer_;
+    cmd_ += ":";
+    if (name_ == "disable_auto_compactions")  {
+        cmd_ += "rocksdb_column_family_options = { disable_auto_compactions = ";
+        if (value_ != "true" && value_ != "false") {
+            LOG(ERROR) << "Failed to get rocksdb_column_family_options value";
+            return ResultCode::ERR_FAILED;
+        }
+        cmd_ += value_;
+        cmd_ += " } ";
+    } else if (name_ == "wal_ttl") {
+        try {
+            folly::to<int32_t>(value_);
+        } catch (const folly::ConversionError& e) {
+            LOG(ERROR) << "Failed to get wal_ttl value";
+            return ResultCode::ERR_FAILED;
+        }
+        cmd_ += name_;
+        cmd_ += " = ";
+        cmd_ += value_;
+    }
+    return ResultCode::OK;
+}
+
+ResultCode UpdateConfigsAction::doRun() {
+    CHECK_NOTNULL(client_);
+    auto ret = buildCmd();
+    if (ret != ResultCode::OK) {
+        return ret;
+    }
+
+    auto cmd = command();
+    LOG(INFO) << "Send " << cmd << " to graphd";
+    ExecutionResponse resp;
+    int32_t retry = 0;
+    while (++retry < retryTimes_) {
+        client_->execute(cmd, resp);
+        LOG(INFO) << "Execute " << cmd << " successfully!";
+        ret = checkResp(resp);
+        if (ret == ResultCode::OK || ret == ResultCode::ERR_FAILED_NO_RETRY) {
+            return ret;
+        }
+        LOG(ERROR) << "Execute " << cmd << " failed, retry " << retry
+                   << " after " << retry << " seconds...";
+        sleep(retry);
+    }
+    return ResultCode::ERR_FAILED;
+}
+
+ResultCode CompactionAction::checkResp(const ExecutionResponse& resp) const {
+    auto errorCode = resp.get_error_code();
+    if (errorCode == ::nebula::graph::cpp2::ErrorCode::SUCCEEDED) {
+        return ResultCode::OK;
+    }
+    return ResultCode::ERR_NOT_FINISHED;
+}
+
+ResultCode ExecutionExpressionAction::doRun() {
+    auto expr = ParserHelper::parse(condition_);
+    if (expr == nullptr) {
+        return ResultCode::ERR_FAILED;
+    }
+
+    auto valOrErr = expr->eval(&ctx_->exprCtx);
+    if (!valOrErr) {
+        LOG(ERROR) << "Eval " << condition_ << " failed!";
+        return ResultCode::ERR_FAILED;
+    }
+    auto val = std::move(valOrErr).value();
+
+    if (!asBool(val)) {
+        return ResultCode::ERR_FAILED;
+    }
+    return ResultCode::OK;
 }
 
 ResultCode RandomRestartAction::stop(NebulaInstance* inst) {
