@@ -226,8 +226,8 @@ public:
                                                       std::move(actions),
                                                       concurrency);
         } else if (type == "RandomPartitionAction") {
-            auto graphIdxs = obj.at("graphs").asInt();
-            NebulaInstance* graph = ctx.insts[graphIdxs];
+            auto graphIdx = obj.at("graph").asInt();
+            NebulaInstance* graph = ctx.insts[graphIdx];
             auto metaIdxs = obj.at("metas");
             std::vector<NebulaInstance*> metas;
             for (auto iter = metaIdxs.begin(); iter != metaIdxs.end(); iter++) {

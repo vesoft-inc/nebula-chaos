@@ -112,7 +112,7 @@
         },
         {
             "type": "RandomPartitionAction",
-            "graphs": [0],
+            "graphs": 0,
             "metas": [1],
             "storages": [2,3,4],
             "loop_times": 3,
