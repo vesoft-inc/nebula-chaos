@@ -1175,5 +1175,57 @@ ResultCode RandomTruncateRestartAction::disturb() {
     return ResultCode::OK;
 }
 
+ResultCode StoragePerfAction::doRun() {
+    if (access(perfPath_.c_str(), F_OK) != 0) {
+        LOG(ERROR) << "File not exists " << perfPath_.c_str();
+        return ResultCode::ERR_FAILED;
+    }
+    std::string randomMsg;
+    if (randomMsg_) {
+        randomMsg = "true";
+    } else {
+        randomMsg = "false";
+    }
+
+    auto commandStr = folly::stringPrintf("nohup %s --meta_server_addrs=%s --method=%s"
+                                          " --totalReqs=%lu --threads=%u --qps=%u"
+                                          " --batch_num=%u --space_name=%s"
+                                          " --tag_name=%s --edge_name=%s --random_message=%s"
+                                          " >/dev/null 2>&1 &",
+                                          perfPath_.c_str(),
+                                          metaServerAddrs_.c_str(),
+                                          method_.c_str(),
+                                          totalReqs_,
+                                          threads_,
+                                          qps_,
+                                          batchNum_,
+                                          spaceName_.c_str(),
+                                          tagName_.c_str(),
+                                          edgeName_.c_str(),
+                                          randomMsg.c_str());
+
+    std::system(commandStr.c_str());
+    sleep(exeTime_);
+
+    //check storage perf is running
+    FILE* fp = popen("ps -ux|grep storage_perf|grep -v grep|awk '{print $2}'", "r");
+    if (!fp) {
+        LOG(ERROR) << "Failed to exe ps -ux|grep storage_perf|grep -v grep|awk '{print $2}'";
+        return ResultCode::ERR_FAILED;
+    }
+    char buffer[256];
+    auto numChars = fgets(buffer, sizeof(buffer), fp);
+    UNUSED(numChars);
+    pclose(fp);
+
+    if (std::string(buffer).empty()) {
+        return ResultCode::ERR_FAILED;
+    } else {
+        std::system("ps -ux|grep storage_perf|grep -v grep|awk '{print $2}'|xargs kill -9");
+        usleep(1000);
+    }
+    return ResultCode::OK;
+}
+
 }   // namespace nebula
 }   // namespace nebula_chaos

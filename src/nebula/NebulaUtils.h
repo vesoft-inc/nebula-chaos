@@ -382,6 +382,36 @@ public:
             auto count = obj.getDefault("count", 1).asInt();
             auto bytes = obj.getDefault("bytes", 10).asInt();
             return std::make_unique<TruncateWalAction>(storages, ctx.gClient, spaceName, partId, count, bytes);
+        } else if (type == "StoragePerfAction") {
+            auto perfPath = obj.at("path").asString();
+            auto metaServerAddrs = obj.at("meta_server_addrs").asString();
+            auto method = obj.at("method").asString();
+            auto totalReqs = obj.getDefault("totalReqs", 10000).asInt();
+            auto threads = obj.getDefault("threads", 1).asInt();
+            auto qps = obj.getDefault("qps", 10000).asInt();
+            auto batchNum = obj.getDefault("batch_num", 1).asInt();
+            auto spaceName = obj.at("space_name").asString();
+            auto tagName = obj.at("tag_name").asString();
+            auto edgeName = obj.at("edge_name").asString();
+            auto randomMsg = obj.getDefault("random_message", true).asBool();
+            auto exeTime = obj.getDefault("exe_time_s", 600).asInt();
+            CHECK(!perfPath.empty());
+            CHECK(!metaServerAddrs.empty());
+            CHECK(!spaceName.empty());
+            CHECK(!tagName.empty());
+            CHECK(!edgeName.empty());
+            return std::make_unique<StoragePerfAction>(perfPath,
+                                                       metaServerAddrs,
+                                                       method,
+                                                       totalReqs,
+                                                       threads,
+                                                       qps,
+                                                       batchNum,
+                                                       spaceName,
+                                                       tagName,
+                                                       edgeName,
+                                                       randomMsg,
+                                                       exeTime);
         }
 
     LOG(FATAL) << "Unknown type " << type;
