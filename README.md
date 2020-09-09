@@ -65,4 +65,4 @@ Start all services, balance leader, turn off auto_compactions, set wal_ttl to 60
 
 #### [check_leader_stability_in_compaction_using_perf](conf/check_leader_stability_in_compaction_using_perf.json)
 Start all services, balance leader, turn off auto_compactions, set wal_ttl to 60s, using storage perf to write data, stop writing data after the specified time, view the leaders distribution of the current space, enable forced compression, turn on auto_compactions, wait a while, view the leaders distribution of the current space again, compare the results of checking the leaders distribution to see if the leaders have changed.
-
+storage perf needs to be specified by the user, stable version Git: 1cd031fa.
