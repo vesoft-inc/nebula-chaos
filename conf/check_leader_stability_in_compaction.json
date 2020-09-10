@@ -220,29 +220,34 @@
             "depends": [26]
         },
         {
+            "type": "DropSpaceAction",
+            "space_name": "check_leader_stability_in_compaction",
+            "depends": [27]
+        },
+        {
             "type": "StopAction",
             "inst_index": 0,
-            "depends": [27]
+            "depends": [28]
         },
         {
             "type": "StopAction",
             "inst_index": 1,
-            "depends": [27]
+            "depends": [28]
         },
         {
             "type": "StopAction",
             "inst_index": 2,
-            "depends": [27]
+            "depends": [28]
         },
         {
             "type": "StopAction",
             "inst_index": 3,
-            "depends": [27]
+            "depends": [28]
         },
         {
             "type": "StopAction",
             "inst_index": 4,
-            "depends": [27]
+            "depends": [28]
         }
     ]
 }

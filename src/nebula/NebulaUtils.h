@@ -118,6 +118,10 @@ public:
             auto spaceName = obj.at("space_name").asString();
             return std::make_unique<UseSpaceAction>(ctx.gClient,
                                                     spaceName);
+        } else if (type == "DropSpaceAction") {
+            auto spaceName = obj.at("space_name").asString();
+            return std::make_unique<DropSpaceAction>(ctx.gClient,
+                                                     spaceName);
         } else if (type == "CreateSchemaAction") {
             auto name = obj.at("name").asString();
             if (ctx.rolling) {

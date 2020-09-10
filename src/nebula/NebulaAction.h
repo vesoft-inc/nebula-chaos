@@ -260,6 +260,20 @@ private:
     std::string spaceName_;
 };
 
+class DropSpaceAction : public MetaAction {
+public:
+    DropSpaceAction(GraphClient* client, const std::string& spaceName)
+        : MetaAction(client)
+        , spaceName_(spaceName) {}
+
+    std::string command() const override {
+        return folly::stringPrintf("DROP SPACE %s", spaceName_.c_str());
+    }
+
+private:
+    std::string spaceName_;
+};
+
 using NameType = std::pair<std::string, std::string>;
 class CreateSchemaAction : public MetaAction {
 public:

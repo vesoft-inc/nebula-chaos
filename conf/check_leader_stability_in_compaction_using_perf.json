@@ -1,6 +1,7 @@
 {
     "name": "Nebula check-leader-stability-in-compaction-using-perf plan",
     "concurrency": 10,
+    "email": "",
     "rolling_table": false,
     "instances": [
         {
@@ -41,183 +42,225 @@
     ],
     "actions" : [
         {
-            "type": "StartAction",
-            "inst_index": 0,
-            "depends": [2, 3, 4]
-        },
-        {
-            "type": "StartAction",
-            "inst_index": 1,
+            "type": "AssignAction",
+            "var_name": "index",
+            "value_expr": "0",
             "depends": []
         },
         {
-            "type": "StartAction",
-            "inst_index": 2,
-            "depends": [1]
-        },
-        {
-            "type": "StartAction",
-            "inst_index": 3,
-            "depends": [1]
-        },
-        {
-            "type": "StartAction",
-            "inst_index": 4,
-            "depends": [1]
-        },
-        {
-            "type": "WaitAction",
-            "wait_time_ms": 120000,
+            "type": "AssignAction",
+            "var_name": "leaderDis1",
+            "value_expr": "0",
             "depends": [0]
         },
         {
-            "type": "ClientConnectAction",
-            "depends": [5]
+            "type": "AssignAction",
+            "var_name": "leaderDis2",
+            "value_expr": "0",
+            "depends": [1]
         },
         {
-            "type": "CreateSpaceAction",
-            "space_name": "check_leader_stability_in_compaction_using_perf",
-            "replica": 3,
-            "parts": 100,
-            "depends": [6]
-        },
-        {
-            "type": "UseSpaceAction",
-            "space_name": "check_leader_stability_in_compaction_using_perf",
-            "depends": [7]
-        },
-        {
-            "type": "CreateSchemaAction",
-            "name": "t",
-            "props": [
-                {"name": "name", "type": "string"}
+            "type": "LoopAction",
+            "condition": "$index < 10 && $leaderDis1 == $leaderDis2",
+            "concurrency": 1,
+            "sub_plan": [
+                {
+                    "type": "StartAction",
+                    "inst_index": 0,
+                    "depends": [2, 3, 4]
+                },
+                {
+                    "type": "StartAction",
+                    "inst_index": 1,
+                    "depends": []
+                },
+                {
+                    "type": "StartAction",
+                    "inst_index": 2,
+                    "depends": [1]
+                },
+                {
+                    "type": "StartAction",
+                    "inst_index": 3,
+                    "depends": [1]
+                },
+                {
+                    "type": "StartAction",
+                    "inst_index": 4,
+                    "depends": [1]
+                },
+                {
+                    "type": "WaitAction",
+                    "wait_time_ms": 120000,
+                    "depends": [0]
+                },
+                {
+                    "type": "ClientConnectAction",
+                    "depends": [5]
+                },
+                {
+                    "type": "CreateSpaceAction",
+                    "space_name": "check_leader_stability_in_compaction_using_perf",
+                    "replica": 3,
+                    "parts": 100,
+                    "depends": [6]
+                },
+                {
+                    "type": "UseSpaceAction",
+                    "space_name": "check_leader_stability_in_compaction_using_perf",
+                    "depends": [7]
+                },
+                {
+                    "type": "CreateSchemaAction",
+                    "name": "t",
+                    "props": [
+                        {"name": "name", "type": "string"}
+                    ],
+                    "edge_or_tag": false,
+                    "depends": [8]
+                },
+                {
+                    "type": "CreateSchemaAction",
+                    "name": "e",
+                    "props": [
+                        {"name": "name", "type": "string"}
+                    ],
+                    "edge_or_tag": true,
+                    "depends": [9]
+                },
+                {
+                    "type": "WaitAction",
+                    "wait_time_ms": 60000,
+                    "depends": [10]
+                },
+                {
+                    "type": "UpdateConfigsAction",
+                    "layer": "storage",
+                    "name": "disable_auto_compactions",
+                    "value": "true",
+                    "depends": [11]
+                },
+                {
+                    "type": "UpdateConfigsAction",
+                    "layer": "storage",
+                    "name": "wal_ttl",
+                    "value": "60",
+                    "depends": [12]
+                },
+                {
+                    "type": "BalanceLeaderAction",
+                    "depends": [13]
+                },
+                {
+                    "type": "WaitAction",
+                    "wait_time_ms": 60000,
+                    "depends": [14]
+                },
+                {
+                    "type": "CheckLeadersAction",
+                    "expected_num": 100,
+                    "space": "check_leader_stability_in_compaction_using_perf",
+                    "depends": [15]
+                },
+                {
+                    "type": "StoragePerfAction",
+                    "path": "",
+                    "meta_server_addrs": "",
+                    "method": "addVertices",
+                    "totalReqs": 1000000000,
+                    "threads": 1,
+                    "qps": 10000,
+                    "batch_num": 1,
+                    "space_name": "check_leader_stability_in_compaction_using_perf",
+                    "tag_name": "t",
+                    "edge_name": "e",
+                    "random_message": true,
+                    "exe_time_s" : 3600,
+                    "depends": [16]
+                },
+                {
+                    "type": "WaitAction",
+                    "wait_time_ms": 60000,
+                    "depends": [17]
+                },
+                {
+                    "type": "CheckLeadersAction",
+                    "expected_num": 100,
+                    "space": "check_leader_stability_in_compaction_using_perf",
+                    "result_var_name": "leaderDis1",
+                    "depends": [18]
+                },
+                {
+                    "type": "CompactionAction",
+                    "depends": [19]
+                },
+                {
+                    "type": "UpdateConfigsAction",
+                    "layer": "storage",
+                    "name": "disable_auto_compactions",
+                    "value": "false",
+                    "depends": [20]
+                },
+                {
+                    "type": "WaitAction",
+                    "wait_time_ms": 120000,
+                    "depends": [21]
+                },
+                {
+                    "type": "CheckLeadersAction",
+                    "expected_num": 100,
+                    "space": "check_leader_stability_in_compaction_using_perf",
+                    "result_var_name": "leaderDis2",
+                    "depends": [22]
+                },
+                {
+                    "type": "ExecutionExpressionAction",
+                    "condition": "$leaderDis1 == $leaderDis2",
+                    "depends": [23]
+                },
+                {
+                    "type": "DropSpaceAction",
+                    "space_name": "check_leader_stability_in_compaction_using_perf",
+                    "depends": [24]
+                },
+                {
+                    "type": "StopAction",
+                    "inst_index": 0,
+                    "depends": [25]
+                },
+                {
+                    "type": "StopAction",
+                    "inst_index": 1,
+                    "depends": [25]
+                },
+                {
+                    "type": "StopAction",
+                    "inst_index": 2,
+                    "depends": [25]
+                },
+                {
+                    "type": "StopAction",
+                    "inst_index": 3,
+                    "depends": [25]
+                },
+                {
+                    "type": "StopAction",
+                    "inst_index": 4,
+                    "depends": [25]
+                },
+                {
+                    "type": "WaitAction",
+                    "wait_time_ms": 60000,
+                    "depends": [26, 27, 28, 29, 30]
+                },
+                {
+                    "type": "AssignAction",
+                    "var_name": "index",
+                    "value_expr": "$index + 1",
+                    "depends": [31]
+                }
             ],
-            "edge_or_tag": false,
-            "depends": [8]
-        },
-        {
-            "type": "CreateSchemaAction",
-            "name": "e",
-            "props": [
-                {"name": "name", "type": "string"}
-            ],
-            "edge_or_tag": true,
-            "depends": [9]
-        },
-        {
-            "type": "WaitAction",
-            "wait_time_ms": 90000,
-            "depends": [10]
-        },
-        {
-            "type": "UpdateConfigsAction",
-            "layer": "storage",
-            "name": "disable_auto_compactions",
-            "value": "true",
-            "depends": [11]
-        },
-        {
-            "type": "UpdateConfigsAction",
-            "layer": "storage",
-            "name": "wal_ttl",
-            "value": "60",
-            "depends": [12]
-        },
-        {
-            "type": "BalanceLeaderAction",
-            "depends": [13]
-        },
-        {
-            "type": "WaitAction",
-            "wait_time_ms": 90000,
-            "depends": [14]
-        },
-        {
-            "type": "CheckLeadersAction",
-            "expected_num": 100,
-            "space": "check_leader_stability_in_compaction_using_perf",
-            "depends": [15]
-        },
-        {
-            "type": "StoragePerfAction",
-            "path": "",
-            "meta_server_addrs": "",
-            "method": "addVertices",
-            "totalReqs": 1000000000,
-            "threads": 1,
-            "qps": 10000,
-            "batch_num": 1,
-            "space_name": "check_leader_stability_in_compaction_using_perf",
-            "tag_name": "t",
-            "edge_name": "e",
-            "random_message": true,
-            "exe_time_s" : 3600,
-            "depends": [16]
-        },
-        {
-            "type": "WaitAction",
-            "wait_time_ms": 120000,
-            "depends": [17]
-        },
-        {
-            "type": "CheckLeadersAction",
-            "expected_num": 100,
-            "space": "check_leader_stability_in_compaction_using_perf",
-            "result_var_name": "leaderDis1",
-            "depends": [18]
-        },
-        {
-            "type": "CompactionAction",
-            "depends": [19]
-        },
-        {
-            "type": "UpdateConfigsAction",
-            "layer": "storage",
-            "name": "disable_auto_compactions",
-            "value": "false",
-            "depends": [20]
-        },
-        {
-            "type": "WaitAction",
-            "wait_time_ms": 120000,
-            "depends": [21]
-        },
-        {
-            "type": "CheckLeadersAction",
-            "expected_num": 100,
-            "space": "check_leader_stability_in_compaction_using_perf",
-            "result_var_name": "leaderDis2",
-            "depends": [22]
-        },
-        {
-            "type": "ExecutionExpressionAction",
-            "condition": "$leaderDis1 == $leaderDis2",
-            "depends": [23]
-        },
-        {
-            "type": "StopAction",
-            "inst_index": 0,
-            "depends": [24]
-        },
-        {
-            "type": "StopAction",
-            "inst_index": 1,
-            "depends": [24]
-        },
-        {
-            "type": "StopAction",
-            "inst_index": 2,
-            "depends": [24]
-        },
-        {
-            "type": "StopAction",
-            "inst_index": 3,
-            "depends": [24]
-        },
-        {
-            "type": "StopAction",
-            "inst_index": 4,
-            "depends": [24]
+            "depends": [2]
         }
     ]
 }
