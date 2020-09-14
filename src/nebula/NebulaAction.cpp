@@ -378,6 +378,9 @@ ResultCode CheckLeadersAction::checkLeaderDis(const ExecutionResponse& resp) {
     bool first = true;
     for (uint32_t i = 0; i < resp.rows.size() - 1; i++) {
         auto& row = resp.rows[i];
+        if (row.columns[2].get_str() == "offline") {
+            continue;
+        }
         if (row.columns.size() != 6) {
             LOG(ERROR) << "Column number is wrong!";
             return ResultCode::ERR_FAILED;
