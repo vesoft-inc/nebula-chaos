@@ -260,6 +260,20 @@ private:
     std::string spaceName_;
 };
 
+class DropSpaceAction : public MetaAction {
+public:
+    DropSpaceAction(GraphClient* client, const std::string& spaceName)
+        : MetaAction(client)
+        , spaceName_(spaceName) {}
+
+    std::string command() const override {
+        return folly::stringPrintf("DROP SPACE %s", spaceName_.c_str());
+    }
+
+private:
+    std::string spaceName_;
+};
+
 using NameType = std::pair<std::string, std::string>;
 class CreateSchemaAction : public MetaAction {
 public:
@@ -826,6 +840,58 @@ private:
     int32_t partId_;
     int32_t count_;                     // how many storage to truncate
     int32_t bytes_;                     // how many bytes to truncate wal
+};
+
+class StoragePerfAction : public core::Action {
+public:
+    StoragePerfAction(const std::string& perfPath,
+                      const std::string& metaServerAddrs,
+                      const std::string& method,
+                      uint64_t totalReqs,
+                      uint32_t threads,
+                      uint32_t qps,
+                      uint32_t batchNum,
+                      const std::string& spaceName,
+                      const std::string& tagName,
+                      const std::string& edgeName,
+                      bool randomMsg,
+                      uint64_t exeTime)
+        : perfPath_(perfPath)
+        , metaServerAddrs_(metaServerAddrs)
+        , method_(method)
+        , totalReqs_(totalReqs)
+        , threads_(threads)
+        , qps_(qps)
+        , batchNum_(batchNum)
+        , spaceName_(spaceName)
+        , tagName_(tagName)
+        , edgeName_(edgeName)
+        , randomMsg_(randomMsg)
+        , exeTime_(exeTime) {}
+
+    ~StoragePerfAction() = default;
+
+    ResultCode doRun() override;
+
+    std::string toString() const override {
+        return folly::stringPrintf("Execute storage perf : %s on host: %s",
+                                    perfPath_.c_str(),
+                                    metaServerAddrs_.c_str());
+    }
+
+private:
+    std::string     perfPath_;
+    std::string     metaServerAddrs_;
+    std::string     method_;
+    uint64_t        totalReqs_;
+    uint32_t        threads_;
+    uint32_t        qps_;
+    uint32_t        batchNum_;
+    std::string     spaceName_;
+    std::string     tagName_;
+    std::string     edgeName_;
+    bool            randomMsg_;
+    uint64_t        exeTime_;
 };
 
 }   // namespace nebula
