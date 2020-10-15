@@ -141,6 +141,37 @@ public:
                                                         name,
                                                         props,
                                                         edgeOrTag);
+        } else if (type == "CreateIndexAction") {
+            auto tag = obj.at("tag").asString();
+            if (ctx.rolling) {
+                tag = Utils::getOperatingTable(tag);
+            }
+
+            auto index = obj.at("index").asString();
+            if (ctx.rolling) {
+                index = Utils::getOperatingTable(index);
+            }
+
+            auto field = obj.at("field").asString();
+            auto edgeOrTag = obj.at("edge_or_tag").asBool();
+            return std::make_unique<CreateIndexAction>(ctx.gClient,
+                                                       tag,
+                                                       index,
+                                                       field,
+                                                       edgeOrTag);
+        } else if (type == "RebuildIndexAction") {
+            auto index = obj.at("index").asString();
+            if (ctx.rolling) {
+                index = Utils::getOperatingTable(index);
+            }
+            return std::make_unique<RebuildIndexAction>(ctx.gClient, index);
+        } else if (type == "LookUpAction") {
+            auto tag = obj.at("tag").asString();
+            if (ctx.rolling) {
+                tag = Utils::getOperatingTable(tag);
+            }
+            auto field = obj.at("col").asString();
+            return std::make_unique<LookUpAction>(ctx.gClient, tag, field);
         } else if (type == "BalanceLeaderAction") {
             return std::make_unique<BalanceLeaderAction>(ctx.gClient);
         } else if (type == "BalanceDataAction") {

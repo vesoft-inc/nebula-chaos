@@ -301,6 +301,55 @@ ResultCode WalkThroughAction::doRun() {
     return count == totalRows_ ? ResultCode::OK : ResultCode::ERR_FAILED;
 }
 
+folly::Expected<uint64_t, ResultCode>
+LookUpAction::sendCommand(const std::string& cmd) {
+    VLOG(1) << cmd;
+    ExecutionResponse resp;
+    uint32_t tryTimes = 0;
+    uint32_t retryInterval = retryIntervalMs_;
+    while (++tryTimes < try_) {
+        auto res = client_->execute(cmd, resp);
+        if (res == Code::SUCCEEDED) {
+            if (resp.rows.empty() || resp.rows[0].columns.empty()) {
+                LOG(WARNING) << "Bad result, resp.rows size " << resp.rows.size();
+                break;
+            }
+            VLOG(1) << resp.rows.size() << ", " << resp.rows[0].columns.size();
+            return resp.rows[0].columns[0].get_id();
+        }
+        usleep(retryInterval * 1000 * tryTimes);
+        LOG(WARNING) << "Failed to send request, tryTimes " << tryTimes
+                     << ", error code " << static_cast<int32_t>(res);
+    }
+    return folly::makeUnexpected(ResultCode::ERR_FAILED);
+}
+
+ResultCode LookUpAction::doRun() {
+    CHECK_NOTNULL(client_);
+    start_ = folly::Random::rand64(totalRows_);
+    uint64_t id = start_;
+    uint64_t count = 0;
+    while (++count <= totalRows_) {
+        auto cmd = folly::stringPrintf("LOOKUP ON %s WHERE %s.%s == \"%ld\"",
+                                       tag_.c_str(), tag_.c_str(),
+                                       col_.c_str(), id);
+        VLOG(1) << cmd;
+        auto res = sendCommand(cmd);
+        if (bool(res)) {
+            id = res.value();
+        } else {
+            LOG(ERROR) << "Send command failed!";
+            return ResultCode::ERR_FAILED;
+        }
+        if (id == start_) {
+            LOG(INFO) << "We are back to " << start_
+                      << ", total count " << count;
+            break;
+        }
+    }
+    return count == totalRows_ ? ResultCode::OK : ResultCode::ERR_FAILED;
+}
+
 ResultCode BalanceDataAction::checkResp(const ExecutionResponse& resp) const {
     auto* msg = resp.get_error_msg();
     if (msg != nullptr && *msg == "The cluster is balanced!") {
@@ -1027,7 +1076,7 @@ ResultCode RestoreFromDataDirAction::doRun() {
     CHECK_NOTNULL(inst_);
     if (inst_->getState() == NebulaInstance::State::RUNNING) {
         LOG(ERROR) << "Can't clean data while instance " << inst_->toString()
-                << " is stil running";
+                   << " is stil running";
         return ResultCode::OK;
     }
     auto dataPaths = inst_->dataDirs();
