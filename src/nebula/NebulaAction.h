@@ -198,7 +198,7 @@ public:
     LookUpAction(GraphClient* client,
                  const std::string& tag,
                  const std::string& col,
-                 uint64_t totalRows = 3000,
+                 uint64_t totalRows,
                  uint32_t tryNum = 32,
                  uint32_t retryIntervalMs = 1)
         : client_(client)
