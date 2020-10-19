@@ -968,6 +968,7 @@ public:
     ~RebuildIndexAction() = default;
 
     std::string command() const override {
+        // todo: check status with "show tag index status"
         return folly::stringPrintf("REBUILD %s INDEX %s OFFLINE",
                                    (isEdge_ ? "EDGE" : "TAG"),
                                    index_.c_str());

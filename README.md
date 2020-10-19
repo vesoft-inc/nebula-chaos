@@ -66,3 +66,6 @@ storage perf needs to be specified by the user, stable version Git: 1cd031fa.
 
 #### [index_lookup](conf/index_create_lookup.json)
 Start all services, write some data with index, check if index is compatible with data.
+
+#### [rebuild_index](conf/rebuild_index.json)
+Start all services, write some data, rebuild index, check if index is compatible with data.
