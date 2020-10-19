@@ -24,9 +24,6 @@ Start all services, disturb (random kill and restart a storage service) while wr
 #### [kill_all](conf/kill_all_plan.json)
 Start all services, kill all storage services and restart while writing.
 
-#### [kill_all_and_truncate_wal](conf/kill_all_and_truncate_wal.json)
-Start all services, kill all storage services while writing, truncate last wal of specified space and part from all storage services, then restart.
-
 #### [scale_up_and_down](conf/scale_up_and_down.json)
 Start 3 storage servies, add 4th storage service using `balance data` while write a circle, then check data integrity. Then stop 1st storage service, remove it using `balance data` while write a circle then check data integrity. Likewise,
 add 1st storage service back and remove the 4th storage service.
@@ -66,3 +63,9 @@ Start all services, balance leader, turn off auto_compactions, set wal_ttl to 60
 #### [check_leader_stability_in_compaction_using_perf](conf/check_leader_stability_in_compaction_using_perf.json)
 Start all services, balance leader, turn off auto_compactions, set wal_ttl to 60s, using storage perf to write data, stop writing data after the specified time, view the leaders distribution of the current space, enable forced compression, turn on auto_compactions, wait a while, view the leaders distribution of the current space again, compare the results of checking the leaders distribution to see if the leaders have changed.
 storage perf needs to be specified by the user, stable version Git: 1cd031fa.
+
+#### [index_lookup](conf/index_create_lookup.json)
+Start all services, write some data with index, check if index is compatible with data.
+
+#### [rebuild_index](conf/rebuild_index.json)
+Start all services, write some data, rebuild index, check if index is compatible with data.

@@ -171,7 +171,8 @@ public:
                 tag = Utils::getOperatingTable(tag);
             }
             auto field = obj.at("col").asString();
-            return std::make_unique<LookUpAction>(ctx.gClient, tag, field);
+            auto totalRows = obj.at("total_rows").asInt();
+            return std::make_unique<LookUpAction>(ctx.gClient, tag, field, totalRows);
         } else if (type == "BalanceLeaderAction") {
             return std::make_unique<BalanceLeaderAction>(ctx.gClient);
         } else if (type == "BalanceDataAction") {

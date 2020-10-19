@@ -113,7 +113,7 @@
             "type": "WriteCircleAction",
             "tag": "circle",
             "col": "nextId",
-            "total_rows": 3000,
+            "total_rows": 40000,
             "depends": [11]
         },
         {
@@ -125,6 +125,7 @@
             "type": "LookUpAction",
             "tag": "circle",
             "col": "nextId",
+            "total_rows": 40000,
             "depends": [13]
         },
         {
