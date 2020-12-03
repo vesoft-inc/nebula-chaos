@@ -58,11 +58,11 @@ ResultCode LoopAction::doRun() {
             auto actionPtr = action.get();
             folly::collect(dependees)
                         .via(threadsPool_.get())
-                        .thenValue([this, actionPtr](auto&&) {
+                        .thenValue([actionPtr](auto&&) {
                             actionPtr->run();
                             LOG(INFO) << "Run " << actionPtr->toString() << " succeeded!";
                         })
-                        .thenError([this, actionPtr, &rc](auto ew) {
+                        .thenError([actionPtr, &rc](auto ew) {
                             LOG(ERROR) << "Run " << actionPtr->toString() << " failed, msg " << ew.what();
                             actionPtr->markFailed(std::move(ew));
                             if (rc == ResultCode::OK) {

@@ -75,7 +75,7 @@ void ChaosPlan::schedule() {
         auto actionPtr = action.get();
         folly::collect(dependees)
                     .via(threadsPool_.get())
-                    .thenValue([this, actionPtr](auto&&) {
+                    .thenValue([actionPtr](auto&&) {
                         actionPtr->run();
                     })
                     .thenError([this, actionPtr](auto ew) {
