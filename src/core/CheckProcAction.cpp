@@ -16,7 +16,7 @@ ResultCode CheckProcAction::doRun() {
     utils::SshHelper::run(
                 command,
                 host_,
-                [this, &procsNo] (const std::string& outMsg) {
+                [&procsNo] (const std::string& outMsg) {
                     folly::gen::lines(outMsg) | [&](folly::StringPiece line) {
                         line  = folly::trimWhitespace(line);
                         VLOG(1) << line;

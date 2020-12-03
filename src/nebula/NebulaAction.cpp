@@ -22,7 +22,7 @@ ResultCode CrashAction::doRun() {
     auto ret = utils::SshHelper::run(
                 killCommand,
                 inst_->getHost(),
-                [this] (const std::string& outMsg) {
+                [] (const std::string& outMsg) {
                     VLOG(1) << "The output is " << outMsg;
                 },
                 [] (const std::string& errMsg) {
@@ -51,7 +51,7 @@ ResultCode StartAction::doRun() {
     auto ret = utils::SshHelper::run(
                 startCommand,
                 inst_->getHost(),
-                [this] (const std::string& outMsg) {
+                [] (const std::string& outMsg) {
                     VLOG(1) << "The output is " << outMsg;
                 },
                 [] (const std::string& errMsg) {
@@ -82,7 +82,7 @@ ResultCode StopAction::doRun() {
         auto ret = utils::SshHelper::run(
                     stopCommand,
                     inst_->getHost(),
-                    [this] (const std::string& outMsg) {
+                    [] (const std::string& outMsg) {
                         VLOG(1) << "The output is " << outMsg;
                     },
                     [] (const std::string& errMsg) {
@@ -141,7 +141,7 @@ ResultCode CleanDataAction::doRun() {
     auto ret = utils::SshHelper::run(
                 cleanCommand,
                 inst_->getHost(),
-                [this] (const std::string& outMsg) {
+                [] (const std::string& outMsg) {
                     VLOG(1) << "The output is " << outMsg;
                 },
                 [] (const std::string& errMsg) {
@@ -667,7 +667,7 @@ ResultCode CleanWalAction::doRun() {
         auto ret = utils::SshHelper::run(
                     cmd,
                     inst_->getHost(),
-                    [this] (const std::string& outMsg) {
+                    [] (const std::string& outMsg) {
                         VLOG(1) << "The output is " << outMsg;
                     },
                     [] (const std::string& errMsg) {
@@ -726,7 +726,7 @@ ResultCode RandomPartitionAction::disturb() {
     auto ret = utils::SshHelper::run(
                 iptable,
                 picked_->getHost(),
-                [this] (const std::string& outMsg) {
+                [] (const std::string& outMsg) {
                     VLOG(1) << "The output is " << outMsg;
                 },
                 [] (const std::string& errMsg) {
@@ -747,7 +747,7 @@ ResultCode RandomPartitionAction::recover() {
     auto ret = utils::SshHelper::run(
                 iptable,
                 picked_->getHost(),
-                [this] (const std::string& outMsg) {
+                [] (const std::string& outMsg) {
                     VLOG(1) << "The output is " << outMsg;
                 },
                 [] (const std::string& errMsg) {
@@ -791,7 +791,7 @@ ResultCode RandomTrafficControlAction::disturb() {
     auto ret = utils::SshHelper::run(
                 tcset,
                 picked_->getHost(),
-                [this] (const std::string& outMsg) {
+                [] (const std::string& outMsg) {
                     VLOG(1) << "The output is " << outMsg;
                 },
                 [] (const std::string& errMsg) {
@@ -812,7 +812,7 @@ ResultCode RandomTrafficControlAction::recover() {
     auto ret = utils::SshHelper::run(
                 tcdel,
                 picked_->getHost(),
-                [this] (const std::string& outMsg) {
+                [] (const std::string& outMsg) {
                     VLOG(1) << "The output is " << outMsg;
                 },
                 [] (const std::string& errMsg) {
@@ -841,7 +841,7 @@ ResultCode FillDiskAction::disturb() {
         auto ret = utils::SshHelper::run(
                     fill,
                     picked->getHost(),
-                    [this] (const std::string& outMsg) {
+                    [] (const std::string& outMsg) {
                         VLOG(1) << "The output is " << outMsg;
                     },
                     [] (const std::string& errMsg) {
@@ -871,7 +871,7 @@ ResultCode FillDiskAction::recover() {
         auto rc = utils::SshHelper::run(
                     clean,
                     storage->getHost(),
-                    [this] (const std::string& outMsg) {
+                    [] (const std::string& outMsg) {
                         VLOG(1) << "The output is " << outMsg;
                     },
                     [] (const std::string& errMsg) {
@@ -965,7 +965,7 @@ ResultCode SlowDiskAction::recover() {
     utils::SshHelper::run(
                 kill,
                 picked_->getHost(),
-                [this] (const std::string& outMsg) {
+                [] (const std::string& outMsg) {
                     VLOG(1) << "The output is " << outMsg;
                 },
                 [] (const std::string& errMsg) {
@@ -990,7 +990,7 @@ ResultCode CleanCheckpointAction::doRun() {
         auto ret = utils::SshHelper::run(
                     cleanCommand,
                     inst_->getHost(),
-                    [this] (const std::string& outMsg) {
+                    [] (const std::string& outMsg) {
                         VLOG(1) << "The output is " << outMsg;
                     },
                     [] (const std::string& errMsg) {
@@ -1023,7 +1023,7 @@ ResultCode RestoreFromCheckpointAction::doRun() {
         auto ret = utils::SshHelper::run(
                     cleanCommand,
                     inst_->getHost(),
-                    [this, &returnMsg] (const std::string& outMsg) {
+                    [&returnMsg] (const std::string& outMsg) {
                         returnMsg = outMsg;
                         VLOG(1) << "The output is " << outMsg;
                     },
@@ -1043,7 +1043,7 @@ ResultCode RestoreFromCheckpointAction::doRun() {
         auto ret = utils::SshHelper::run(
                     cleanCommand,
                     inst_->getHost(),
-                    [this, &returnMsg] (const std::string& outMsg) {
+                    [&returnMsg] (const std::string& outMsg) {
                         returnMsg = outMsg;
                         VLOG(1) << "The output is " << outMsg;
                     },
@@ -1059,7 +1059,7 @@ ResultCode RestoreFromCheckpointAction::doRun() {
         ret = utils::SshHelper::run(
             copyCommand,
             inst_->getHost(),
-            [this, &returnMsg] (const std::string& outMsg) {
+            [&returnMsg] (const std::string& outMsg) {
                 returnMsg = outMsg;
                 VLOG(1) << "The output is " << outMsg;
             },
@@ -1100,7 +1100,7 @@ ResultCode RestoreFromDataDirAction::doRun() {
         auto ret = utils::SshHelper::run(
                     cleanCmd,
                     inst_->getHost(),
-                    [this] (const std::string& outMsg) {
+                    [] (const std::string& outMsg) {
                         VLOG(1) << "The output is " << outMsg;
                     },
                     [] (const std::string& errMsg) {
@@ -1115,7 +1115,7 @@ ResultCode RestoreFromDataDirAction::doRun() {
         ret = utils::SshHelper::run(
             cpCmd,
             inst_->getHost(),
-            [this] (const std::string& outMsg) {
+            [] (const std::string& outMsg) {
                 VLOG(1) << "The output is " << outMsg;
             },
             [] (const std::string& errMsg) {
@@ -1158,7 +1158,7 @@ ResultCode TruncateWalAction::doRun() {
             auto ret = utils::SshHelper::run(
                 cmd,
                 storage->getHost(),
-                [this, &size, &lastWal] (const std::string& outMsg) {
+                [&size, &lastWal] (const std::string& outMsg) {
                     std::vector<std::string> info;
                     folly::split(" ", outMsg, info);
                     if (info.size() == 2) {
@@ -1187,7 +1187,7 @@ ResultCode TruncateWalAction::doRun() {
             ret = utils::SshHelper::run(
                 truncate,
                 storage->getHost(),
-                [this] (const std::string& outMsg) {
+                [] (const std::string& outMsg) {
                     VLOG(1) << "The output is " << outMsg;
                 },
                 [] (const std::string& errMsg) {

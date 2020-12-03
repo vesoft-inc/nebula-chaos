@@ -211,7 +211,7 @@ public:
     ~LookUpAction() = default;
 
     folly::Expected<uint64_t, ResultCode> sendCommand(const std::string& cmd);
-    
+
     ResultCode doRun() override;
 
     std::string toString() const override {
@@ -873,7 +873,6 @@ private:
     GraphClient* client_;
     std::string spaceName_;
     int32_t partId_;
-    int32_t count_;                     // how many storage to truncate
     int32_t bytes_;                     // how many bytes to truncate wal
 };
 
@@ -945,8 +944,13 @@ public:
     ~CreateIndexAction() = default;
 
     std::string command() const override {
-        return folly::stringPrintf("CREATE TAG INDEX %s ON %s(%s)", index_.c_str(), 
-                                   schema_.c_str(), field_.c_str());
+        if (isEdge_) {
+            return folly::stringPrintf("CREATE EDGE INDEX %s ON %s(%s)", index_.c_str(),
+                                       schema_.c_str(), field_.c_str());
+        } else {
+            return folly::stringPrintf("CREATE TAG INDEX %s ON %s(%s)", index_.c_str(),
+                                       schema_.c_str(), field_.c_str());
+        }
     }
 
 private:
@@ -975,7 +979,6 @@ public:
     }
 
 private:
-    GraphClient* client_{nullptr};
     std::string index_;
     bool isEdge_;
 };
