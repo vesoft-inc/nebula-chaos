@@ -948,7 +948,7 @@ public:
             return folly::stringPrintf("CREATE EDGE INDEX %s ON %s(%s)", index_.c_str(),
                                        schema_.c_str(), field_.c_str());
         } else {
-            return folly::stringPrintf("CREATE TAF INDEX %s ON %s(%s)", index_.c_str(),
+            return folly::stringPrintf("CREATE TAG INDEX %s ON %s(%s)", index_.c_str(),
                                        schema_.c_str(), field_.c_str());
         }
     }
