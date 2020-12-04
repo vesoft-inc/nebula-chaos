@@ -83,8 +83,10 @@ add_custom_command(
     --templates ${THRIFT_TEMPLATES}
     --gen "mstch_cpp2:include_prefix=${include_prefix},process_in_event_base,stack_arguments"
     --gen "py"
+    --gen "js:node:"
+    --gen "csharp"
     --gen "java:hashcode"
-    --gen "go:thrift_import=github.com/facebook/fbthrift/thrift/lib/go/thrift,package_prefix=github.com/vesoft-inc/nebula-go/"
+    --gen "go:thrift_import=github.com/facebook/fbthrift/thrift/lib/go/thrift,package_prefix=github.com/vesoft-inc/nebula-go/,use_context"
     -o "." "${file_path}/${file_name}.thrift"
   DEPENDS "${file_path}/${file_name}.thrift"
   COMMENT "Generating thrift files for ${file_name}"
@@ -96,7 +98,26 @@ add_library(
   OBJECT
   ${${file_name}-cpp2-SOURCES}
 )
+
+set_target_properties(
+    "${file_name}_thrift_obj"
+    PROPERTIES CXX_CLANG_TIDY ""
+)
+
 target_compile_options(${file_name}_thrift_obj PRIVATE "-Wno-pedantic")
 target_compile_options(${file_name}_thrift_obj PRIVATE "-Wno-extra")
+export(
+  TARGETS "${file_name}_thrift_obj"
+  NAMESPACE "common_"
+  APPEND
+  FILE ${CMAKE_BINARY_DIR}/${PACKAGE_NAME}-config.cmake
+)
+
 add_custom_target(${file_name}_thrift_headers DEPENDS ${${file_name}-cpp2-HEADERS})
+if(NOT "${file_name}" STREQUAL "common")
+    add_dependencies(
+        "${file_name}_thrift_obj"
+        "common_thrift_obj"
+    )
+endif()
 endmacro()

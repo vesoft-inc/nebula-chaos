@@ -26,6 +26,8 @@ public:
         variables_[name] = std::move(val);
     }
 
+    virtual ~ExprContext() = default;
+
 private:
     std::unordered_map<std::string, Value> variables_;
 };

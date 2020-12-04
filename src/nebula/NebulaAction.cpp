@@ -112,7 +112,7 @@ ResultCode CleanDataAction::doRun() {
     CHECK_NOTNULL(inst_);
     if (inst_->getState() == NebulaInstance::State::RUNNING) {
         LOG(ERROR) << "Can't clean data while instance " << inst_->toString()
-                   << " is stil running";
+                   << " is still running";
         return ResultCode::OK;
     }
     auto dataPaths = inst_->dataDirs();
@@ -230,7 +230,8 @@ ResultCode WriteCircleAction::doRun() {
             batchCmds.clear();
         }
         if (randomVal_) {
-            batchCmds.emplace_back(folly::stringPrintf("%lu:(\"%s\")", startId_++, genData().c_str()));
+            batchCmds.emplace_back(folly::stringPrintf("%lu:(\"%s\")",
+                                   startId_++, genData().c_str()));
         } else {
             batchCmds.emplace_back(folly::stringPrintf("%lu:(\"%lu\")", row, row + 1));
         }
@@ -282,7 +283,7 @@ ResultCode WalkThroughAction::doRun() {
                                        col_.c_str());
         FB_LOG_EVERY_MS(INFO, 3000) << cmd;
         auto res = sendCommand(cmd);
-        if (bool(res)) {
+        if (res) {
             id = res.value();
         } else {
             LOG(ERROR) << "Send command failed!";
@@ -335,7 +336,7 @@ ResultCode LookUpAction::doRun() {
                                        col_.c_str(), id);
         VLOG(1) << cmd;
         auto res = sendCommand(cmd);
-        if (bool(res)) {
+        if (res) {
             id = res.value();
         } else {
             LOG(ERROR) << "Send command failed!";
@@ -783,8 +784,10 @@ ResultCode RandomTrafficControlAction::disturb() {
     }
     std::string tcset;
     for (const auto& para : paras_) {
-        tcset.append(folly::stringPrintf("tcset %s %s --delay %s --delay-distro %s --loss %d --duplicate %d --add; ",
-                     device_.c_str(), para.c_str(),  delay_.c_str(), dist_.c_str(), loss_, duplicate_));
+        tcset.append(folly::stringPrintf("tcset %s %s --delay %s --delay-distro %s "
+                                         "--loss %d --duplicate %d --add; ",
+                                         device_.c_str(), para.c_str(),  delay_.c_str(),
+                                         dist_.c_str(), loss_, duplicate_));
     }
     LOG(INFO) << "Begin traffic control of " << picked_->toString();
     VLOG(1) << tcset << " on " << picked_->toString();
@@ -929,8 +932,10 @@ ResultCode SlowDiskAction::disturb() {
         return ResultCode::ERR_FAILED;
     }
     LOG(INFO) << "Begin to slow disk of " << picked_->toString();
-    auto stap = folly::stringPrintf("stap -e \'%s\' -DMAXSKIPPED=1000000 -F -o /tmp/stap_log_%d -g -x %d %d %d %d",
-                                    script.c_str(), pid.value(), pid.value(), major_, minor_, delayMs_);
+    auto stap = folly::stringPrintf("stap -e \'%s\' -DMAXSKIPPED=1000000 -F -o "
+                                    "/tmp/stap_log_%d -g -x %d %d %d %d",
+                                    script.c_str(), pid.value(), pid.value(),
+                                    major_, minor_, delayMs_);
     VLOG(1) << "SystemTap script: " << stap;
     auto ret = utils::SshHelper::run(
                 stap,
@@ -938,7 +943,8 @@ ResultCode SlowDiskAction::disturb() {
                 [this] (const std::string& outMsg) {
                     try {
                         stapPid_ = folly::to<int32_t>(outMsg);
-                        LOG(INFO) << "SystemTap has been running as daemon of pid " << stapPid_.value();
+                        LOG(INFO) << "SystemTap has been running as daemon of pid "
+                                  << stapPid_.value();
                     } catch (const folly::ConversionError& e) {
                         LOG(ERROR) << "Failed to get SystemTap pid";
                     }
@@ -952,7 +958,9 @@ ResultCode SlowDiskAction::disturb() {
 }
 
 ResultCode SlowDiskAction::recover() {
-    nebula_chaos::core::CheckProcAction action(picked_->getHost(), stapPid_.value(), picked_->owner());
+    nebula_chaos::core::CheckProcAction action(picked_->getHost(),
+                                               stapPid_.value(),
+                                               picked_->owner());
     auto res = action.doRun();
     if (res == ResultCode::ERR_NOT_FOUND) {
         LOG(WARNING) << "SystemTap has quit before we kill it, please check the log";
@@ -1054,7 +1062,8 @@ ResultCode RestoreFromCheckpointAction::doRun() {
         CHECK_EQ(0, ret.exitStatus());
 
         auto cpCmd = "cp -fr %s/`ls -t %s | head -n 1`/* %s/../";
-        auto copyCommand = folly::stringPrintf(cpCmd, checkpoint.c_str(), checkpoint.c_str(), checkpoint.c_str());
+        auto copyCommand = folly::stringPrintf(cpCmd, checkpoint.c_str(),
+                                               checkpoint.c_str(), checkpoint.c_str());
         LOG(INFO) << copyCommand << " on " << inst_->toString() << " as " << inst_->owner();
         ret = utils::SshHelper::run(
             copyCommand,
@@ -1123,7 +1132,6 @@ ResultCode RestoreFromDataDirAction::doRun() {
             },
             inst_->owner());
         CHECK_EQ(0, ret.exitStatus());
-
     }
     return ResultCode::OK;
 }
@@ -1145,7 +1153,8 @@ ResultCode TruncateWalAction::doRun() {
         auto* storage = storages_[i];
         auto wals = storage->walDirs(spaceId);
         if (!wals.hasValue()) {
-            LOG(ERROR) << "Can't find wals for space " << spaceName_ << " on " << storage->toString();
+            LOG(ERROR) << "Can't find wals for space " << spaceName_
+                       << " on " << storage->toString();
             return ResultCode::ERR_FAILED;
         }
         for (auto& walDir : wals.value()) {
@@ -1183,7 +1192,8 @@ ResultCode TruncateWalAction::doRun() {
                 return ResultCode::ERR_FAILED;
             }
             // truncate latest wal of specified bytes
-            auto truncate = folly::stringPrintf("truncate -s %d %s", size - bytes_, lastWal.c_str());
+            auto truncate = folly::stringPrintf("truncate -s %d %s", size - bytes_,
+                                                lastWal.c_str());
             ret = utils::SshHelper::run(
                 truncate,
                 storage->getHost(),
@@ -1259,7 +1269,7 @@ ResultCode StoragePerfAction::doRun() {
     std::system(commandStr.c_str());
     sleep(exeTime_);
 
-    //check storage perf is running
+    // check storage perf is running
     FILE* fp = popen("ps -ux|grep storage_perf|grep -v grep|awk '{print $2}'", "r");
     if (!fp) {
         LOG(ERROR) << "Failed to exe ps -ux|grep storage_perf|grep -v grep|awk '{print $2}'";

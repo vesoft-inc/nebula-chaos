@@ -45,7 +45,7 @@ bool NebulaInstance::parseConf(const std::string& confFile) {
 }
 
 bool NebulaInstance::init() {
-    // This is the default conf file name inside nebula, to keep it simplem, we
+    // This is the default conf file name inside nebula, to keep it simple, we
     // just use it. If we can't find it, dump err message inside parseConf.
     switch (type_) {
         case NebulaInstance::Type::STORAGE: {

@@ -5,7 +5,6 @@ nebula_add_executable(
         RunChaosPlan.cpp
     OBJECTS
         $<TARGET_OBJECTS:nebula_client_obj>
-        $<TARGET_OBJECTS:graph_thrift_obj>
         $<TARGET_OBJECTS:nebula_plan_obj>
         $<TARGET_OBJECTS:nebula_instance_obj>
         $<TARGET_OBJECTS:actions_obj>

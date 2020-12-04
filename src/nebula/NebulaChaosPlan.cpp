@@ -18,6 +18,11 @@ namespace nebula {
 std::unique_ptr<NebulaChaosPlan>
 NebulaChaosPlan::loadFromFile(const std::string& filename) {
     std::string jsonStr;
+    if (access(filename.c_str(), F_OK) != 0) {
+        LOG(ERROR) << "File not exists " << filename.c_str();
+        return nullptr;
+    }
+
     if (!folly::readFile(filename.c_str(), jsonStr)) {
         LOG(ERROR) << "Parse file " << filename << " failed!";
         return nullptr;

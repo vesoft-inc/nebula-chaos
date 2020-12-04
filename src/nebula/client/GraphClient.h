@@ -8,19 +8,19 @@
 #define NEBULA_CLIENT_CPP_GRAPHCLIENT_H_
 
 #include "common/Base.h"
-#include "nebula/interface/gen-cpp2/GraphServiceAsyncClient.h"
-#include <folly/executors/IOThreadPoolExecutor.h>
+#include "nebula/client/Config.h"
+#include "nebula/client/ConnectionPool.h"
+#include "nebula/client/Session.h"
 
 namespace nebula_chaos {
 namespace nebula {
 
 using Code = ::nebula::graph::cpp2::ErrorCode;
-using ExecutionResponse = ::nebula::graph::cpp2::ExecutionResponse;
-using GraphServiceAsyncClient = ::nebula::graph::cpp2::GraphServiceAsyncClient;
 
 class GraphClient {
 public:
     GraphClient(const std::string& addr, uint16_t port);
+
     virtual ~GraphClient();
 
     // Authenticate the user
@@ -37,12 +37,10 @@ public:
     }
 
 private:
-    std::unique_ptr<GraphServiceAsyncClient> client_;
+    std::unique_ptr<ConnectionPool> pool_;
     const std::string addr_;
     const uint16_t port_;
-    int64_t sessionId_;
-    std::unique_ptr<folly::IOThreadPoolExecutor> ioPool_;
-    folly::EventBase* evb_;
+    Session session_;
 };
 
 }  // namespace nebula
