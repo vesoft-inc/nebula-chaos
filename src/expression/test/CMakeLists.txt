@@ -5,8 +5,8 @@ nebula_add_test(
     SOURCES
         ExprTest.cpp
     OBJECTS
+        $<TARGET_OBJECTS:common_base_obj>
         $<TARGET_OBJECTS:expr_obj>
-        $<TARGET_OBJECTS:base_obj>
     LIBRARIES
         gtest
 )

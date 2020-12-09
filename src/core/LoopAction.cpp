@@ -43,7 +43,7 @@ ResultCode LoopAction::doRun() {
             return ResultCode::ERR_FAILED;
         }
         auto val = std::move(valOrErr).value();
-        if (!asBool(val)) {
+        if (!ExprUtils::asBool(val)) {
             LOG(INFO) << "Stop the loop";
             break;
         }

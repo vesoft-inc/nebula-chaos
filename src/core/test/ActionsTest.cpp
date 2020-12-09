@@ -60,7 +60,7 @@ TEST(ActionsTest, AssignActionTest) {
     CHECK(ResultCode::OK == ret);
     auto valOrErr = ctx.exprCtx.getVar("a");
     CHECK(valOrErr);
-    CHECK_EQ(7, asInt(valOrErr.value()));
+    CHECK_EQ(7, ExprUtils::asInt(valOrErr.value()));
 }
 
 }  // namespace utils

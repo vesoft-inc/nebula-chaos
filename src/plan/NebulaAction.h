@@ -234,7 +234,7 @@ private:
  * */
 class MetaAction : public core::Action {
 public:
-    explict MetaAction(GraphClient* client, int32_t retryTimes = 32)
+    explicit MetaAction(GraphClient* client, int32_t retryTimes = 32)
         : client_(client)
         , retryTimes_(retryTimes) {}
 
@@ -248,7 +248,7 @@ public:
         return command();
     }
 
-    virtual ResultCode checkResp(const DataSet* resp) const;
+    virtual ResultCode checkResp(const DataSet& resp) const;
 
 protected:
     GraphClient* client_ = nullptr;

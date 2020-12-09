@@ -74,20 +74,20 @@ std::string UnaryExpression::toString() const {
 
 ValueOrErr UnaryExpression::eval(ExprContext* ctx) const {
     auto valOrErr = operand_->eval(ctx);
-    if (!bool(valOrErr)) {
+    if (!valOrErr) {
         return valOrErr;
     }
     auto value = valOrErr.value();
     if (op_ == PLUS) {
         return value;
     } else if (op_ == NEGATE) {
-        if (isInt(value)) {
-            return -asInt(value);
-        } else if (isDouble(value)) {
-            return -asDouble(value);
+        if (ExprUtils::isInt(value)) {
+            return -ExprUtils::asInt(value);
+        } else if (ExprUtils::isDouble(value)) {
+            return -ExprUtils::asDouble(value);
         }
     } else {
-        return !asBool(value);
+        return !ExprUtils::asBool(value);
     }
     return folly::makeUnexpected(ErrorCode::ERR_UNKNOWN_OP);
 }
@@ -121,11 +121,11 @@ std::string ArithmeticExpression::toString() const {
 
 ValueOrErr ArithmeticExpression::eval(ExprContext* ctx) const {
     auto lValOrErr = left_->eval(ctx);
-    if (!bool(lValOrErr)) {
+    if (!lValOrErr) {
         return lValOrErr;
     }
     auto rValOrErr = right_->eval(ctx);
-    if (!bool(rValOrErr)) {
+    if (!rValOrErr) {
         return rValOrErr;
     }
     auto l = lValOrErr.value();
@@ -170,29 +170,29 @@ ValueOrErr ArithmeticExpression::eval(ExprContext* ctx) const {
 
     switch (op_) {
         case ADD:
-            if (isArithmetic(l) && isArithmetic(r)) {
-                if (isDouble(l) || isDouble(r)) {
-                    return asDouble(l) + asDouble(r);
+            if (ExprUtils::isArithmetic(l) && ExprUtils::isArithmetic(r)) {
+                if (ExprUtils::isDouble(l) || ExprUtils::isDouble(r)) {
+                    return ExprUtils::asDouble(l) + ExprUtils::asDouble(r);
                 }
-                int64_t lValue = asInt(l);
-                int64_t rValue = asInt(r);
+                int64_t lValue = ExprUtils::asInt(l);
+                int64_t rValue = ExprUtils::asInt(r);
                 if (isAddOverflow(lValue, rValue)) {
                     LOG(FATAL) << "Error";
                 }
                 return lValue + rValue;
             }
 
-            if (isString(l) && isString(r)) {
-                return asString(l) + asString(r);
+            if (ExprUtils::isString(l) && ExprUtils::isString(r)) {
+                return ExprUtils::asString(l) + ExprUtils::asString(r);
             }
             break;
         case SUB:
-            if (isArithmetic(l) && isArithmetic(r)) {
-                if (isDouble(l) || isDouble(r)) {
-                    return asDouble(l) - asDouble(r);
+            if (ExprUtils::isArithmetic(l) && ExprUtils::isArithmetic(r)) {
+                if (ExprUtils::isDouble(l) || ExprUtils::isDouble(r)) {
+                    return ExprUtils::asDouble(l) - ExprUtils::asDouble(r);
                 }
-                int64_t lValue = asInt(l);
-                int64_t rValue = asInt(r);
+                int64_t lValue = ExprUtils::asInt(l);
+                int64_t rValue = ExprUtils::asInt(r);
                 if (isSubOverflow(lValue, rValue)) {
                     LOG(FATAL) << "Error";
                 }
@@ -200,12 +200,12 @@ ValueOrErr ArithmeticExpression::eval(ExprContext* ctx) const {
             }
             break;
         case MUL:
-            if (isArithmetic(l) && isArithmetic(r)) {
-                if (isDouble(l) || isDouble(r)) {
-                    return asDouble(l) * asDouble(r);
+            if (ExprUtils::isArithmetic(l) && ExprUtils::isArithmetic(r)) {
+                if (ExprUtils::isDouble(l) || ExprUtils::isDouble(r)) {
+                    return ExprUtils::asDouble(l) * ExprUtils::asDouble(r);
                 }
-                int64_t lValue = asInt(l);
-                int64_t rValue = asInt(r);
+                int64_t lValue = ExprUtils::asInt(l);
+                int64_t rValue = ExprUtils::asInt(r);
                 if (isMulOverflow(lValue, rValue)) {
                     LOG(FATAL) << "Error";
                 }
@@ -213,32 +213,32 @@ ValueOrErr ArithmeticExpression::eval(ExprContext* ctx) const {
             }
             break;
         case DIV:
-            if (isArithmetic(l) && isArithmetic(r)) {
-                if (isDouble(l) || isDouble(r)) {
-                    if (abs(asDouble(r)) < 1e-8) {
+            if (ExprUtils::isArithmetic(l) && ExprUtils::isArithmetic(r)) {
+                if (ExprUtils::isDouble(l) || ExprUtils::isDouble(r)) {
+                    if (abs(ExprUtils::asDouble(r)) < 1e-8) {
                         LOG(FATAL) << "Error";
                     }
-                    return asDouble(l) / asDouble(r);
+                    return ExprUtils::asDouble(l) / ExprUtils::asDouble(r);
                 }
 
-                if (abs(asInt(r)) == 0) {
+                if (abs(ExprUtils::asInt(r)) == 0) {
                     LOG(FATAL) << "Error";
                 }
-                return asInt(l) / asInt(r);
+                return ExprUtils::asInt(l) / ExprUtils::asInt(r);
             }
             break;
         case MOD:
-            if (isArithmetic(l) && isArithmetic(r)) {
-                if (isDouble(l) || isDouble(r)) {
-                    if (abs(asDouble(r)) < 1e-8) {
+            if (ExprUtils::isArithmetic(l) && ExprUtils::isArithmetic(r)) {
+                if (ExprUtils::isDouble(l) || ExprUtils::isDouble(r)) {
+                    if (abs(ExprUtils::asDouble(r)) < 1e-8) {
                         LOG(FATAL) << "Error";
                     }
-                    return fmod(asDouble(l), asDouble(r));
+                    return fmod(ExprUtils::asDouble(l), ExprUtils::asDouble(r));
                 }
-                if (abs(asInt(r)) == 0) {
+                if (abs(ExprUtils::asInt(r)) == 0) {
                     LOG(FATAL) << "Error";
                 }
-                return asInt(l) % asInt(r);
+                return ExprUtils::asInt(l) % ExprUtils::asInt(r);
             }
             break;
         default:
@@ -279,11 +279,11 @@ std::string RelationalExpression::toString() const {
 
 ValueOrErr RelationalExpression::eval(ExprContext* ctx) const {
     auto lValOrErr = left_->eval(ctx);
-    if (!bool(lValOrErr)) {
+    if (!lValOrErr) {
         return lValOrErr;
     }
     auto rValOrErr = right_->eval(ctx);
-    if (!bool(rValOrErr)) {
+    if (!rValOrErr) {
         return rValOrErr;
     }
     auto l = lValOrErr.value();
@@ -299,18 +299,18 @@ ValueOrErr RelationalExpression::eval(ExprContext* ctx) const {
         case GE:
             return l >= r;
         case EQ:
-            if (isArithmetic(l) && isArithmetic(r)) {
-                if (isDouble(l) || isDouble(r)) {
-                    return almostEqual(asDouble(l),
-                                       asDouble(r));
+            if (ExprUtils::isArithmetic(l) && ExprUtils::isArithmetic(r)) {
+                if (ExprUtils::isDouble(l) || ExprUtils::isDouble(r)) {
+                    return ExprUtils::almostEqual(ExprUtils::asDouble(l),
+                                                  ExprUtils::asDouble(r));
                 }
             }
             return l == r;
         case NE:
-            if (isArithmetic(l) && isArithmetic(r)) {
-                if (isDouble(l) || isDouble(r)) {
-                    return !almostEqual(asDouble(l),
-                                        asDouble(r));
+            if (ExprUtils::isArithmetic(l) && ExprUtils::isArithmetic(r)) {
+                if (ExprUtils::isDouble(l) || ExprUtils::isDouble(r)) {
+                    return !ExprUtils::almostEqual(ExprUtils::asDouble(l),
+                                                   ExprUtils::asDouble(r));
                 }
             }
             return l != r;
@@ -341,31 +341,31 @@ std::string LogicalExpression::toString() const {
 
 ValueOrErr LogicalExpression::eval(ExprContext* ctx) const {
     auto lValOrErr = left_->eval(ctx);
-    if (!bool(lValOrErr)) {
+    if (!lValOrErr) {
         return lValOrErr;
     }
     auto rValOrErr = right_->eval(ctx);
-    if (!bool(rValOrErr)) {
+    if (!rValOrErr) {
         return rValOrErr;
     }
     auto l = lValOrErr.value();
     auto r = rValOrErr.value();
-    VLOG(3) << "left: " << asBool(l)
-            << ", right:" << asBool(r)
+    VLOG(3) << "left: " << ExprUtils::asBool(l)
+            << ", right:" << ExprUtils::asBool(r)
             << ", op " << static_cast<int32_t>(op_);
     if (op_ == AND) {
-        if (!asBool(l)) {
+        if (!ExprUtils::asBool(l)) {
             return false;
         }
-        return asBool(r);
+        return ExprUtils::asBool(r);
     } else if (op_ == OR) {
-        if (asBool(l)) {
+        if (ExprUtils::asBool(l)) {
             return true;
         }
-        return asBool(r);
+        return ExprUtils::asBool(r);
     } else {
         // op_ == XOR
-        return asBool(l) != asBool(r);
+        return ExprUtils::asBool(l) != ExprUtils::asBool(r);
     }
 }
 

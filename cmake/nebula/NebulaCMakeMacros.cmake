@@ -33,6 +33,11 @@ macro(nebula_add_executable)
             common_project
         )
     endif()
+    if(TARGET client_project)
+        add_dependencies(
+            ${nebula_exec_NAME}
+            client_project
+        )
 endmacro()
 
 macro(nebula_add_test)

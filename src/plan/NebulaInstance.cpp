@@ -8,7 +8,7 @@
 #include <boost/algorithm/string.hpp>
 
 namespace nebula_chaos {
-namespace nebula_plan {
+namespace plan {
 
 bool NebulaInstance::parseConf(const std::string& confFile) {
     LOG(INFO) << "Parse conf file " << confFile

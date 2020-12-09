@@ -16,7 +16,7 @@ TEST(ParserTest, ExpressionTest) {
         LOG(INFO) << "The expression is " << expr->toString();
         auto valOrErr = expr->eval(&ctx);
         CHECK(valOrErr);
-        CHECK_EQ(2, asInt(valOrErr.value()));
+        CHECK_EQ(2, ExprUtils::asInt(valOrErr.value()));
     }
     {
         auto expr = ParserHelper::parse("$a + 3");
@@ -24,7 +24,7 @@ TEST(ParserTest, ExpressionTest) {
         LOG(INFO) << "The expression is " << expr->toString();
         auto valOrErr = expr->eval(&ctx);
         CHECK(valOrErr);
-        CHECK_EQ(4, asInt(valOrErr.value()));
+        CHECK_EQ(4, ExprUtils::asInt(valOrErr.value()));
     }
 }
 

@@ -4,9 +4,9 @@ nebula_add_test(
     SOURCES
         NebulaInstanceTest.cpp
     OBJECTS
+        $<TARGET_OBJECTS:common_base_obj>
         $<TARGET_OBJECTS:nebula_instance_obj>
         $<TARGET_OBJECTS:ssh_helper_obj>
-        $<TARGET_OBJECTS:base_obj>
     LIBRARIES
         gtest
 )

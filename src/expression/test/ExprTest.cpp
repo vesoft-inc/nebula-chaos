@@ -1,3 +1,9 @@
+/* Copyright (c) 2020 vesoft inc. All rights reserved.
+ *
+ * This source code is licensed under Apache 2.0 License,
+ * attached with Common Clause Condition 1.0, found in the LICENSES directory.
+ */
+
 #include "common/Base.h"
 #include <gtest/gtest.h>
 #include <glog/logging.h>
@@ -15,7 +21,7 @@ TEST(ExprTest, ExprTest) {
         ArithmeticExpression expr(left, ArithmeticExpression::Operator::ADD, right);
         auto valOrErr = expr.eval(&ctx);
         CHECK(valOrErr);
-        CHECK_EQ(3, asInt(valOrErr.value()));
+        CHECK_EQ(3, ExprUtils::asInt(valOrErr.value()));
     }
     {
         auto* left = new ConstantExpression(1L);
@@ -23,7 +29,7 @@ TEST(ExprTest, ExprTest) {
         ArithmeticExpression expr(left, ArithmeticExpression::Operator::ADD, right);
         auto valOrErr = expr.eval(&ctx);
         CHECK(valOrErr);
-        CHECK_EQ(2, asInt(valOrErr.value()));
+        CHECK_EQ(2, ExprUtils::asInt(valOrErr.value()));
     }
 }
 

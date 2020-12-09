@@ -4,6 +4,7 @@ nebula_add_executable(
     SOURCES
         RunChaosPlan.cpp
     OBJECTS
+        $<TARGET_OBJECTS:common_base_obj>
         $<TARGET_OBJECTS:nebula_client_obj>
         $<TARGET_OBJECTS:nebula_plan_obj>
         $<TARGET_OBJECTS:nebula_instance_obj>
@@ -11,7 +12,6 @@ nebula_add_executable(
         $<TARGET_OBJECTS:parser_obj>
         $<TARGET_OBJECTS:expr_obj>
         $<TARGET_OBJECTS:ssh_helper_obj>
-        $<TARGET_OBJECTS:base_obj>
     LIBRARIES
         gtest
         ${THRIFT_LIBRARIES}

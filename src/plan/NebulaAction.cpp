@@ -163,7 +163,7 @@ ResultCode MetaAction::doRun() {
     DataSet resp;
     int32_t retry = 0;
     while (++retry < retryTimes_) {
-        auto res = client_->execute(cmd, &resp);
+        auto res = client_->execute(cmd, resp);
         if (res == ErrorCode::SUCCEEDED) {
             LOG(INFO) << "Execute " << cmd << " successfully!";
             auto ret = checkResp(resp);
@@ -186,7 +186,7 @@ ResultCode WriteCircleAction::sendBatch(const std::vector<std::string>& batchCmd
                                    col_.c_str(),
                                    joinStr.c_str());
     VLOG(1) << cmd;
-    ExecutionResponse resp;
+    DataSet resp;
     uint32_t tryTimes = 0;
     uint32_t retryInterval = retryIntervalMs_;
     while (++tryTimes < try_) {
@@ -256,14 +256,14 @@ WalkThroughAction::sendCommand(const std::string& cmd) {
     uint32_t tryTimes = 0;
     uint32_t retryInterval = retryIntervalMs_;
     while (++tryTimes < try_) {
-        auto res = client_->execute(cmd, &resp);
+        auto res = client_->execute(cmd, resp);
         if (res == nebula::ErrorCode::SUCCEEDED) {
-            if (resp.rows.empty() || resp.rows[0].columns.empty()) {
+            if (resp.rows.empty() || resp.rows[0].empty()) {
                 LOG(WARNING) << "Bad result, resp.rows size " << resp.rows.size();
                 break;
             }
-            VLOG(1) << resp.rows.size() << ", " << resp.rows[0].columns.size();
-            return resp.rows[0].columns[1].get_str();
+            VLOG(1) << resp.rows.size() << ", " << resp.rows[0].size();
+            return resp.rows[0][1].getStr();
         }
         usleep(retryInterval * 1000 * tryTimes);
         LOG(WARNING) << "Failed to send request, tryTimes " << tryTimes
@@ -311,14 +311,14 @@ LookUpAction::sendCommand(const std::string& cmd) {
     uint32_t tryTimes = 0;
     uint32_t retryInterval = retryIntervalMs_;
     while (++tryTimes < try_) {
-        auto res = client_->execute(cmd, &resp);
+        auto res = client_->execute(cmd, resp);
         if (res == nebula::ErrorCode::SUCCEEDED) {
-            if (resp.rows.empty() || resp.rows[0].columns.empty()) {
+            if (resp.rows.empty() || resp.rows[0].empty()) {
                 LOG(WARNING) << "Bad result, resp.rows size " << resp.rows.size();
                 break;
             }
-            VLOG(1) << resp.rows.size() << ", " << resp.rows[0].columns.size();
-            return resp.rows[0].columns[0].get_id();
+            VLOG(1) << resp.rows.size() << ", " << resp.rows[0].size();
+            return resp.rows[0][0].getInt();
         }
         usleep(retryInterval * 1000 * tryTimes);
         LOG(WARNING) << "Failed to send request, tryTimes " << tryTimes
@@ -353,8 +353,8 @@ ResultCode LookUpAction::doRun() {
     return count == totalRows_ ? ResultCode::OK : ResultCode::ERR_FAILED;
 }
 
-ResultCode BalanceDataAction::checkResp(const DataSet& resp) const {
-    //TODO(pandasheeps)
+ResultCode BalanceDataAction::checkResp(const DataSet&) const {
+    // TODO(pandasheeps)
     /*
     auto* msg = resp.get_error_msg();
     if (msg != nullptr && *msg == "The cluster is balanced!") {
@@ -375,15 +375,15 @@ ResultCode DescSpaceAction::checkResp(const DataSet& resp) const {
         return ResultCode::ERR_FAILED;
     }
     auto& row = resp.rows[0];
-    if (row.columns.size() != 6) {
-        LOG(ERROR) << "Column number is wrong!";
+    if (row.size() != 6) {
+        LOG(ERROR) << "Value number is wrong!";
         return ResultCode::ERR_FAILED;
     }
-    if (row.columns[1].get_str() != spaceName_) {
+    if (row[1].getStr() != spaceName_) {
         LOG(ERROR) << "Desc a wrong space! Should be " << spaceName_;
         return ResultCode::ERR_FAILED;
     }
-    spaceId_ = row.columns[0].get_integer();
+    spaceId_ = row[0].getInt();
     return ResultCode::OK;
 }
 
@@ -393,15 +393,15 @@ ResultCode CheckLeadersAction::checkResp(const DataSet& resp) const {
         return ResultCode::ERR_FAILED;
     }
     auto& row = resp.rows[resp.rows.size() - 1];
-    if (row.columns.size() != 6) {
-        LOG(ERROR) << "Column number is wrong!";
+    if (row.size() != 6) {
+        LOG(ERROR) << "Value number is wrong!";
         return ResultCode::ERR_FAILED;
     }
-    if (row.columns[0].get_str() != "Total") {
+    if (row[0].getStr() != "Total") {
         LOG(ERROR) << "Bad format for the response!";
         return ResultCode::ERR_FAILED;
     }
-    auto& leaderStr = row.columns[4].get_str();
+    auto& leaderStr = row[4].getStr();
     if (leaderStr.empty()) {
         return ResultCode::ERR_FAILED;
     }
@@ -434,19 +434,19 @@ ResultCode CheckLeadersAction::checkLeaderDis(const DataSet& resp) {
     bool first = true;
     for (uint32_t i = 0; i < resp.rows.size() - 1; i++) {
         auto& row = resp.rows[i];
-        if (row.columns[2].get_str() == "offline") {
+        if (row[2].getStr() == "offline") {
             continue;
         }
-        if (row.columns.size() != 6) {
-            LOG(ERROR) << "Column number is wrong!";
+        if (row.size() != 6) {
+            LOG(ERROR) << "Value number is wrong!";
             return ResultCode::ERR_FAILED;
         }
 
-        auto& ipStr = row.columns[0].get_str();
+        auto& ipStr = row[0].getStr();
         if (ipStr.empty()) {
             return ResultCode::ERR_FAILED;
         }
-        auto& leaderStr = row.columns[4].get_str();
+        auto& leaderStr = row[4].getStr();
         if (leaderStr.empty()) {
             return ResultCode::ERR_FAILED;
         }
@@ -481,9 +481,9 @@ ResultCode CheckLeadersAction::doRun() {
     DataSet resp;
     int32_t retry = 0;
     while (++retry < retryTimes_) {
-        auto res = client_->execute(cmd, &resp);
+        auto res = client_->execute(cmd, resp);
         if (res == ErrorCode::SUCCEEDED) {
-            LOG(INFO) << "Execute " << cmd << " successfully!"; 
+            LOG(INFO) << "Execute " << cmd << " successfully!";
             auto ret = checkResp(resp);
             if (ret == ResultCode::ERR_FAILED_NO_RETRY) {
                 return ret;
@@ -552,10 +552,10 @@ ResultCode UpdateConfigsAction::doRun() {
 
     auto cmd = command();
     LOG(INFO) << "Send " << cmd << " to graphd";
-    DataSet resp;
+    nebula::DataSet resp;
     int32_t retry = 0;
     while (++retry < retryTimes_) {
-        auto res = client_->execute(cmd, &resp);
+        auto res = client_->execute(cmd, resp);
         if (res == ErrorCode::SUCCEEDED) {
             LOG(INFO) << "Execute " << cmd << " successfully!";
             ret = checkResp(resp);
@@ -583,7 +583,7 @@ ResultCode ExecutionExpressionAction::doRun() {
     }
     auto val = std::move(valOrErr).value();
 
-    if (!asBool(val)) {
+    if (!ExprUtils::asBool(val)) {
         return ResultCode::ERR_FAILED;
     }
     return ResultCode::OK;

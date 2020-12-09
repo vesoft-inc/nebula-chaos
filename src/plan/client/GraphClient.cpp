@@ -26,30 +26,35 @@ GraphClient::~GraphClient() {
 
 ErrorCode GraphClient::connect(const std::string& username,
                                const std::string& password) {
-    session_ = conPool_->getSession(username, password);
-    if (session_.valid()) {
+    auto session = conPool_->getSession(username, password);
+    if (session.valid()) {
+        session_.reset(new nebula::Session(std::move(session)));
         return nebula::ErrorCode::SUCCEEDED;
     }
     return nebula::ErrorCode::E_RPC_FAILURE;
 }
 
 void GraphClient::disconnect() {
-    session_.release();
+    if (session_ != nullptr) {
+        session_->release();
+        session_ = nullptr;
+    }
+    conPool_ = nullptr;
 }
 
 ErrorCode GraphClient::execute(folly::StringPiece stmt,
-                               DataSet* resp) {
-    if (!session_.valid()) {
-        auto ret = session_.retryConnect();
+                               nebula::DataSet& resp) {
+    if (!session_->valid()) {
+        auto ret = session_->retryConnect();
         if (ret != nebula::ErrorCode::SUCCEEDED ||
-            !session_.valid()) {
+            !session_->valid()) {
             return nebula::ErrorCode::E_DISCONNECTED;
         }
     }
 
     int32_t retry = 0;
     while (++retry < kRetryTimes) {
-        auto exeRet = session_.execute(stmt.str());
+        auto exeRet = session_->execute(stmt.str());
         if (exeRet.errorCode() != nebula::ErrorCode::SUCCEEDED) {
             LOG(ERROR) << stmt.str() << " execute failed"
                        << static_cast<int>(exeRet.errorCode());
@@ -59,9 +64,10 @@ ErrorCode GraphClient::execute(folly::StringPiece stmt,
             sleep(retry);
             continue;
         }
-        resp = exeRet.data();
+        resp = *(const_cast<nebula::DataSet*>(exeRet.data()));
         return nebula::ErrorCode::SUCCEEDED;
     }
+    return nebula::ErrorCode::E_EXECUTION_ERROR;
 }
 
 }  // namespace plan

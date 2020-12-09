@@ -33,17 +33,17 @@ public:
     void disconnect();
 
     ErrorCode execute(folly::StringPiece stmt,
-                      DataSet* resp);
+                      nebula::DataSet& resp);
 
     std::string serverAddress() const {
         return folly::stringPrintf("%s:%d", addr_.c_str(), port_);
     }
 
 private:
-    std::unique_ptr<nebula::ConnectionPool> conPool_;
+    std::unique_ptr<nebula::ConnectionPool> conPool_{nullptr};
     const std::string                       addr_;
     const uint16_t                          port_;
-    nebula::Session                         session_;
+    std::unique_ptr<nebula::Session>        session_{nullptr};
 };
 
 }  // namespace plan
