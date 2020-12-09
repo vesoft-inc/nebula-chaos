@@ -152,7 +152,7 @@ ResultCode CleanDataAction::doRun() {
     return ResultCode::OK;
 }
 
-ResultCode MetaAction::checkResp(const ExecutionResponse&) const {
+ResultCode MetaAction::checkResp(const DataSet&) const {
     return ResultCode::OK;
 }
 
@@ -160,15 +160,17 @@ ResultCode MetaAction::doRun() {
     CHECK_NOTNULL(client_);
     auto cmd = command();
     LOG(INFO) << "Send " << cmd << " to graphd";
-    ExecutionResponse resp;
+    DataSet resp;
     int32_t retry = 0;
     while (++retry < retryTimes_) {
-        client_->execute(cmd, resp);
-        LOG(INFO) << "Execute " << cmd << " successfully!";
-        auto ret = checkResp(resp);
-        if (ret == ResultCode::OK
+        auto res = client_->execute(cmd, &resp);
+        if (res == ErrorCode::SUCCEEDED) {
+            LOG(INFO) << "Execute " << cmd << " successfully!";
+            auto ret = checkResp(resp);
+            if (ret == ResultCode::OK
                 || ret == ResultCode::ERR_FAILED_NO_RETRY) {
-            return ret;
+                return ret;
+            }
         }
         LOG(ERROR) << "Execute " << cmd << " failed, retry " << retry
                    << " after " << retry << " seconds...";
@@ -250,11 +252,11 @@ ResultCode WriteCircleAction::doRun() {
 folly::Expected<std::string, ResultCode>
 WalkThroughAction::sendCommand(const std::string& cmd) {
     VLOG(1) << cmd;
-    ExecutionResponse resp;
+    DataSet resp;
     uint32_t tryTimes = 0;
     uint32_t retryInterval = retryIntervalMs_;
     while (++tryTimes < try_) {
-        auto res = client_->execute(cmd, resp);
+        auto res = client_->execute(cmd, &resp);
         if (res == nebula::ErrorCode::SUCCEEDED) {
             if (resp.rows.empty() || resp.rows[0].columns.empty()) {
                 LOG(WARNING) << "Bad result, resp.rows size " << resp.rows.size();
@@ -305,11 +307,11 @@ ResultCode WalkThroughAction::doRun() {
 folly::Expected<uint64_t, ResultCode>
 LookUpAction::sendCommand(const std::string& cmd) {
     VLOG(1) << cmd;
-    ExecutionResponse resp;
+    DataSet resp;
     uint32_t tryTimes = 0;
     uint32_t retryInterval = retryIntervalMs_;
     while (++tryTimes < try_) {
-        auto res = client_->execute(cmd, resp);
+        auto res = client_->execute(cmd, &resp);
         if (res == nebula::ErrorCode::SUCCEEDED) {
             if (resp.rows.empty() || resp.rows[0].columns.empty()) {
                 LOG(WARNING) << "Bad result, resp.rows size " << resp.rows.size();
@@ -351,15 +353,19 @@ ResultCode LookUpAction::doRun() {
     return count == totalRows_ ? ResultCode::OK : ResultCode::ERR_FAILED;
 }
 
-ResultCode BalanceDataAction::checkResp(const ExecutionResponse& resp) const {
+ResultCode BalanceDataAction::checkResp(const DataSet& resp) const {
+    //TODO(pandasheeps)
+    /*
     auto* msg = resp.get_error_msg();
     if (msg != nullptr && *msg == "The cluster is balanced!") {
         return ResultCode::OK;
     }
     return ResultCode::ERR_NOT_FINISHED;
+    */
+    return ResultCode::OK;
 }
 
-ResultCode DescSpaceAction::checkResp(const ExecutionResponse& resp) const {
+ResultCode DescSpaceAction::checkResp(const DataSet& resp) const {
     if (resp.rows.empty()) {
         LOG(ERROR) << "Result should not be empty!";
         return ResultCode::ERR_FAILED;
@@ -381,7 +387,7 @@ ResultCode DescSpaceAction::checkResp(const ExecutionResponse& resp) const {
     return ResultCode::OK;
 }
 
-ResultCode CheckLeadersAction::checkResp(const ExecutionResponse& resp) const {
+ResultCode CheckLeadersAction::checkResp(const DataSet& resp) const {
     if (resp.rows.empty()) {
         LOG(ERROR) << "Result should not be empty!";
         return ResultCode::ERR_FAILED;
@@ -418,7 +424,7 @@ ResultCode CheckLeadersAction::checkResp(const ExecutionResponse& resp) const {
     return ResultCode::ERR_FAILED;
 }
 
-ResultCode CheckLeadersAction::checkLeaderDis(const ExecutionResponse& resp) {
+ResultCode CheckLeadersAction::checkLeaderDis(const DataSet& resp) {
     restult_.clear();
     if (resp.rows.empty()) {
         LOG(ERROR) << "Result should not be empty!";
@@ -472,26 +478,28 @@ ResultCode CheckLeadersAction::doRun() {
     CHECK_NOTNULL(client_);
     auto cmd = command();
     LOG(INFO) << "Send " << cmd << " to graphd";
-    ExecutionResponse resp;
+    DataSet resp;
     int32_t retry = 0;
     while (++retry < retryTimes_) {
-        client_->execute(cmd, resp);
-        LOG(INFO) << "Execute " << cmd << " successfully!";
-        auto ret = checkResp(resp);
-        if (ret == ResultCode::ERR_FAILED_NO_RETRY) {
-            return ret;
-        }
-        if (ret == ResultCode::OK) {
-            if (resultVarName_.empty()) {
-                return ResultCode::OK;
-            } else {
-                ret = checkLeaderDis(resp);
-                if (ret == ResultCode::ERR_FAILED_NO_RETRY) {
-                    return ret;
-                }
-                if (ret == ResultCode::OK) {
-                    ctx_->exprCtx.setVar(resultVarName_, std::move(restult_));
-                    return ret;
+        auto res = client_->execute(cmd, &resp);
+        if (res == ErrorCode::SUCCEEDED) {
+            LOG(INFO) << "Execute " << cmd << " successfully!"; 
+            auto ret = checkResp(resp);
+            if (ret == ResultCode::ERR_FAILED_NO_RETRY) {
+                return ret;
+            }
+            if (ret == ResultCode::OK) {
+                if (resultVarName_.empty()) {
+                    return ResultCode::OK;
+                } else {
+                    ret = checkLeaderDis(resp);
+                    if (ret == ResultCode::ERR_FAILED_NO_RETRY) {
+                        return ret;
+                    }
+                    if (ret == ResultCode::OK) {
+                        ctx_->exprCtx.setVar(resultVarName_, std::move(restult_));
+                        return ret;
+                    }
                 }
             }
         }
@@ -544,28 +552,22 @@ ResultCode UpdateConfigsAction::doRun() {
 
     auto cmd = command();
     LOG(INFO) << "Send " << cmd << " to graphd";
-    ExecutionResponse resp;
+    DataSet resp;
     int32_t retry = 0;
     while (++retry < retryTimes_) {
-        client_->execute(cmd, resp);
-        LOG(INFO) << "Execute " << cmd << " successfully!";
-        ret = checkResp(resp);
-        if (ret == ResultCode::OK || ret == ResultCode::ERR_FAILED_NO_RETRY) {
-            return ret;
+        auto res = client_->execute(cmd, &resp);
+        if (res == ErrorCode::SUCCEEDED) {
+            LOG(INFO) << "Execute " << cmd << " successfully!";
+            ret = checkResp(resp);
+            if (ret == ResultCode::OK || ret == ResultCode::ERR_FAILED_NO_RETRY) {
+                return ret;
+            }
         }
         LOG(ERROR) << "Execute " << cmd << " failed, retry " << retry
                    << " after " << retry << " seconds...";
         sleep(retry);
     }
     return ResultCode::ERR_FAILED;
-}
-
-ResultCode CompactionAction::checkResp(const ExecutionResponse& resp) const {
-    auto errorCode = resp.get_error_code();
-    if (errorCode == ::nebula::graph::cpp2::ErrorCode::SUCCEEDED) {
-        return ResultCode::OK;
-    }
-    return ResultCode::ERR_NOT_FINISHED;
 }
 
 ResultCode ExecutionExpressionAction::doRun() {

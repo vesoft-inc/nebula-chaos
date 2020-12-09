@@ -5,7 +5,6 @@
  */
 
 #include "common/Base.h"
-#include "common/graph/Response.h"
 #include "plan/client/GraphClient.h"
 
 namespace nebula_chaos {
@@ -17,8 +16,8 @@ GraphClient::GraphClient(const std::string& addr, uint16_t port)
         : addr_(addr)
         , port_(port) {
     conPool_ = std::make_unique<nebula::ConnectionPool>();
-    std::string addr = folly::stringPrintf("%s:%u", addr.c_str, port);
-    conPool_->init({addr}, nebula::Config{});
+    auto address = folly::stringPrintf("%s:%u", addr.c_str(), port);
+    conPool_->init({address}, nebula::Config{});
 }
 
 GraphClient::~GraphClient() {
@@ -26,8 +25,8 @@ GraphClient::~GraphClient() {
 }
 
 ErrorCode GraphClient::connect(const std::string& username,
-                          const std::string& password) {
-    session_ = conPool_.getSession(username, password);
+                               const std::string& password) {
+    session_ = conPool_->getSession(username, password);
     if (session_.valid()) {
         return nebula::ErrorCode::SUCCEEDED;
     }
@@ -39,7 +38,7 @@ void GraphClient::disconnect() {
 }
 
 ErrorCode GraphClient::execute(folly::StringPiece stmt,
-                          ExecutionResponse& resp) {
+                               DataSet* resp) {
     if (!session_.valid()) {
         auto ret = session_.retryConnect();
         if (ret != nebula::ErrorCode::SUCCEEDED ||
@@ -49,18 +48,18 @@ ErrorCode GraphClient::execute(folly::StringPiece stmt,
     }
 
     int32_t retry = 0;
-    bool complete{false};
     while (++retry < kRetryTimes) {
         auto exeRet = session_.execute(stmt.str());
-        if (exeRet != nebula::ErrorCode::SUCCEEDED) {
+        if (exeRet.errorCode() != nebula::ErrorCode::SUCCEEDED) {
             LOG(ERROR) << stmt.str() << " execute failed"
-                       << static_cast<int>(result.errorCode());
-            if (retry + 1 =  kRetryTimes) {
-                return exeRet;
+                       << static_cast<int>(exeRet.errorCode());
+            if (retry + 1 ==  kRetryTimes) {
+                return exeRet.errorCode();
             }
             sleep(retry);
             continue;
         }
+        resp = exeRet.data();
         return nebula::ErrorCode::SUCCEEDED;
     }
 }

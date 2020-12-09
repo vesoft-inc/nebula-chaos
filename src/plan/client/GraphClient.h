@@ -18,6 +18,7 @@ namespace nebula_chaos {
 namespace plan {
 
 using ErrorCode = nebula::ErrorCode;
+using DataSet = nebula::DataSet;
 
 class GraphClient {
 public:
@@ -27,12 +28,12 @@ public:
 
     // Authenticate the user
     ErrorCode connect(const std::string& username,
-                 const std::string& password);
+                      const std::string& password);
 
     void disconnect();
 
     ErrorCode execute(folly::StringPiece stmt,
-                 ExecutionResponse& resp);
+                      DataSet* resp);
 
     std::string serverAddress() const {
         return folly::stringPrintf("%s:%d", addr_.c_str(), port_);

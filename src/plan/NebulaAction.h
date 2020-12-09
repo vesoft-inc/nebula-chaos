@@ -248,7 +248,7 @@ public:
         return command();
     }
 
-    virtual ResultCode checkResp(const ExecutionResponse& resp) const;
+    virtual ResultCode checkResp(const DataSet* resp) const;
 
 protected:
     GraphClient* client_ = nullptr;
@@ -378,7 +378,7 @@ public:
     BalanceDataAction(GraphClient* client, int32_t retry)
         : MetaAction(client, retry) {}
 
-    ResultCode checkResp(const ExecutionResponse& resp) const override;
+    ResultCode checkResp(const DataSet& resp) const override;
 
     std::string command() const override {
         return "balance data";
@@ -394,7 +394,7 @@ public:
         : MetaAction(client)
         , spaceName_(spaceName) {}
 
-    ResultCode checkResp(const ExecutionResponse& resp) const override;
+    ResultCode checkResp(const DataSet& resp) const override;
 
     std::string command() const override {
         return folly::stringPrintf("desc space %s", spaceName_.c_str());
@@ -430,9 +430,9 @@ public:
         return "show hosts";
     }
 
-    ResultCode checkResp(const ExecutionResponse& resp) const override;
+    ResultCode checkResp(const DataSet& resp) const override;
 
-    ResultCode checkLeaderDis(const ExecutionResponse& resp);
+    ResultCode checkLeaderDis(const DataSet& resp);
 
 private:
     core::ActionContext*    ctx_{nullptr};
@@ -482,8 +482,6 @@ public:
         : MetaAction(client) {}
 
     ~CompactionAction() = default;
-
-    ResultCode checkResp(const ExecutionResponse& resp) const override;
 
     std::string command() const override {
         return "submit job compact";
