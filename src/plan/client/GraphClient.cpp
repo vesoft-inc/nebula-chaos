@@ -5,17 +5,18 @@
  */
 
 #include "common/Base.h"
-#include "nebula/client/GraphClient.h"
+#include "common/graph/Response.h"
+#include "plan/client/GraphClient.h"
 
 namespace nebula_chaos {
-namespace nebula {
+namespace plan {
 
 const int32_t kRetryTimes = 10;
 
 GraphClient::GraphClient(const std::string& addr, uint16_t port)
         : addr_(addr)
         , port_(port) {
-    conPool_ = std::make_unique<ConnectionPool>();
+    conPool_ = std::make_unique<nebula::ConnectionPool>();
     std::string addr = folly::stringPrintf("%s:%u", addr.c_str, port);
     conPool_->init({addr}, nebula::Config{});
 }
@@ -24,26 +25,26 @@ GraphClient::~GraphClient() {
     disconnect();
 }
 
-Code GraphClient::connect(const std::string& username,
+ErrorCode GraphClient::connect(const std::string& username,
                           const std::string& password) {
     session_ = conPool_.getSession(username, password);
     if (session_.valid()) {
-        return true;
+        return nebula::ErrorCode::SUCCEEDED;
     }
-    return false;
+    return nebula::ErrorCode::E_RPC_FAILURE;
 }
 
 void GraphClient::disconnect() {
     session_.release();
 }
 
-Code GraphClient::execute(folly::StringPiece stmt,
+ErrorCode GraphClient::execute(folly::StringPiece stmt,
                           ExecutionResponse& resp) {
     if (!session_.valid()) {
         auto ret = session_.retryConnect();
         if (ret != nebula::ErrorCode::SUCCEEDED ||
             !session_.valid()) {
-            return Code::E_DISCONNECTED;
+            return nebula::ErrorCode::E_DISCONNECTED;
         }
     }
 
@@ -64,5 +65,5 @@ Code GraphClient::execute(folly::StringPiece stmt,
     }
 }
 
-}  // namespace nebula
+}  // namespace plan
 }  // namespace nebula_chaos

@@ -35,6 +35,6 @@ SshHelper::run(const std::string& command,
 }
 
 }  // namespace utils
-}  // namespace nebula
+}  // namespace nebula_chaos
 
 

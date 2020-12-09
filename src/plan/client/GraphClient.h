@@ -8,14 +8,16 @@
 #define NEBULA_CLIENT_CPP_GRAPHCLIENT_H_
 
 #include "common/Base.h"
+#include "common/graph/Response.h"
+#include <folly/String.h>
 #include "nebula/client/Config.h"
 #include "nebula/client/ConnectionPool.h"
 #include "nebula/client/Session.h"
 
 namespace nebula_chaos {
-namespace nebula {
+namespace plan {
 
-using Code = ::nebula::graph::cpp2::ErrorCode;
+using ErrorCode = nebula::ErrorCode;
 
 class GraphClient {
 public:
@@ -24,12 +26,12 @@ public:
     virtual ~GraphClient();
 
     // Authenticate the user
-    Code connect(const std::string& username,
+    ErrorCode connect(const std::string& username,
                  const std::string& password);
 
     void disconnect();
 
-    Code execute(folly::StringPiece stmt,
+    ErrorCode execute(folly::StringPiece stmt,
                  ExecutionResponse& resp);
 
     std::string serverAddress() const {
@@ -37,13 +39,13 @@ public:
     }
 
 private:
-    std::unique_ptr<ConnectionPool> pool_;
-    const std::string addr_;
-    const uint16_t port_;
-    Session session_;
+    std::unique_ptr<nebula::ConnectionPool> conPool_;
+    const std::string                       addr_;
+    const uint16_t                          port_;
+    nebula::Session                         session_;
 };
 
-}  // namespace nebula
+}  // namespace plan
 }  // namespace nebula_chaos
 
 #endif  // NEBULA_CLIENT_CPP_GRAPHCLIENT_H_

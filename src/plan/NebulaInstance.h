@@ -11,7 +11,7 @@
 #include <folly/dynamic.h>
 
 namespace nebula_chaos {
-namespace nebula {
+namespace plan {
 
 class NebulaInstance {
 public:
@@ -112,7 +112,7 @@ private:
     std::string owner_;
 };
 
-}   // namespace nebula
+}   // namespace plan
 }   // namespace nebula_chaos
 
 #endif  // NEBULA_NEBULAINSTANCE_H_

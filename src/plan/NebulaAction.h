@@ -8,17 +8,18 @@
 #define NEBULA_CRASHACTION_H_
 
 #include "core/Action.h"
-#include "nebula/NebulaInstance.h"
-#include "nebula/client/GraphClient.h"
+#include "plan/NebulaInstance.h"
+#include "plan/client/GraphClient.h"
 #include <folly/Expected.h>
 
 namespace nebula_chaos {
-namespace nebula {
+namespace plan {
+
 using ResultCode = nebula_chaos::core::ResultCode;
 
 class CrashAction : public core::Action {
 public:
-    CrashAction(NebulaInstance* inst)
+    explicit CrashAction(NebulaInstance* inst)
         : inst_(inst) {}
 
     ~CrashAction() = default;
@@ -37,7 +38,7 @@ private:
 
 class StartAction : public core::Action {
 public:
-    StartAction(NebulaInstance* inst)
+    explicit StartAction(NebulaInstance* inst)
         : inst_(inst) {
         VLOG(1) << "Construct StartAction for " << inst_->toString();
     }
@@ -58,7 +59,7 @@ private:
 
 class StopAction : public core::Action {
 public:
-    StopAction(NebulaInstance* inst)
+    explicit StopAction(NebulaInstance* inst)
         : inst_(inst) {}
 
     ~StopAction() = default;
@@ -77,7 +78,7 @@ private:
 
 class ClientConnectAction : public core::Action {
 public:
-    ClientConnectAction(GraphClient* client)
+    explicit ClientConnectAction(GraphClient* client)
         : client_(client) {}
 
     virtual ~ClientConnectAction() = default;
@@ -87,7 +88,7 @@ public:
         int retry = 0;
         while (++retry < 32) {
             auto code = client_->connect("user", "password");
-            if (Code::SUCCEEDED == code) {
+            if (nebula::ErrorCode::SUCCEEDED == code) {
                 return ResultCode::OK;
             }
             LOG(ERROR) << "connect failed, retry " << retry;
@@ -233,7 +234,7 @@ private:
  * */
 class MetaAction : public core::Action {
 public:
-    MetaAction(GraphClient* client, int32_t retryTimes = 32)
+    explict MetaAction(GraphClient* client, int32_t retryTimes = 32)
         : client_(client)
         , retryTimes_(retryTimes) {}
 
@@ -477,8 +478,8 @@ private:
 
 class CompactionAction : public MetaAction {
 public:
-    CompactionAction(GraphClient* client)
-        : MetaAction(client){}
+    explicit CompactionAction(GraphClient* client)
+        : MetaAction(client) {}
 
     ~CompactionAction() = default;
 
@@ -740,7 +741,7 @@ private:
 
 class CreateCheckpointAction : public MetaAction {
 public:
-    CreateCheckpointAction(GraphClient* client)
+    explicit CreateCheckpointAction(GraphClient* client)
         : MetaAction(client) {}
 
     ~CreateCheckpointAction() = default;
@@ -753,7 +754,7 @@ public:
 // Clean all snapshot
 class CleanCheckpointAction : public core::Action {
 public:
-    CleanCheckpointAction(NebulaInstance* inst)
+    explicit CleanCheckpointAction(NebulaInstance* inst)
         : inst_(inst) {}
 
     ~CleanCheckpointAction() = default;
@@ -772,7 +773,7 @@ private:
 // Clean all snapshot
 class RestoreFromCheckpointAction : public core::Action {
 public:
-    RestoreFromCheckpointAction(NebulaInstance* inst)
+    explicit RestoreFromCheckpointAction(NebulaInstance* inst)
         : inst_(inst) {}
 
     ~RestoreFromCheckpointAction() = default;
@@ -983,7 +984,7 @@ private:
     bool isEdge_;
 };
 
-}   // namespace nebula
+}   // namespace plan
 }   // namespace nebula_chaos
 
 #endif  // NEBULA_CRASHACTION_H_

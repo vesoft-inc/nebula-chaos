@@ -4,8 +4,8 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-#include "nebula/NebulaAction.h"
-#include "nebula/NebulaUtils.h"
+#include "plan/NebulaAction.h"
+#include "plan/NebulaUtils.h"
 #include "utils/SshHelper.h"
 #include "core/CheckProcAction.h"
 #include <folly/Random.h>
@@ -13,7 +13,7 @@
 #include "boost/filesystem/operations.hpp"
 
 namespace nebula_chaos {
-namespace nebula {
+namespace plan {
 
 ResultCode CrashAction::doRun() {
     CHECK_NOTNULL(inst_);
@@ -189,7 +189,7 @@ ResultCode WriteCircleAction::sendBatch(const std::vector<std::string>& batchCmd
     uint32_t retryInterval = retryIntervalMs_;
     while (++tryTimes < try_) {
         auto res = client_->execute(cmd, resp);
-        if (res == Code::SUCCEEDED) {
+        if (res == nebula::ErrorCode::SUCCEEDED) {
             return ResultCode::OK;
         }
         usleep(retryInterval * 1000 * tryTimes);
@@ -255,7 +255,7 @@ WalkThroughAction::sendCommand(const std::string& cmd) {
     uint32_t retryInterval = retryIntervalMs_;
     while (++tryTimes < try_) {
         auto res = client_->execute(cmd, resp);
-        if (res == Code::SUCCEEDED) {
+        if (res == nebula::ErrorCode::SUCCEEDED) {
             if (resp.rows.empty() || resp.rows[0].columns.empty()) {
                 LOG(WARNING) << "Bad result, resp.rows size " << resp.rows.size();
                 break;
@@ -310,7 +310,7 @@ LookUpAction::sendCommand(const std::string& cmd) {
     uint32_t retryInterval = retryIntervalMs_;
     while (++tryTimes < try_) {
         auto res = client_->execute(cmd, resp);
-        if (res == Code::SUCCEEDED) {
+        if (res == nebula::ErrorCode::SUCCEEDED) {
             if (resp.rows.empty() || resp.rows[0].columns.empty()) {
                 LOG(WARNING) << "Bad result, resp.rows size " << resp.rows.size();
                 break;
@@ -1289,5 +1289,5 @@ ResultCode StoragePerfAction::doRun() {
     return ResultCode::OK;
 }
 
-}   // namespace nebula
+}   // namespace plan
 }   // namespace nebula_chaos

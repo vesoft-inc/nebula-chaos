@@ -3,12 +3,12 @@
  * This source code is licensed under Apache 2.0 License,
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
-#include "nebula/NebulaInstance.h"
+#include "plan/NebulaInstance.h"
 #include "utils/SshHelper.h"
 #include <boost/algorithm/string.hpp>
 
 namespace nebula_chaos {
-namespace nebula {
+namespace nebula_plan {
 
 bool NebulaInstance::parseConf(const std::string& confFile) {
     LOG(INFO) << "Parse conf file " << confFile
@@ -218,6 +218,6 @@ std::string NebulaInstance::killCommand() const {
     return command("kill");
 }
 
-}   // namespace nebula
+}   // namespace plan
 }   // namespace nebula_chaos
 

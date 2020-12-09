@@ -31,7 +31,7 @@ private:
 };
 
 }  // namespace utils
-}  // namespace nebula
+}  // namespace nebula_chaos
 
 #endif  // UTILS_SSHHELPER_H_
 

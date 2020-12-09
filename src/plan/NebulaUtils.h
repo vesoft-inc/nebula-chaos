@@ -10,14 +10,14 @@
 #include "common/Base.h"
 #include <ctime>
 #include <folly/Random.h>
-#include "nebula/NebulaAction.h"
+#include "plan/NebulaAction.h"
 #include "core/WaitAction.h"
 #include "core/LoopAction.h"
 #include "core/AssignAction.h"
-#include "nebula/NebulaChaosPlan.h"
+#include "plan/NebulaChaosPlan.h"
 
 namespace nebula_chaos {
-namespace nebula {
+namespace plan {
 
 class GraphClient;
 
@@ -472,7 +472,7 @@ private:
     Utils() = default;
 };
 
-}  // namespace nebula
+}  // namespace plan
 }  // namespace nebula_chaos
 
 #endif  // NEBULA_NEBULAUTILS_H_

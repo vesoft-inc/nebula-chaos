@@ -2,10 +2,10 @@
 #include <gtest/gtest.h>
 #include <glog/logging.h>
 #include <folly/init/Init.h>
-#include "nebula/NebulaInstance.h"
+#include "plan/NebulaInstance.h"
 
 namespace nebula_chaos {
-namespace nebula {
+namespace plan {
 
 TEST(NebulaInstanceTest, DateTest) {
     auto installPath = folly::stringPrintf("%s/mock/nebula",
@@ -27,7 +27,7 @@ TEST(NebulaInstanceTest, DateTest) {
     }
 }
 
-}  // namespace utils
+}  // namespace plan
 }  // namespace nebula_chaos
 
 int main(int argc, char** argv) {

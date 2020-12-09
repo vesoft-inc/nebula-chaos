@@ -8,12 +8,13 @@
 #define NEBULA_NEBULACHAOSPLAN_H_
 
 #include "common/Base.h"
-#include "nebula/NebulaAction.h"
+#include "plan/NebulaAction.h"
 #include "core/ChaosPlan.h"
 #include "core/Action.h"
 
 namespace nebula_chaos {
-namespace nebula {
+namespace plan {
+
 using Action = nebula_chaos::core::Action;
 using ActionPtr = nebula_chaos::core::ActionPtr;
 
@@ -58,7 +59,7 @@ protected:
     std::unique_ptr<GraphClient> client_;
 };
 
-}   // namespace nebula
+}   // namespace plan
 }   // namespace nebula_chaos
 
 #endif  // NEBULA_NEBULACHAOSPLAN_H_
