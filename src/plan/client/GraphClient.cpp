@@ -4,7 +4,6 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-#include "common/Base.h"
 #include "plan/client/GraphClient.h"
 
 namespace nebula_chaos {

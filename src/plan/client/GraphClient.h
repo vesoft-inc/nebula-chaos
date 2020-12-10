@@ -7,7 +7,7 @@
 #ifndef NEBULA_CLIENT_CPP_GRAPHCLIENT_H_
 #define NEBULA_CLIENT_CPP_GRAPHCLIENT_H_
 
-#include "common/Base.h"
+#include "common/base/Base.h"
 #include "common/graph/Response.h"
 #include <folly/String.h>
 #include "nebula/client/Config.h"

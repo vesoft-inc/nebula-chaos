@@ -6,7 +6,7 @@
 #ifndef EXPRESSION_EXPRESSIONS_H_
 #define EXPRESSION_EXPRESSIONS_H_
 
-#include "common/Base.h"
+#include "common/base/Base.h"
 #include "expression/ExprUtils.h"
 
 namespace nebula_chaos {

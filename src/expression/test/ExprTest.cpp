@@ -4,7 +4,7 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-#include "common/Base.h"
+#include "common/base/Base.h"
 #include <gtest/gtest.h>
 #include <glog/logging.h>
 #include <folly/init/Init.h>

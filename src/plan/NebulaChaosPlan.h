@@ -7,7 +7,7 @@
 #ifndef NEBULA_NEBULACHAOSPLAN_H_
 #define NEBULA_NEBULACHAOSPLAN_H_
 
-#include "common/Base.h"
+#include "common/base/Base.h"
 #include "plan/NebulaAction.h"
 #include "core/ChaosPlan.h"
 #include "core/Action.h"

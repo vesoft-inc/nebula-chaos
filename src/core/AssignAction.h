@@ -7,7 +7,7 @@
 #ifndef CORE_ASSIGNACTION_H_
 #define CORE_ASSIGNACTION_H_
 
-#include "common/Base.h"
+#include "common/base/Base.h"
 #include "core/Action.h"
 #include "parser/ParserHelper.h"
 

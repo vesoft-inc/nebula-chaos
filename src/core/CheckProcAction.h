@@ -7,7 +7,7 @@
 #ifndef CORE_CHECKPROCACTION_H_
 #define CORE_CHECKPROCACTION_H_
 
-#include "common/Base.h"
+#include "common/base/Base.h"
 #include "core/Action.h"
 
 namespace nebula_chaos {

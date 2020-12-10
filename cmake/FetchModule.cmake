@@ -13,7 +13,12 @@ macro(nebula_fetch_module)
         ""                          # <multi_value_args>
         ${ARGN}
     )
-    set(module_dir ${CMAKE_SOURCE_DIR}/modules/${module_NAME})
+    if ("${module_NAME}" STREQUAL "common")
+        set(module_dir ${CMAKE_SOURCE_DIR}/modules/client/modules/${module_NAME})
+    else()
+        set(module_dir ${CMAKE_SOURCE_DIR}/modules/${module_NAME})
+    endif()
+
     if(NOT EXISTS ${module_dir}/.git)
         message(STATUS "Cloning from ${module_URL}")
         execute_process(

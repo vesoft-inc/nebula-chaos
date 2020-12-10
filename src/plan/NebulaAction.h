@@ -7,6 +7,8 @@
 #ifndef NEBULA_CRASHACTION_H_
 #define NEBULA_CRASHACTION_H_
 
+#include "common/base/Base.h"
+#include "common/datatypes/Value.h"
 #include "core/Action.h"
 #include "plan/NebulaInstance.h"
 #include "plan/client/GraphClient.h"

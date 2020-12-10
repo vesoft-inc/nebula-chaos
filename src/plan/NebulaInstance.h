@@ -7,7 +7,7 @@
 #ifndef NEBULA_NEBULAINSTANCE_H_
 #define NEBULA_NEBULAINSTANCE_H_
 
-#include "common/Base.h"
+#include "common/base/Base.h"
 #include <folly/dynamic.h>
 
 namespace nebula_chaos {
@@ -82,7 +82,7 @@ public:
     Type type() const {
         return type_;
     }
-    
+
     State getState() const {
         return state_;
     }

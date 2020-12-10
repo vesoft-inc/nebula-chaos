@@ -7,7 +7,7 @@
 #ifndef UTILS_SSHHELPER_H_
 #define UTILS_SSHHELPER_H_
 
-#include "common/Base.h"
+#include "common/base/Base.h"
 #include <folly/Subprocess.h>
 
 namespace nebula_chaos {

@@ -7,6 +7,7 @@
 #ifndef EXPRESSION_EXPRUTILS_H_
 #define EXPRESSION_EXPRUTILS_H_
 
+#include "common/base/Base.h"
 #include <glog/logging.h>
 #include <folly/Range.h>
 #include <boost/variant.hpp>
@@ -14,7 +15,6 @@
 #include <folly/String.h>
 #include <folly/Format.h>
 #include <folly/Expected.h>
-#include "common/Base.h"
 
 namespace nebula_chaos {
 

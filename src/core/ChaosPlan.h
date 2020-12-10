@@ -7,7 +7,7 @@
 #ifndef PLAN_CHAOSPLAN_H_
 #define PLAN_CHAOSPLAN_H_
 
-#include "common/Base.h"
+#include "common/base/Base.h"
 #include "core/RunTaskAction.h"
 #include "core/SendEmailAction.h"
 #include <folly/executors/CPUThreadPoolExecutor.h>
@@ -42,7 +42,7 @@ public:
 
     void addActions(std::vector<ActionPtr>&& actions);
 
-    virtual void prepare() {};
+    virtual void prepare() {}
 
     void schedule();
 
@@ -70,6 +70,6 @@ protected:
     std::string  attachment_;
 };
 
-}  // action
-}  // nebula_chaos
+}  // namespace core
+}  // namespace nebula_chaos
 #endif  // PLAN_CHAOSPLAN_H_

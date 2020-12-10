@@ -7,7 +7,7 @@
 #ifndef UTILS_HTTPCLIENT_H_
 #define UTILS_HTTPCLIENT_H_
 
-#include "common/Base.h"
+#include "common/base/Base.h"
 #include <folly/Optional.h>
 
 namespace nebula_chaos {

@@ -7,7 +7,7 @@
 #ifndef ACTIONS_ACTION_H_
 #define ACTIONS_ACTION_H_
 
-#include "common/Base.h"
+#include "common/base/Base.h"
 #include <chrono>
 #include <folly/Unit.h>
 #include <folly/Try.h>
@@ -46,6 +46,7 @@ struct ActionContext {
 class Action {
     friend class ChaosPlan;
     friend class LoopAction;
+
 public:
     enum class Status {
         INIT,
@@ -53,7 +54,8 @@ public:
         SUCCEEDED,
         FAILED,
     };
-    Action(ActionContext* ctx = nullptr)
+
+    explicit Action(ActionContext* ctx = nullptr)
         : ctx_(ctx)
         , promise_(std::make_unique<folly::SharedPromise<folly::Unit>>()) {}
 
@@ -213,8 +215,8 @@ protected:
     virtual ResultCode recover() = 0;
 
     int32_t loopTimes_;
-    int32_t timeToDisurb_;  // seconds
-    int32_t timeToRecover_; // seconds
+    int32_t timeToDisurb_;    // seconds
+    int32_t timeToRecover_;   // seconds
 };
 
 }   // namespace core

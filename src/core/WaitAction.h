@@ -7,7 +7,7 @@
 #ifndef ACTIONS_WAITACTION_H_
 #define ACTIONS_WAITACTION_H_
 
-#include "common/Base.h"
+#include "common/base/Base.h"
 #include "core/Action.h"
 
 namespace nebula_chaos {
@@ -15,7 +15,7 @@ namespace core {
 
 class WaitAction : public Action {
 public:
-    WaitAction(uint64_t waitTimeMs = 3000)
+    explicit WaitAction(uint64_t waitTimeMs = 3000)
         : waitTimeMs_(waitTimeMs) {
         CHECK_LT(0, waitTimeMs);
     }
