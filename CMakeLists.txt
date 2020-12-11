@@ -14,20 +14,19 @@
 #   NEBULA_CLIENT_REPO_URL         -- Git URL for the nebula-client repo
 #   NEBULA_CLIENT_REPO_TAG         -- Tag/branch of the nebula-client repo
 
-#   NEBULA_COMMON_REPO_URL          -- Git URL for the nebula-common repo
-#   NEBULA_COMMON_REPO_TAG          -- Tag/branch of the nebula-common repo
+#   NEBULA_COMMON_REPO_URL         -- Git URL for the nebula-common repo
+#   NEBULA_COMMON_REPO_TAG         -- Tag/branch of the nebula-common repo
 #
 #   ENABLE_JEMALLOC                -- Link jemalloc into all executables
 #   ENABLE_NATIVE                  -- Build native client
 #   ENABLE_TESTING                 -- Build unit test
 #
+
 cmake_minimum_required(VERSION 3.5.0)
 
 project("Nebula Chaos" C CXX)
 
 option(ENABLE_CLIENT_MODULE_UPDATE "Automatically update client module" OFF)
-message(STATUS "ENABLE_CLIENT_MODULE_UPDATE    : ${ENABLE_CLIENT_MODULE_UPDATE}")
-
 option(ENABLE_COMMON_MODULE_UPDATE "Automatically update module" OFF)
 
 # Set the project home dir
@@ -59,7 +58,7 @@ message(STATUS "CMAKE_MODULE_PATH: " ${CMAKE_MODULE_PATH})
 
 if(NOT NEBULA_CLIENT_SOURCE_DIR)
     include(FetchModule)
-    # fetch cpp client repo
+    # fetch graph cpp client repo
     nebula_fetch_module(
         NAME
             client
@@ -93,15 +92,13 @@ else()
     endif()
 endif()
 
-# cpp client cmake
+# graph cpp client cmake
 list(APPEND CMAKE_MODULE_PATH ${nebula_client_source_dir}/cmake)
 list(APPEND CMAKE_MODULE_PATH ${nebula_client_source_dir}/cmake/nebula)
 
 # common cmake
 list(APPEND CMAKE_MODULE_PATH ${nebula_client_source_dir}/modules/common/cmake)
 list(APPEND CMAKE_MODULE_PATH ${nebula_client_source_dir}/modules/common/cmake/nebula)
-
-#message(FATAL_ERROR "Exiting...")
 
 include(PlatformCheck)
 include(NebulaCMakeMacros)
@@ -124,28 +121,11 @@ config_nebula_client(
     BUILD_DIR ${nebula_client_build_dir}
 )
 
-find_package(SSH REQUIRED)
-if("${SSH_EXECUTABLE}" STREQUAL "SSH_EXECUTABLE-NOTFOUND")
-    message(FATAL_ERROR "ssh should be installed!")
-endif()
-add_definitions(-DSSH_EXEC=${SSH_EXECUTABLE})
-
-if("${MAIL_EXECUTABLE}" STREQUAL "MAIL_EXECUTABLE-NOTFOUND")
-    message(FATAL_ERROR "mail should be installed!")
-endif()
-add_definitions(-DMAIL_EXEC=${MAIL_EXECUTABLE})
-
-if("${ECHO_EXECUTABLE}" STREQUAL "ECHO_EXECUTABLE-NOTFOUND")
-    message(FATAL_ERROR "echo should be installed!")
-endif()
-add_definitions(-DECHO_EXEC=${ECHO_EXECUTABLE})
-
-find_package(CURL REQUIRED)
-if("${CURL_EXECUTABLE}" STREQUAL "CURL_EXECUTABLE-NOTFOUND")
-    message(FATAL_ERROR "curl should be installed!")
-endif()
-add_definitions(-DCURL_EXEC=${CURL_EXECUTABLE})
-
+include(FindSSH)
+include(FindMail)
+include(FindEcho)
+include(FindPython3)
+include(FindCURL)
 
 # For simplicity, we make all ordinary libraries depend on the compile-time generated files,
 # including the precompiled header, a.k.a Base.h.gch, and thrift headers.

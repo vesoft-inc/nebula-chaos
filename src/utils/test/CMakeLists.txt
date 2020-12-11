@@ -8,6 +8,7 @@ nebula_add_test(
     SOURCES
         SubProcessTest.cpp
     OBJECTS
+        $<TARGET_OBJECTS:ssh_helper_obj>
         ${chaos_test_deps}
     LIBRARIES
         gtest
@@ -19,8 +20,8 @@ nebula_add_test(
     SOURCES
         SshHelperTest.cpp
     OBJECTS
-        ${chaos_test_deps}
         $<TARGET_OBJECTS:ssh_helper_obj>
+        ${chaos_test_deps}
     LIBRARIES
         gtest
 )
