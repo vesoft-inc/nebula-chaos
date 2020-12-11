@@ -7,11 +7,11 @@
 #ifndef CORE_ASSIGNACTION_H_
 #define CORE_ASSIGNACTION_H_
 
-#include "common/Base.h"
+#include "common/base/Base.h"
 #include "core/Action.h"
 #include "parser/ParserHelper.h"
 
-namespace nebula_chaos {
+namespace chaos {
 namespace core {
 
 class AssignAction : public Action {
@@ -50,6 +50,6 @@ private:
 };
 
 }   // namespace core
-}   // namespace nebula_chaos
+}   // namespace chaos
 
 #endif  // CORE_ASSIGNACTION_H_

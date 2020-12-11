@@ -1,3 +1,12 @@
+set(chaos_test_deps
+    $<TARGET_OBJECTS:client_nebula_graph_client_obj>
+    $<TARGET_OBJECTS:common_base_obj>
+    $<TARGET_OBJECTS:common_common_thrift_obj>
+    $<TARGET_OBJECTS:common_graph_thrift_obj>
+    $<TARGET_OBJECTS:common_datatypes_obj>
+    $<TARGET_OBJECTS:common_graph_obj>
+)
+
 nebula_add_executable(
     NAME
         run_chaos_plan
@@ -5,15 +14,14 @@ nebula_add_executable(
         RunChaosPlan.cpp
     OBJECTS
         $<TARGET_OBJECTS:nebula_client_obj>
-        $<TARGET_OBJECTS:graph_thrift_obj>
         $<TARGET_OBJECTS:nebula_plan_obj>
         $<TARGET_OBJECTS:nebula_instance_obj>
         $<TARGET_OBJECTS:actions_obj>
         $<TARGET_OBJECTS:parser_obj>
         $<TARGET_OBJECTS:expr_obj>
         $<TARGET_OBJECTS:ssh_helper_obj>
-        $<TARGET_OBJECTS:base_obj>
+        ${chaos_test_deps}
     LIBRARIES
-        gtest
         ${THRIFT_LIBRARIES}
+        gtest
 )

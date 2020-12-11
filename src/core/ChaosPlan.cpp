@@ -3,9 +3,10 @@
  * This source code is licensed under Apache 2.0 License,
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
+
 #include "core/ChaosPlan.h"
 
-namespace nebula_chaos {
+namespace chaos {
 namespace core {
 
 // Transfer the ownership into the plan.
@@ -79,7 +80,8 @@ void ChaosPlan::schedule() {
                         actionPtr->run();
                     })
                     .thenError([this, actionPtr](auto ew) {
-                        LOG(ERROR) << "Run " << actionPtr->toString() << " failed, msg " << ew.what();
+                        LOG(ERROR) << "Run " << actionPtr->toString()
+                                   << " failed, msg " << ew.what();
                         actionPtr->markFailed(std::move(ew));
                         if (status_ == Status::SUCCEEDED) {
                             status_ = Status::FAILED;
@@ -88,12 +90,13 @@ void ChaosPlan::schedule() {
     }
     sinkAction->promise_->getFuture().wait();
     if (sinkAction->status() == ActionStatus::FAILED) {
-        LOG(INFO) << "The plan failed, rerun the last action to ensure the email has been send out!";
+        LOG(INFO) << "The plan failed, rerun the last action "
+                  << "to ensure the email has been send out!";
         sinkAction->doRun();
     }
     return;
 }
-using namespace std::chrono;
+
 std::string ChaosPlan::toString() const {
     std::stringstream str;
     str << "STATUS: " << (status_ == Status::SUCCEEDED ? "SUCCEEDED" : "FAILED") << "\n";
@@ -104,17 +107,18 @@ std::string ChaosPlan::toString() const {
         str << "Action " << action->id() << ", " << action->toString()
             << ", Status: " << action->statusStr()
             << ", Cost "
-            << duration_cast<milliseconds>(action->timeSpent_).count() << "ms"
-            << ", Depends on Action ";
+            << std::chrono::duration_cast<std::chrono::milliseconds>(action->timeSpent_).count()
+            << "ms, Depends on Action ";
         for (auto& der : action->dependees_) {
             str << der->id() << ",";
         }
         str.seekp(-1, std::ios_base::end);
         str << std::endl;
     }
-    str << "TIME COSTS: " << duration_cast<milliseconds>(timeSpent_).count() <<  "ms\n";
+    str << "TIME COSTS: "
+        << std::chrono::duration_cast<std::chrono::milliseconds>(timeSpent_).count() << "ms\n";
     return str.str();
 }
 
-}  // action
-}  // nebula_chaos
+}  // namespace core
+}  // namespace chaos

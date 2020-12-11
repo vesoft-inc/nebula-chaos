@@ -4,48 +4,49 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-#ifndef NEBULA_CLIENT_CPP_GRAPHCLIENT_H_
-#define NEBULA_CLIENT_CPP_GRAPHCLIENT_H_
+#ifndef NEBULA_CLIENT_GRAPHCLIENT_H_
+#define NEBULA_CLIENT_GRAPHCLIENT_H_
 
-#include "common/Base.h"
-#include "nebula/interface/gen-cpp2/GraphServiceAsyncClient.h"
-#include <folly/executors/IOThreadPoolExecutor.h>
+#include "common/base/Base.h"
+#include "common/graph/Response.h"
+#include <folly/String.h>
+#include "nebula/client/Config.h"
+#include "nebula/client/ConnectionPool.h"
+#include "nebula/client/Session.h"
 
+namespace chaos {
 namespace nebula_chaos {
-namespace nebula {
 
-using Code = ::nebula::graph::cpp2::ErrorCode;
-using ExecutionResponse = ::nebula::graph::cpp2::ExecutionResponse;
-using GraphServiceAsyncClient = ::nebula::graph::cpp2::GraphServiceAsyncClient;
+using ErrorCode = nebula::ErrorCode;
+using DataSet = nebula::DataSet;
 
 class GraphClient {
 public:
     GraphClient(const std::string& addr, uint16_t port);
+
     virtual ~GraphClient();
 
     // Authenticate the user
-    Code connect(const std::string& username,
-                 const std::string& password);
+    ErrorCode connect(const std::string& username,
+                      const std::string& password);
 
     void disconnect();
 
-    Code execute(folly::StringPiece stmt,
-                 ExecutionResponse& resp);
+    ErrorCode execute(folly::StringPiece stmt,
+                      nebula::DataSet& resp);
 
     std::string serverAddress() const {
         return folly::stringPrintf("%s:%d", addr_.c_str(), port_);
     }
 
 private:
-    std::unique_ptr<GraphServiceAsyncClient> client_;
-    const std::string addr_;
-    const uint16_t port_;
-    int64_t sessionId_;
-    std::unique_ptr<folly::IOThreadPoolExecutor> ioPool_;
-    folly::EventBase* evb_;
+    std::unique_ptr<nebula::ConnectionPool> conPool_{nullptr};
+    const std::string                       addr_;
+    const uint16_t                          port_;
+    std::unique_ptr<nebula::Session>        session_{nullptr};
 };
 
-}  // namespace nebula
 }  // namespace nebula_chaos
+}  // namespace chaos
 
-#endif  // NEBULA_CLIENT_CPP_GRAPHCLIENT_H_
+#endif  // NEBULA_CLIENT_GRAPHCLIENT_H_

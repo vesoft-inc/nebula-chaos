@@ -3,9 +3,11 @@
  * This source code is licensed under Apache 2.0 License,
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
+
 #ifndef EXPRESSION_EXPRUTILS_H_
 #define EXPRESSION_EXPRUTILS_H_
 
+#include "common/base/Base.h"
 #include <glog/logging.h>
 #include <folly/Range.h>
 #include <boost/variant.hpp>
@@ -13,9 +15,8 @@
 #include <folly/String.h>
 #include <folly/Format.h>
 #include <folly/Expected.h>
-#include "common/Base.h"
 
-namespace nebula_chaos {
+namespace chaos {
 
 #ifndef VAR_INT64
 #define VAR_INT64 0
@@ -44,67 +45,72 @@ enum class ErrorCode {
 
 using ValueOrErr = folly::Expected<Value, ErrorCode>;
 
-static std::string indent(uint32_t d) {
-    std::string indent(d * 4, '-');
-    return indent;
-}
+class ExprUtils final {
+public:
+    ~ExprUtils() = default;
 
-static int64_t asInt(const Value& value) {
-    return boost::get<int64_t>(value);
-}
-
-static double asDouble(const Value& value) {
-    if (value.which() == 0) {
-        return static_cast<double>(boost::get<int64_t>(value));
+    static std::string indent(uint32_t d) {
+        std::string indent(d * 4, '-');
+        return indent;
     }
-    return boost::get<double>(value);
-}
 
-static const std::string& asString(const Value &value) {
-    return boost::get<std::string>(value);
-}
-
-static bool asBool(const Value& value) {
-    switch (value.which()) {
-        case 0:
-            return asInt(value) != 0;
-        case 1:
-            return asDouble(value) != 0.0;
-        case 2:
-            return boost::get<bool>(value);
-        case 3:
-            return asString(value).empty();
-        default:
-            DCHECK(false);
+    static int64_t asInt(const Value& value) {
+        return boost::get<int64_t>(value);
     }
-    return false;
-}
 
-static bool isInt(const Value &value) {
-    return value.which() == 0;
-}
+    static double asDouble(const Value& value) {
+        if (value.which() == 0) {
+            return static_cast<double>(boost::get<int64_t>(value));
+        }
+        return boost::get<double>(value);
+    }
 
-static bool isDouble(const Value &value) {
-    return value.which() == 1;
-}
+    static const std::string& asString(const Value &value) {
+        return boost::get<std::string>(value);
+    }
 
-static bool isBool(const Value &value) {
-    return value.which() == 2;
-}
+    static bool asBool(const Value& value) {
+        switch (value.which()) {
+            case 0:
+                return asInt(value) != 0;
+            case 1:
+                return asDouble(value) != 0.0;
+            case 2:
+                return boost::get<bool>(value);
+            case 3:
+                return asString(value).empty();
+            default:
+                DCHECK(false);
+        }
+        return false;
+    }
 
-static bool isString(const Value &value) {
-    return value.which() == 3;
-}
+    static bool isInt(const Value &value) {
+        return value.which() == 0;
+    }
 
-static bool isArithmetic(const Value &value) {
-    return isInt(value) || isDouble(value);
-}
+    static bool isDouble(const Value &value) {
+        return value.which() == 1;
+    }
 
-static bool almostEqual(double left, double right) {
-    constexpr auto EPSILON = 1e-8;
-    return std::abs(left - right) < EPSILON;
-}
+    static bool isBool(const Value &value) {
+        return value.which() == 2;
+    }
 
-}   // namespace nebula_chaos
+    static bool isString(const Value &value) {
+        return value.which() == 3;
+    }
+
+    static bool isArithmetic(const Value &value) {
+        return isInt(value) || isDouble(value);
+    }
+
+    static bool almostEqual(double left, double right) {
+        constexpr auto EPSILON = 1e-8;
+        return std::abs(left - right) < EPSILON;
+    }
+};
+
+}   // namespace chaos
 
 #endif  // EXPRESSION_EXPRUTILS_H_

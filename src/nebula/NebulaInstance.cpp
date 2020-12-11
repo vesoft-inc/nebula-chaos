@@ -3,12 +3,13 @@
  * This source code is licensed under Apache 2.0 License,
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
+
 #include "nebula/NebulaInstance.h"
 #include "utils/SshHelper.h"
 #include <boost/algorithm/string.hpp>
 
+namespace chaos {
 namespace nebula_chaos {
-namespace nebula {
 
 bool NebulaInstance::parseConf(const std::string& confFile) {
     LOG(INFO) << "Parse conf file " << confFile
@@ -45,7 +46,7 @@ bool NebulaInstance::parseConf(const std::string& confFile) {
 }
 
 bool NebulaInstance::init() {
-    // This is the default conf file name inside nebula, to keep it simplem, we
+    // This is the default conf file name inside nebula, to keep it simple, we
     // just use it. If we can't find it, dump err message inside parseConf.
     switch (type_) {
         case NebulaInstance::Type::STORAGE: {
@@ -218,6 +219,5 @@ std::string NebulaInstance::killCommand() const {
     return command("kill");
 }
 
-}   // namespace nebula
 }   // namespace nebula_chaos
-
+}   // namespace chaos

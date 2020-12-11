@@ -7,17 +7,17 @@
 #ifndef NEBULA_NEBULAUTILS_H_
 #define NEBULA_NEBULAUTILS_H_
 
-#include "common/Base.h"
+#include "common/base/Base.h"
 #include <ctime>
 #include <folly/Random.h>
 #include "nebula/NebulaAction.h"
+#include "nebula/NebulaChaosPlan.h"
 #include "core/WaitAction.h"
 #include "core/LoopAction.h"
 #include "core/AssignAction.h"
-#include "nebula/NebulaChaosPlan.h"
 
+namespace chaos {
 namespace nebula_chaos {
-namespace nebula {
 
 class GraphClient;
 
@@ -417,7 +417,8 @@ public:
             auto partId = obj.at("part_id").asInt();
             auto count = obj.getDefault("count", 1).asInt();
             auto bytes = obj.getDefault("bytes", 10).asInt();
-            return std::make_unique<TruncateWalAction>(storages, ctx.gClient, spaceName, partId, count, bytes);
+            return std::make_unique<TruncateWalAction>(storages, ctx.gClient,
+                                                       spaceName, partId, count, bytes);
         } else if (type == "StoragePerfAction") {
             auto perfPath = obj.at("path").asString();
             auto metaServerAddrs = obj.at("meta_server_addrs").asString();
@@ -472,8 +473,7 @@ private:
     Utils() = default;
 };
 
-}  // namespace nebula
 }  // namespace nebula_chaos
+}  // namespace chaos
 
 #endif  // NEBULA_NEBULAUTILS_H_
-

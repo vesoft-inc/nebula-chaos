@@ -7,10 +7,10 @@
 #ifndef UTILS_SSHHELPER_H_
 #define UTILS_SSHHELPER_H_
 
-#include "common/Base.h"
+#include "common/base/Base.h"
 #include <folly/Subprocess.h>
 
-namespace nebula_chaos {
+namespace chaos {
 namespace utils {
 
 using ReadCallback = std::function<void(const std::string&)>;
@@ -31,7 +31,6 @@ private:
 };
 
 }  // namespace utils
-}  // namespace nebula
+}  // namespace chaos
 
 #endif  // UTILS_SSHHELPER_H_
-

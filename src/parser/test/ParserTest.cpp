@@ -1,10 +1,16 @@
-#include "common/Base.h"
+/* Copyright (c) 2020 vesoft inc. All rights reserved.
+ *
+ * This source code is licensed under Apache 2.0 License,
+ * attached with Common Clause Condition 1.0, found in the LICENSES directory.
+ */
+
+#include "common/base/Base.h"
 #include <gtest/gtest.h>
 #include <glog/logging.h>
 #include <folly/init/Init.h>
 #include "parser/ParserHelper.h"
 
-namespace nebula_chaos {
+namespace chaos {
 
 TEST(ParserTest, ExpressionTest) {
     ExprContext ctx;
@@ -16,7 +22,7 @@ TEST(ParserTest, ExpressionTest) {
         LOG(INFO) << "The expression is " << expr->toString();
         auto valOrErr = expr->eval(&ctx);
         CHECK(valOrErr);
-        CHECK_EQ(2, asInt(valOrErr.value()));
+        CHECK_EQ(2, ExprUtils::asInt(valOrErr.value()));
     }
     {
         auto expr = ParserHelper::parse("$a + 3");
@@ -24,11 +30,11 @@ TEST(ParserTest, ExpressionTest) {
         LOG(INFO) << "The expression is " << expr->toString();
         auto valOrErr = expr->eval(&ctx);
         CHECK(valOrErr);
-        CHECK_EQ(4, asInt(valOrErr.value()));
+        CHECK_EQ(4, ExprUtils::asInt(valOrErr.value()));
     }
 }
 
-}  // namespace nebula_chaos
+}  // namespace chaos
 
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);

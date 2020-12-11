@@ -3,6 +3,7 @@
  * This source code is licensed under Apache 2.0 License,
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
+
 #ifndef PARSER_CHAOSEXPRPARSER_H_
 #define PARSER_CHAOSEXPRPARSER_H_
 
@@ -10,7 +11,7 @@
 #include "ExprParser.hpp"
 #include "ExprScanner.h"
 
-namespace nebula_chaos {
+namespace chaos {
 
 class ParserHelper {
 public:
@@ -29,9 +30,8 @@ public:
     }
 
 private:
-    ParserHelper()  = default;
+    ParserHelper() = default;
 };
 
-}   // namespace nebula_chaos
-
+}   // namespace chaos
 #endif  // PARSER_CHAOSEXPRPARSER_H_

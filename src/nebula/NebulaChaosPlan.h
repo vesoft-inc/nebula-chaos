@@ -7,15 +7,16 @@
 #ifndef NEBULA_NEBULACHAOSPLAN_H_
 #define NEBULA_NEBULACHAOSPLAN_H_
 
-#include "common/Base.h"
+#include "common/base/Base.h"
 #include "nebula/NebulaAction.h"
 #include "core/ChaosPlan.h"
 #include "core/Action.h"
 
+namespace chaos {
 namespace nebula_chaos {
-namespace nebula {
-using Action = nebula_chaos::core::Action;
-using ActionPtr = nebula_chaos::core::ActionPtr;
+
+using Action = chaos::core::Action;
+using ActionPtr = chaos::core::ActionPtr;
 
 struct PlanContext {
     std::vector<NebulaInstance>  storageds;
@@ -24,7 +25,7 @@ struct PlanContext {
     core::ActionContext          actionCtx;
 };
 
-class NebulaChaosPlan : public nebula_chaos::core::ChaosPlan {
+class NebulaChaosPlan : public chaos::core::ChaosPlan {
 public:
     NebulaChaosPlan(std::unique_ptr<PlanContext> ctx,
                     int32_t concurrency,
@@ -58,7 +59,7 @@ protected:
     std::unique_ptr<GraphClient> client_;
 };
 
-}   // namespace nebula
 }   // namespace nebula_chaos
+}   // namespace chaos
 
 #endif  // NEBULA_NEBULACHAOSPLAN_H_

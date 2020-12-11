@@ -1,10 +1,16 @@
-#include "common/Base.h"
+/* Copyright (c) 2020 vesoft inc. All rights reserved.
+ *
+ * This source code is licensed under Apache 2.0 License,
+ * attached with Common Clause Condition 1.0, found in the LICENSES directory.
+ */
+
+#include "common/base/Base.h"
 #include <gtest/gtest.h>
 #include <glog/logging.h>
 #include <folly/init/Init.h>
 #include "expression/Expressions.h"
 
-namespace nebula_chaos {
+namespace chaos {
 
 TEST(ExprTest, ExprTest) {
     ExprContext ctx;
@@ -15,7 +21,7 @@ TEST(ExprTest, ExprTest) {
         ArithmeticExpression expr(left, ArithmeticExpression::Operator::ADD, right);
         auto valOrErr = expr.eval(&ctx);
         CHECK(valOrErr);
-        CHECK_EQ(3, asInt(valOrErr.value()));
+        CHECK_EQ(3, ExprUtils::asInt(valOrErr.value()));
     }
     {
         auto* left = new ConstantExpression(1L);
@@ -23,11 +29,11 @@ TEST(ExprTest, ExprTest) {
         ArithmeticExpression expr(left, ArithmeticExpression::Operator::ADD, right);
         auto valOrErr = expr.eval(&ctx);
         CHECK(valOrErr);
-        CHECK_EQ(2, asInt(valOrErr.value()));
+        CHECK_EQ(2, ExprUtils::asInt(valOrErr.value()));
     }
 }
 
-}  // namespace nebula_chaos
+}  // namespace chaos
 
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);

@@ -4,15 +4,15 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-#ifndef PLAN_CHAOSPLAN_H_
-#define PLAN_CHAOSPLAN_H_
+#ifndef CORE_CHAOSPLAN_H_
+#define CORE_CHAOSPLAN_H_
 
-#include "common/Base.h"
+#include "common/base/Base.h"
 #include "core/RunTaskAction.h"
 #include "core/SendEmailAction.h"
 #include <folly/executors/CPUThreadPoolExecutor.h>
 
-namespace nebula_chaos {
+namespace chaos {
 namespace core {
 
 using ActionStatus = Action::Status;
@@ -42,7 +42,7 @@ public:
 
     void addActions(std::vector<ActionPtr>&& actions);
 
-    virtual void prepare() {};
+    virtual void prepare() {}
 
     void schedule();
 
@@ -70,6 +70,6 @@ protected:
     std::string  attachment_;
 };
 
-}  // action
-}  // nebula_chaos
-#endif  // PLAN_CHAOSPLAN_H_
+}  // namespace core
+}  // namespace chaos
+#endif  // CORE_CHAOSPLAN_H_

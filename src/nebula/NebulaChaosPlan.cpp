@@ -3,21 +3,27 @@
  * This source code is licensed under Apache 2.0 License,
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
+
 #include "nebula/NebulaChaosPlan.h"
+#include "nebula/NebulaUtils.h"
 #include "core/WaitAction.h"
 #include <folly/FileUtil.h>
 #include <folly/json.h>
-#include "nebula/NebulaUtils.h"
 
 DEFINE_string(email_to, "", "");
 
+namespace chaos {
 namespace nebula_chaos {
-namespace nebula {
 
 // static
 std::unique_ptr<NebulaChaosPlan>
 NebulaChaosPlan::loadFromFile(const std::string& filename) {
     std::string jsonStr;
+    if (access(filename.c_str(), F_OK) != 0) {
+        LOG(ERROR) << "File not exists " << filename.c_str();
+        return nullptr;
+    }
+
     if (!folly::readFile(filename.c_str(), jsonStr)) {
         LOG(ERROR) << "Parse file " << filename << " failed!";
         return nullptr;
@@ -118,5 +124,5 @@ NebulaChaosPlan::loadFromFile(const std::string& filename) {
     return plan;
 }
 
-}   // namespace nebula
 }   // namespace nebula_chaos
+}   // namespace chaos

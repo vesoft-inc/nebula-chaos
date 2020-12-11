@@ -9,6 +9,5 @@ nebula_add_library(
     NebulaAction.cpp
 )
 
-nebula_add_subdirectory(interface)
 nebula_add_subdirectory(client)
 nebula_add_subdirectory(test)

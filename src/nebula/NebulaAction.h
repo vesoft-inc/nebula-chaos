@@ -7,18 +7,21 @@
 #ifndef NEBULA_CRASHACTION_H_
 #define NEBULA_CRASHACTION_H_
 
+#include "common/base/Base.h"
+#include "common/datatypes/Value.h"
 #include "core/Action.h"
 #include "nebula/NebulaInstance.h"
 #include "nebula/client/GraphClient.h"
 #include <folly/Expected.h>
 
+namespace chaos {
 namespace nebula_chaos {
-namespace nebula {
-using ResultCode = nebula_chaos::core::ResultCode;
+
+using ResultCode = chaos::core::ResultCode;
 
 class CrashAction : public core::Action {
 public:
-    CrashAction(NebulaInstance* inst)
+    explicit CrashAction(NebulaInstance* inst)
         : inst_(inst) {}
 
     ~CrashAction() = default;
@@ -37,7 +40,7 @@ private:
 
 class StartAction : public core::Action {
 public:
-    StartAction(NebulaInstance* inst)
+    explicit StartAction(NebulaInstance* inst)
         : inst_(inst) {
         VLOG(1) << "Construct StartAction for " << inst_->toString();
     }
@@ -58,7 +61,7 @@ private:
 
 class StopAction : public core::Action {
 public:
-    StopAction(NebulaInstance* inst)
+    explicit StopAction(NebulaInstance* inst)
         : inst_(inst) {}
 
     ~StopAction() = default;
@@ -77,7 +80,7 @@ private:
 
 class ClientConnectAction : public core::Action {
 public:
-    ClientConnectAction(GraphClient* client)
+    explicit ClientConnectAction(GraphClient* client)
         : client_(client) {}
 
     virtual ~ClientConnectAction() = default;
@@ -87,7 +90,7 @@ public:
         int retry = 0;
         while (++retry < 32) {
             auto code = client_->connect("user", "password");
-            if (Code::SUCCEEDED == code) {
+            if (nebula::ErrorCode::SUCCEEDED == code) {
                 return ResultCode::OK;
             }
             LOG(ERROR) << "connect failed, retry " << retry;
@@ -233,7 +236,7 @@ private:
  * */
 class MetaAction : public core::Action {
 public:
-    MetaAction(GraphClient* client, int32_t retryTimes = 32)
+    explicit MetaAction(GraphClient* client, int32_t retryTimes = 32)
         : client_(client)
         , retryTimes_(retryTimes) {}
 
@@ -247,7 +250,7 @@ public:
         return command();
     }
 
-    virtual ResultCode checkResp(const ExecutionResponse& resp) const;
+    virtual ResultCode checkResp(const DataSet& resp) const;
 
 protected:
     GraphClient* client_ = nullptr;
@@ -377,7 +380,7 @@ public:
     BalanceDataAction(GraphClient* client, int32_t retry)
         : MetaAction(client, retry) {}
 
-    ResultCode checkResp(const ExecutionResponse& resp) const override;
+    ResultCode checkResp(const DataSet& resp) const override;
 
     std::string command() const override {
         return "balance data";
@@ -393,7 +396,7 @@ public:
         : MetaAction(client)
         , spaceName_(spaceName) {}
 
-    ResultCode checkResp(const ExecutionResponse& resp) const override;
+    ResultCode checkResp(const DataSet& resp) const override;
 
     std::string command() const override {
         return folly::stringPrintf("desc space %s", spaceName_.c_str());
@@ -429,9 +432,9 @@ public:
         return "show hosts";
     }
 
-    ResultCode checkResp(const ExecutionResponse& resp) const override;
+    ResultCode checkResp(const DataSet& resp) const override;
 
-    ResultCode checkLeaderDis(const ExecutionResponse& resp);
+    ResultCode checkLeaderDis(const DataSet& resp);
 
 private:
     core::ActionContext*    ctx_{nullptr};
@@ -477,12 +480,10 @@ private:
 
 class CompactionAction : public MetaAction {
 public:
-    CompactionAction(GraphClient* client)
-        : MetaAction(client){}
+    explicit CompactionAction(GraphClient* client)
+        : MetaAction(client) {}
 
     ~CompactionAction() = default;
-
-    ResultCode checkResp(const ExecutionResponse& resp) const override;
 
     std::string command() const override {
         return "submit job compact";
@@ -740,7 +741,7 @@ private:
 
 class CreateCheckpointAction : public MetaAction {
 public:
-    CreateCheckpointAction(GraphClient* client)
+    explicit CreateCheckpointAction(GraphClient* client)
         : MetaAction(client) {}
 
     ~CreateCheckpointAction() = default;
@@ -753,7 +754,7 @@ public:
 // Clean all snapshot
 class CleanCheckpointAction : public core::Action {
 public:
-    CleanCheckpointAction(NebulaInstance* inst)
+    explicit CleanCheckpointAction(NebulaInstance* inst)
         : inst_(inst) {}
 
     ~CleanCheckpointAction() = default;
@@ -772,7 +773,7 @@ private:
 // Clean all snapshot
 class RestoreFromCheckpointAction : public core::Action {
 public:
-    RestoreFromCheckpointAction(NebulaInstance* inst)
+    explicit RestoreFromCheckpointAction(NebulaInstance* inst)
         : inst_(inst) {}
 
     ~RestoreFromCheckpointAction() = default;
@@ -983,7 +984,7 @@ private:
     bool isEdge_;
 };
 
-}   // namespace nebula
 }   // namespace nebula_chaos
+}   // namespace chaos
 
 #endif  // NEBULA_CRASHACTION_H_

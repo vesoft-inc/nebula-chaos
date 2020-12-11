@@ -4,13 +4,13 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-#ifndef ACTIONS_RUNTASKACTION_H_
-#define ACTIONS_RUNTASKACTION_H_
+#ifndef CORE_RUNTASKACTION_H_
+#define CORE_RUNTASKACTION_H_
 
-#include "common/Base.h"
+#include "common/base/Base.h"
 #include "core/Action.h"
 
-namespace nebula_chaos {
+namespace chaos {
 namespace core {
 
 using ActionTask = folly::Function<ResultCode()>;
@@ -41,6 +41,5 @@ protected:
 };
 
 }   // namespace core
-}   // namespace nebula_chaos
-
-#endif  // ACTIONS_RUNTASKACTION_H_
+}   // namespace chaos
+#endif  // CORE_RUNTASKACTION_H_

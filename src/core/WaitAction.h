@@ -4,18 +4,18 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-#ifndef ACTIONS_WAITACTION_H_
-#define ACTIONS_WAITACTION_H_
+#ifndef CORE_WAITACTION_H_
+#define CORE_WAITACTION_H_
 
-#include "common/Base.h"
+#include "common/base/Base.h"
 #include "core/Action.h"
 
-namespace nebula_chaos {
+namespace chaos {
 namespace core {
 
 class WaitAction : public Action {
 public:
-    WaitAction(uint64_t waitTimeMs = 3000)
+    explicit WaitAction(uint64_t waitTimeMs = 3000)
         : waitTimeMs_(waitTimeMs) {
         CHECK_LT(0, waitTimeMs);
     }
@@ -36,6 +36,5 @@ protected:
 };
 
 }   // namespace core
-}   // namespace nebula_chaos
-
-#endif  // ACTIONS_WAITACTION_H_
+}   // namespace chaos
+#endif  // CORE_WAITACTION_H_

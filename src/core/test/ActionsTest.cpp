@@ -1,4 +1,10 @@
-#include "common/Base.h"
+/* Copyright (c) 2020 vesoft inc. All rights reserved.
+ *
+ * This source code is licensed under Apache 2.0 License,
+ * attached with Common Clause Condition 1.0, found in the LICENSES directory.
+ */
+
+#include "common/base/Base.h"
 #include <gtest/gtest.h>
 #include <glog/logging.h>
 #include <folly/init/Init.h>
@@ -7,7 +13,7 @@
 #include "core/LoopAction.h"
 #include "core/AssignAction.h"
 
-namespace nebula_chaos {
+namespace chaos {
 namespace core {
 
 TEST(ActionsTest, CheckProcActionTest) {
@@ -60,11 +66,11 @@ TEST(ActionsTest, AssignActionTest) {
     CHECK(ResultCode::OK == ret);
     auto valOrErr = ctx.exprCtx.getVar("a");
     CHECK(valOrErr);
-    CHECK_EQ(7, asInt(valOrErr.value()));
+    CHECK_EQ(7, ExprUtils::asInt(valOrErr.value()));
 }
 
-}  // namespace utils
-}  // namespace nebula_chaos
+}  // namespace core
+}  // namespace chaos
 
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);

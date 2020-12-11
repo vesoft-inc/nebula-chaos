@@ -1,4 +1,10 @@
-#include "common/Base.h"
+/* Copyright (c) 2020 vesoft inc. All rights reserved.
+ *
+ * This source code is licensed under Apache 2.0 License,
+ * attached with Common Clause Condition 1.0, found in the LICENSES directory.
+ */
+
+#include "common/base/Base.h"
 #include <glog/logging.h>
 #include <gflags/gflags.h>
 #include <folly/init/Init.h>
@@ -8,8 +14,8 @@
 DEFINE_string(conf_file, "", "json path");
 DEFINE_string(flow_chart_script, "", "python script to generate flow chart of json");
 
+namespace chaos {
 namespace nebula_chaos {
-namespace nebula {
 
 int run() {
     std::string flowChart;
@@ -40,11 +46,11 @@ int run() {
     }
 }
 
-}  // namespace nebula
 }  // namespace nebula_chaos
+}  // namespace chaos
 
 int main(int argc, char** argv) {
     folly::init(&argc, &argv, true);
     google::SetStderrLogging(google::INFO);
-    return nebula_chaos::nebula::run();
+    return chaos::nebula_chaos::run();
 }

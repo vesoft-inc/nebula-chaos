@@ -1,11 +1,17 @@
-#include "common/Base.h"
+/* Copyright (c) 2020 vesoft inc. All rights reserved.
+ *
+ * This source code is licensed under Apache 2.0 License,
+ * attached with Common Clause Condition 1.0, found in the LICENSES directory.
+ */
+
+#include "common/base/Base.h"
 #include <gtest/gtest.h>
 #include <glog/logging.h>
 #include <folly/init/Init.h>
 #include "nebula/NebulaInstance.h"
 
+namespace chaos {
 namespace nebula_chaos {
-namespace nebula {
 
 TEST(NebulaInstanceTest, DateTest) {
     auto installPath = folly::stringPrintf("%s/mock/nebula",
@@ -27,8 +33,8 @@ TEST(NebulaInstanceTest, DateTest) {
     }
 }
 
-}  // namespace utils
 }  // namespace nebula_chaos
+}  // namespace chaos
 
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);

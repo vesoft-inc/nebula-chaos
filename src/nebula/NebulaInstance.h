@@ -7,11 +7,11 @@
 #ifndef NEBULA_NEBULAINSTANCE_H_
 #define NEBULA_NEBULAINSTANCE_H_
 
-#include "common/Base.h"
+#include "common/base/Base.h"
 #include <folly/dynamic.h>
 
+namespace chaos {
 namespace nebula_chaos {
-namespace nebula {
 
 class NebulaInstance {
 public:
@@ -82,7 +82,7 @@ public:
     Type type() const {
         return type_;
     }
-    
+
     State getState() const {
         return state_;
     }
@@ -112,7 +112,7 @@ private:
     std::string owner_;
 };
 
-}   // namespace nebula
 }   // namespace nebula_chaos
+}   // namespace chaos
 
 #endif  // NEBULA_NEBULAINSTANCE_H_

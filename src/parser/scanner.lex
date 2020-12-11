@@ -12,7 +12,7 @@
     yylloc->step();                     \
     yylloc->columns(yyleng);
 
-using TokenType = nebula_chaos::ExprParser::token;
+using TokenType = chaos::ExprParser::token;
 
 static constexpr size_t MAX_STRING = 4096;
 
@@ -167,7 +167,7 @@ OCT                         ([0-7])
 
 %%
 
-namespace nebula_chaos {
+namespace chaos {
 
 ExprScanner::ExprScanner(std::istream* in,
                          std::ostream* out)
