@@ -4,10 +4,10 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-#include "plan/client/GraphClient.h"
+#include "nebula/client/GraphClient.h"
 
+namespace chaos {
 namespace nebula_chaos {
-namespace plan {
 
 const int32_t kRetryTimes = 10;
 
@@ -69,5 +69,5 @@ ErrorCode GraphClient::execute(folly::StringPiece stmt,
     return nebula::ErrorCode::E_EXECUTION_ERROR;
 }
 
-}  // namespace plan
 }  // namespace nebula_chaos
+}  // namespace chaos

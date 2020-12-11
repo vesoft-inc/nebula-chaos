@@ -4,16 +4,16 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-#include "plan/NebulaAction.h"
-#include "plan/NebulaUtils.h"
+#include "nebula/NebulaAction.h"
+#include "nebula/NebulaUtils.h"
 #include "utils/SshHelper.h"
 #include "core/CheckProcAction.h"
 #include <folly/Random.h>
 #include <folly/GLog.h>
 #include "boost/filesystem/operations.hpp"
 
+namespace chaos {
 namespace nebula_chaos {
-namespace plan {
 
 ResultCode CrashAction::doRun() {
     CHECK_NOTNULL(inst_);
@@ -34,7 +34,7 @@ ResultCode CrashAction::doRun() {
     if (!pid.hasValue()) {
         return ResultCode::ERR_FAILED;
     }
-    nebula_chaos::core::CheckProcAction action(inst_->getHost(), pid.value(), inst_->owner());
+    chaos::core::CheckProcAction action(inst_->getHost(), pid.value(), inst_->owner());
     auto res = action.doRun();
     if (res == ResultCode::ERR_NOT_FOUND) {
         inst_->setState(NebulaInstance::State::STOPPED);
@@ -64,7 +64,7 @@ ResultCode StartAction::doRun() {
         return ResultCode::ERR_FAILED;
     }
     // Check the start action succeeded or not
-    nebula_chaos::core::CheckProcAction action(inst_->getHost(), pid.value(), inst_->owner());
+    chaos::core::CheckProcAction action(inst_->getHost(), pid.value(), inst_->owner());
     auto res = action.doRun();
     if (res == ResultCode::OK) {
         inst_->setState(NebulaInstance::State::RUNNING);
@@ -95,7 +95,7 @@ ResultCode StopAction::doRun() {
             return ResultCode::ERR_FAILED;
         }
         // Check the stop action succeeded or not
-        nebula_chaos::core::CheckProcAction action(inst_->getHost(), pid.value(), inst_->owner());
+        chaos::core::CheckProcAction action(inst_->getHost(), pid.value(), inst_->owner());
         auto res = action.doRun();
         if (res == ResultCode::OK) {
             sleep(tryTimes);
@@ -960,7 +960,7 @@ ResultCode SlowDiskAction::disturb() {
 }
 
 ResultCode SlowDiskAction::recover() {
-    nebula_chaos::core::CheckProcAction action(picked_->getHost(),
+    chaos::core::CheckProcAction action(picked_->getHost(),
                                                stapPid_.value(),
                                                picked_->owner());
     auto res = action.doRun();
@@ -1291,5 +1291,5 @@ ResultCode StoragePerfAction::doRun() {
     return ResultCode::OK;
 }
 
-}   // namespace plan
 }   // namespace nebula_chaos
+}   // namespace chaos

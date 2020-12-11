@@ -8,14 +8,14 @@
 #include <glog/logging.h>
 #include <gflags/gflags.h>
 #include <folly/init/Init.h>
-#include "plan/NebulaChaosPlan.h"
-#include "plan/NebulaUtils.h"
+#include "nebula/NebulaChaosPlan.h"
+#include "nebula/NebulaUtils.h"
 
 DEFINE_string(conf_file, "", "json path");
 DEFINE_string(flow_chart_script, "", "python script to generate flow chart of json");
 
+namespace chaos {
 namespace nebula_chaos {
-namespace plan {
 
 int run() {
     std::string flowChart;
@@ -46,11 +46,11 @@ int run() {
     }
 }
 
-}  // namespace plan
 }  // namespace nebula_chaos
+}  // namespace chaos
 
 int main(int argc, char** argv) {
     folly::init(&argc, &argv, true);
     google::SetStderrLogging(google::INFO);
-    return nebula_chaos::plan::run();
+    return chaos::nebula_chaos::run();
 }

@@ -9,7 +9,7 @@
 #include "common/base/Base.h"
 #include "expression/ExprUtils.h"
 
-namespace nebula_chaos {
+namespace chaos {
 
 class ExprContext {
 public:
@@ -288,6 +288,6 @@ private:
     std::unique_ptr<Expression>                 left_;
     std::unique_ptr<Expression>                 right_;
 };
-}   // namespace nebula_chaos
 
+}   // namespace chaos
 #endif  // EXPRESSION_EXPRESSIONS_H_

@@ -10,7 +10,7 @@
 #include <folly/init/Init.h>
 #include "expression/Expressions.h"
 
-namespace nebula_chaos {
+namespace chaos {
 
 TEST(ExprTest, ExprTest) {
     ExprContext ctx;
@@ -33,7 +33,7 @@ TEST(ExprTest, ExprTest) {
     }
 }
 
-}  // namespace nebula_chaos
+}  // namespace chaos
 
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);

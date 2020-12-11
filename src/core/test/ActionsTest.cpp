@@ -13,7 +13,7 @@
 #include "core/LoopAction.h"
 #include "core/AssignAction.h"
 
-namespace nebula_chaos {
+namespace chaos {
 namespace core {
 
 TEST(ActionsTest, CheckProcActionTest) {
@@ -70,7 +70,7 @@ TEST(ActionsTest, AssignActionTest) {
 }
 
 }  // namespace core
-}  // namespace nebula_chaos
+}  // namespace chaos
 
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);

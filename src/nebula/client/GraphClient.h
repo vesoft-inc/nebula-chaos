@@ -4,8 +4,8 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-#ifndef NEBULA_CLIENT_CPP_GRAPHCLIENT_H_
-#define NEBULA_CLIENT_CPP_GRAPHCLIENT_H_
+#ifndef NEBULA_CLIENT_GRAPHCLIENT_H_
+#define NEBULA_CLIENT_GRAPHCLIENT_H_
 
 #include "common/base/Base.h"
 #include "common/graph/Response.h"
@@ -14,8 +14,8 @@
 #include "nebula/client/ConnectionPool.h"
 #include "nebula/client/Session.h"
 
+namespace chaos {
 namespace nebula_chaos {
-namespace plan {
 
 using ErrorCode = nebula::ErrorCode;
 using DataSet = nebula::DataSet;
@@ -46,7 +46,7 @@ private:
     std::unique_ptr<nebula::Session>        session_{nullptr};
 };
 
-}  // namespace plan
 }  // namespace nebula_chaos
+}  // namespace chaos
 
-#endif  // NEBULA_CLIENT_CPP_GRAPHCLIENT_H_
+#endif  // NEBULA_CLIENT_GRAPHCLIENT_H_

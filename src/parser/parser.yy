@@ -2,10 +2,10 @@
 %skeleton "lalr1.cc"
 %no-lines
 %locations
-%define api.namespace { nebula_chaos }
+%define api.namespace { chaos }
 %define parser_class_name { ExprParser }
-%lex-param { nebula_chaos::ExprScanner& scanner }
-%parse-param { nebula_chaos::ExprScanner& scanner }
+%lex-param { chaos::ExprScanner& scanner }
+%parse-param { chaos::ExprScanner& scanner }
 %parse-param { std::string& errmsg }
 %parse-param { Expression** expr }
 
@@ -18,7 +18,7 @@
 
 #define YYDEBUG 1
 
-namespace nebula_chaos {
+namespace chaos {
 
 class ExprScanner;
 
@@ -29,12 +29,12 @@ static constexpr size_t MAX_ABS_INTEGER = 9223372036854775808ULL;
 }
 
 %code {
-    static int yylex(nebula_chaos::ExprParser::semantic_type* yylval,
-                     nebula_chaos::ExprParser::location_type *yylloc,
-                     nebula_chaos::ExprScanner& scanner);
+    static int yylex(chaos::ExprParser::semantic_type* yylval,
+                     chaos::ExprParser::location_type *yylloc,
+                     chaos::ExprScanner& scanner);
 
     void ifOutOfRange(const int64_t input,
-                      const nebula_chaos::ExprParser::location_type& loc);
+                      const chaos::ExprParser::location_type& loc);
 }
 
 %union {
@@ -42,7 +42,7 @@ static constexpr size_t MAX_ABS_INTEGER = 9223372036854775808ULL;
     int64_t                                 intval;
     double                                  doubleval;
     std::string*                            strval;
-    nebula_chaos::Expression*               expr;
+    chaos::Expression*                      expr;
 }
 
 /* destructors */
@@ -207,8 +207,8 @@ expression
 
 #include "ExprScanner.h"
 
-void nebula_chaos::ExprParser::error(const nebula_chaos::ExprParser::location_type& loc,
-                                     const std::string &msg) {
+void chaos::ExprParser::error(const chaos::ExprParser::location_type& loc,
+                              const std::string &msg) {
     std::ostringstream os;
     if (msg.empty()) {
         os << "syntax error";
@@ -224,15 +224,14 @@ void nebula_chaos::ExprParser::error(const nebula_chaos::ExprParser::location_ty
 // which filled as uint64_t
 // so the conversion is expected
 void ifOutOfRange(const int64_t input,
-                  const nebula_chaos::ExprParser::location_type& loc) {
+                  const chaos::ExprParser::location_type& loc) {
     if ((uint64_t)input >= MAX_ABS_INTEGER) {
-        throw nebula_chaos::ExprParser::syntax_error(loc, "Out of range:");
+        throw chaos::ExprParser::syntax_error(loc, "Out of range:");
     }
 }
 
-static int yylex(nebula_chaos::ExprParser::semantic_type* yylval,
-                 nebula_chaos::ExprParser::location_type *yylloc,
-                 nebula_chaos::ExprScanner& scanner) {
+static int yylex(chaos::ExprParser::semantic_type* yylval,
+                 chaos::ExprParser::location_type *yylloc,
+                 chaos::ExprScanner& scanner) {
     return scanner.yylex(yylval, yylloc);
 }
-

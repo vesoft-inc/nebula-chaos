@@ -4,15 +4,15 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-#ifndef PLAN_CHAOSPLAN_H_
-#define PLAN_CHAOSPLAN_H_
+#ifndef CORE_CHAOSPLAN_H_
+#define CORE_CHAOSPLAN_H_
 
 #include "common/base/Base.h"
 #include "core/RunTaskAction.h"
 #include "core/SendEmailAction.h"
 #include <folly/executors/CPUThreadPoolExecutor.h>
 
-namespace nebula_chaos {
+namespace chaos {
 namespace core {
 
 using ActionStatus = Action::Status;
@@ -71,5 +71,5 @@ protected:
 };
 
 }  // namespace core
-}  // namespace nebula_chaos
-#endif  // PLAN_CHAOSPLAN_H_
+}  // namespace chaos
+#endif  // CORE_CHAOSPLAN_H_

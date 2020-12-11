@@ -14,7 +14,7 @@
 #include <folly/gen/String.h>
 #include "utils/SshHelper.h"
 
-namespace nebula_chaos {
+namespace chaos {
 namespace utils {
 
 TEST(SSHHelperTest, DateTest) {
@@ -30,7 +30,7 @@ TEST(SSHHelperTest, DateTest) {
 }
 
 }  // namespace utils
-}  // namespace nebula_chaos
+}  // namespace chaos
 
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);

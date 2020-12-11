@@ -11,7 +11,7 @@
 #include "core/Action.h"
 #include <folly/Subprocess.h>
 
-namespace nebula_chaos {
+namespace chaos {
 namespace core {
 
 class SendEmailAction : public Action {
@@ -57,6 +57,5 @@ protected:
 };
 
 }   // namespace core
-}   // namespace nebula_chaos
-
+}   // namespace chaos
 #endif  // CORE_SENDEMAILACTION_H_

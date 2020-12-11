@@ -34,13 +34,11 @@ add_definitions(-DNEBULA_CHAOS_HOME=${CMAKE_SOURCE_DIR})
 
 # Submodules cpp client
 if("${NEBULA_CLIENT_REPO_URL}" STREQUAL "")
-    # SET(NEBULA_CLIENT_REPO_URL "https://github.com/vesoft-inc/nebula-cpp.git")
-    SET(NEBULA_CLIENT_REPO_URL "https://github.com/panda-sheep/nebula-cpp.git")
+    SET(NEBULA_CLIENT_REPO_URL "https://github.com/vesoft-inc/nebula-cpp.git")
 endif()
 
 if("${NEBULA_CLIENT_REPO_TAG}" STREQUAL "")
-    # SET(NEBULA_CLIENT_REPO_TAG "master")
-    SET(NEBULA_CLIENT_REPO_TAG "enable_for_chaos")
+    SET(NEBULA_CLIENT_REPO_TAG "master")
 endif()
 
 # Submodules common

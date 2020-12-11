@@ -10,7 +10,7 @@
 #include "core/Action.h"
 #include <folly/executors/CPUThreadPoolExecutor.h>
 
-namespace nebula_chaos {
+namespace chaos {
 namespace core {
 
 class LoopAction : public Action {
@@ -37,6 +37,5 @@ private:
 };
 
 }   // namespace core
-}   // namespace nebula_chaos
-
+}   // namespace chaos
 #endif  // CORE_LOOPACTION_H_

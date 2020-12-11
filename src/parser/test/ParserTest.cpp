@@ -10,7 +10,7 @@
 #include <folly/init/Init.h>
 #include "parser/ParserHelper.h"
 
-namespace nebula_chaos {
+namespace chaos {
 
 TEST(ParserTest, ExpressionTest) {
     ExprContext ctx;
@@ -34,7 +34,7 @@ TEST(ParserTest, ExpressionTest) {
     }
 }
 
-}  // namespace nebula_chaos
+}  // namespace chaos
 
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);

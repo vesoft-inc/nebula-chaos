@@ -10,14 +10,14 @@
 #include "common/base/Base.h"
 #include "common/datatypes/Value.h"
 #include "core/Action.h"
-#include "plan/NebulaInstance.h"
-#include "plan/client/GraphClient.h"
+#include "nebula/NebulaInstance.h"
+#include "nebula/client/GraphClient.h"
 #include <folly/Expected.h>
 
+namespace chaos {
 namespace nebula_chaos {
-namespace plan {
 
-using ResultCode = nebula_chaos::core::ResultCode;
+using ResultCode = chaos::core::ResultCode;
 
 class CrashAction : public core::Action {
 public:
@@ -984,7 +984,7 @@ private:
     bool isEdge_;
 };
 
-}   // namespace plan
 }   // namespace nebula_chaos
+}   // namespace chaos
 
 #endif  // NEBULA_CRASHACTION_H_

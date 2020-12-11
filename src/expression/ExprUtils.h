@@ -16,7 +16,7 @@
 #include <folly/Format.h>
 #include <folly/Expected.h>
 
-namespace nebula_chaos {
+namespace chaos {
 
 #ifndef VAR_INT64
 #define VAR_INT64 0
@@ -111,6 +111,6 @@ public:
     }
 };
 
-}   // namespace nebula_chaos
+}   // namespace chaos
 
 #endif  // EXPRESSION_EXPRUTILS_H_

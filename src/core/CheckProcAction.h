@@ -10,7 +10,7 @@
 #include "common/base/Base.h"
 #include "core/Action.h"
 
-namespace nebula_chaos {
+namespace chaos {
 namespace core {
 
 class CheckProcAction : public Action {
@@ -35,6 +35,5 @@ protected:
 };
 
 }   // namespace core
-}   // namespace nebula_chaos
-
+}   // namespace chaos
 #endif  // CORE_CHECKPROCACTION_H_

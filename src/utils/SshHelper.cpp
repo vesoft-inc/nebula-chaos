@@ -7,7 +7,7 @@
 #include "utils/SshHelper.h"
 #include <folly/String.h>
 
-namespace nebula_chaos {
+namespace chaos {
 namespace utils {
 
 // static
@@ -35,6 +35,4 @@ SshHelper::run(const std::string& command,
 }
 
 }  // namespace utils
-}  // namespace nebula_chaos
-
-
+}  // namespace chaos

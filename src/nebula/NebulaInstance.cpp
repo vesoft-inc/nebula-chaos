@@ -4,12 +4,12 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-#include "plan/NebulaInstance.h"
+#include "nebula/NebulaInstance.h"
 #include "utils/SshHelper.h"
 #include <boost/algorithm/string.hpp>
 
+namespace chaos {
 namespace nebula_chaos {
-namespace plan {
 
 bool NebulaInstance::parseConf(const std::string& confFile) {
     LOG(INFO) << "Parse conf file " << confFile
@@ -219,6 +219,5 @@ std::string NebulaInstance::killCommand() const {
     return command("kill");
 }
 
-}   // namespace plan
 }   // namespace nebula_chaos
-
+}   // namespace chaos

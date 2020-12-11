@@ -17,11 +17,11 @@
 
 // Override the interface for yylex since we namespaced it
 #undef YY_DECL
-#define YY_DECL int nebula_chaos::ExprScanner::yylex()
+#define YY_DECL int chaos::ExprScanner::yylex()
 
 #include "ExprParser.hpp"
 
-namespace nebula_chaos {
+namespace chaos {
 
 class ExprScanner : public yyFlexLexer {
 public:
@@ -45,6 +45,5 @@ private:
     ExprParser::location_type* yylloc{nullptr};
 };
 
-}   // namespace nebula_chaos
-
+}   // namespace chaos
 #endif  // PARSER_EXPRSCANNER_H_

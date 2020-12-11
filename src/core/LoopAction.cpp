@@ -3,10 +3,11 @@
  * This source code is licensed under Apache 2.0 License,
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
+
 #include "core/LoopAction.h"
 #include "parser/ParserHelper.h"
 
-namespace nebula_chaos {
+namespace chaos {
 namespace core {
 
 ResultCode LoopAction::doRun() {
@@ -63,7 +64,8 @@ ResultCode LoopAction::doRun() {
                             LOG(INFO) << "Run " << actionPtr->toString() << " succeeded!";
                         })
                         .thenError([actionPtr, &rc](auto ew) {
-                            LOG(ERROR) << "Run " << actionPtr->toString() << " failed, msg " << ew.what();
+                            LOG(ERROR) << "Run " << actionPtr->toString()
+                                       << " failed, msg " << ew.what();
                             actionPtr->markFailed(std::move(ew));
                             if (rc == ResultCode::OK) {
                                 rc = ResultCode::ERR_FAILED;
@@ -80,5 +82,4 @@ ResultCode LoopAction::doRun() {
 }
 
 }   // namespace core
-}   // namespace nebula_chaos
-
+}   // namespace chaos

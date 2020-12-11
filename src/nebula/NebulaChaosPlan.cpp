@@ -3,16 +3,17 @@
  * This source code is licensed under Apache 2.0 License,
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
-#include "plan/NebulaChaosPlan.h"
-#include "plan/NebulaUtils.h"
+
+#include "nebula/NebulaChaosPlan.h"
+#include "nebula/NebulaUtils.h"
 #include "core/WaitAction.h"
 #include <folly/FileUtil.h>
 #include <folly/json.h>
 
 DEFINE_string(email_to, "", "");
 
+namespace chaos {
 namespace nebula_chaos {
-namespace plan {
 
 // static
 std::unique_ptr<NebulaChaosPlan>
@@ -123,5 +124,5 @@ NebulaChaosPlan::loadFromFile(const std::string& filename) {
     return plan;
 }
 
-}   // namespace plan
 }   // namespace nebula_chaos
+}   // namespace chaos

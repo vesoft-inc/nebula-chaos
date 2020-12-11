@@ -3,10 +3,11 @@
  * This source code is licensed under Apache 2.0 License,
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
+
 #include "core/CheckProcAction.h"
 #include "utils/SshHelper.h"
 
-namespace nebula_chaos {
+namespace chaos {
 namespace core {
 
 ResultCode CheckProcAction::doRun() {
@@ -33,5 +34,5 @@ ResultCode CheckProcAction::doRun() {
 }
 
 }   // namespace core
-}   // namespace nebula_chaos
+}   // namespace chaos
 

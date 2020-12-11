@@ -4,8 +4,8 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-#ifndef ACTIONS_ACTION_H_
-#define ACTIONS_ACTION_H_
+#ifndef CORE_ACTION_H_
+#define CORE_ACTION_H_
 
 #include "common/base/Base.h"
 #include <chrono>
@@ -18,8 +18,9 @@
 #include <folly/String.h>
 #include "expression/Expressions.h"
 
-namespace nebula_chaos {
+namespace chaos {
 namespace core {
+
 using Clock = std::chrono::high_resolution_clock;
 using TimePoint = Clock::time_point;
 using Duration = Clock::duration;
@@ -220,6 +221,6 @@ protected:
 };
 
 }   // namespace core
-}   // namespace nebula_chaos
+}   // namespace chaos
 
-#endif  // ACTIONS_ACTION_H_
+#endif  // CORE_ACTION_H_

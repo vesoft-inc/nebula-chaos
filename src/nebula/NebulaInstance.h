@@ -10,8 +10,8 @@
 #include "common/base/Base.h"
 #include <folly/dynamic.h>
 
+namespace chaos {
 namespace nebula_chaos {
-namespace plan {
 
 class NebulaInstance {
 public:
@@ -112,7 +112,7 @@ private:
     std::string owner_;
 };
 
-}   // namespace plan
 }   // namespace nebula_chaos
+}   // namespace chaos
 
 #endif  // NEBULA_NEBULAINSTANCE_H_
