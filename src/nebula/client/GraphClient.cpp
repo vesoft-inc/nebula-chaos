@@ -52,18 +52,22 @@ ErrorCode GraphClient::execute(folly::StringPiece stmt,
     }
 
     int32_t retry = 0;
-    while (++retry < kRetryTimes) {
+    while (retry++ < kRetryTimes) {
         auto exeRet = session_->execute(stmt.str());
         if (exeRet.errorCode() != nebula::ErrorCode::SUCCEEDED) {
             LOG(ERROR) << stmt.str() << " execute failed"
                        << static_cast<int>(exeRet.errorCode());
-            if (retry + 1 ==  kRetryTimes) {
+            if (retry ==  kRetryTimes) {
                 return exeRet.errorCode();
             }
             sleep(retry);
             continue;
         }
-        resp = *(const_cast<nebula::DataSet*>(exeRet.data()));
+
+        // Not every ResultSet returned by Session::execute contains a DataSet
+        if (exeRet.data()) {
+            resp = *(const_cast<nebula::DataSet*>(exeRet.data()));
+        }
         return nebula::ErrorCode::SUCCEEDED;
     }
     return nebula::ErrorCode::E_EXECUTION_ERROR;

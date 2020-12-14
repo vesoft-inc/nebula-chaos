@@ -81,6 +81,7 @@ public:
             auto randomVal = obj.getDefault("random_value", false).asBool();
             auto tryNum = obj.getDefault("try_num", 32).asInt();
             auto retryInterval = obj.getDefault("retry_interval_ms", 500).asInt();
+            auto stringVid = obj.getDefault("string_vid", true).asBool();
             return std::make_unique<WriteCircleAction>(ctx.gClient,
                                                        tag,
                                                        col,
@@ -90,7 +91,8 @@ public:
                                                        startId,
                                                        randomVal,
                                                        tryNum,
-                                                       retryInterval);
+                                                       retryInterval,
+                                                       stringVid);
         } else if (type == "WalkThroughAction") {
             auto tag = obj.at("tag").asString();
             if (ctx.rolling) {
@@ -100,12 +102,14 @@ public:
             auto totalRows = obj.getDefault("total_rows", 100000).asInt();
             auto tryNum = obj.getDefault("try_num", 32).asInt();
             auto retryInterval = obj.getDefault("retry_interval_ms", 100).asInt();
+            auto stringVid = obj.getDefault("string_vid", true).asBool();
             return std::make_unique<WalkThroughAction>(ctx.gClient,
                                                        tag,
                                                        col,
                                                        totalRows,
                                                        tryNum,
-                                                       retryInterval);
+                                                       retryInterval,
+                                                       stringVid);
         } else if (type == "CreateSpaceAction") {
             auto spaceName = obj.at("space_name").asString();
             auto replica = obj.getDefault("replica", 3).asInt();

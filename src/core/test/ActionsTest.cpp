@@ -24,9 +24,10 @@ TEST(ActionsTest, CheckProcActionTest) {
 TEST(ActionsTest, SendEmailAction) {
     SendEmailAction action("Thanos kill nebula!!!",
                            "Oh my god, nebula dead again!",
-                           "heng.chen@vesoft.com");
+                           "xxx@vesoft.com");
     action.doRun();
 }
+
 TEST(ActionsTest, LoopAction) {
     ActionContext ctx;
 
@@ -59,6 +60,7 @@ TEST(ActionsTest, LoopAction) {
     LoopAction loopAction(&ctx, "$i < 10", std::move(actions), 2);
     loopAction.doRun();
 }
+
 TEST(ActionsTest, AssignActionTest) {
     ActionContext ctx;
     AssignAction action(&ctx, "a", "1 + 2 * 3");

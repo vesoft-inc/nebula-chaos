@@ -215,6 +215,30 @@ std::string WriteCircleAction::genData() {
     return str;
 }
 
+void WriteCircleAction::buildVIdAndValue(uint64_t vid,
+                                         std::string val,
+                                         std::vector<std::string>& cmds) {
+    if (stringVid_) {
+        cmds.emplace_back(folly::stringPrintf("\"%lu\":(\"%s\")",
+                          vid, val.c_str()));
+    } else {
+        cmds.emplace_back(folly::stringPrintf("%lu:(\"%s\")",
+                          vid, val.c_str()));
+    }
+}
+
+void WriteCircleAction::buildVIdAndValue(uint64_t vid,
+                                         uint64_t val,
+                                         std::vector<std::string>& cmds) {
+    if (stringVid_) {
+        cmds.emplace_back(folly::stringPrintf("\"%lu\":(\"%lu\")",
+                          vid, val));
+    } else {
+        cmds.emplace_back(folly::stringPrintf("%lu:(\"%lu\")",
+                          vid, val));
+    }
+}
+
 ResultCode WriteCircleAction::doRun() {
     CHECK_NOTNULL(client_);
     std::vector<std::string> batchCmds;
@@ -232,17 +256,16 @@ ResultCode WriteCircleAction::doRun() {
             batchCmds.clear();
         }
         if (randomVal_) {
-            batchCmds.emplace_back(folly::stringPrintf("%lu:(\"%s\")",
-                                   startId_++, genData().c_str()));
+            buildVIdAndValue(startId_++, genData(), batchCmds);
         } else {
-            batchCmds.emplace_back(folly::stringPrintf("%lu:(\"%lu\")", row, row + 1));
+            buildVIdAndValue(row, row + 1, batchCmds);
         }
         row++;
     }
     if (randomVal_) {
-        batchCmds.emplace_back(folly::stringPrintf("%lu:(\"%s\")", startId_++, genData().c_str()));
+        buildVIdAndValue(startId_++, genData(), batchCmds);
     } else {
-        batchCmds.emplace_back(folly::stringPrintf("%lu:(\"%lu\")", row, 1L));
+        buildVIdAndValue(row, 1, batchCmds);
     }
     auto res = sendBatch(batchCmds);
     LOG(INFO) << "Send all requests successfully, row " << row;
@@ -278,11 +301,20 @@ ResultCode WalkThroughAction::doRun() {
     auto id = std::to_string(start_);
     uint64_t count = 0;
     while (++count <= totalRows_) {
-        auto cmd = folly::stringPrintf("FETCH PROP ON %s %s YIELD %s.%s",
-                                       tag_.c_str(),
-                                       id.c_str(),
-                                       tag_.c_str(),
-                                       col_.c_str());
+        std::string cmd;
+        if (stringVid_) {
+            cmd = folly::stringPrintf("FETCH PROP ON %s \"%s\" YIELD %s.%s",
+                                      tag_.c_str(),
+                                      id.c_str(),
+                                      tag_.c_str(),
+                                      col_.c_str());
+        } else {
+            cmd = folly::stringPrintf("FETCH PROP ON %s %s YIELD %s.%s",
+                                      tag_.c_str(),
+                                      id.c_str(),
+                                      tag_.c_str(),
+                                      col_.c_str());
+        }
         FB_LOG_EVERY_MS(INFO, 3000) << cmd;
         auto res = sendCommand(cmd);
         if (res) {
@@ -292,13 +324,23 @@ ResultCode WalkThroughAction::doRun() {
             return ResultCode::ERR_FAILED;
         }
         if (id == std::to_string(start_)) {
-            LOG(INFO) << "We are back to " << start_
-                      << ", total count " << count;
+            if (stringVid_) {
+                LOG(INFO) << "We are back to \"" << start_
+                          << "\", total count " << count;
+            } else {
+                LOG(INFO) << "We are back to " << start_
+                          << ", total count " << count;
+            }
             break;
         }
     }
     if (id != std::to_string(start_)) {
-        LOG(ERROR) << "Wrong value, id = " << id.c_str() << ", start = " << start_;
+        if (stringVid_) {
+            LOG(ERROR) << "Wrong value, id = \"" << id.c_str()
+                       << "\", start = \"" << start_ << "\"";
+        } else {
+            LOG(ERROR) << "Wrong value, id = " << id.c_str() << ", start = " << start_;
+        }
         return ResultCode::ERR_FAILED;
     }
     return count == totalRows_ ? ResultCode::OK : ResultCode::ERR_FAILED;
