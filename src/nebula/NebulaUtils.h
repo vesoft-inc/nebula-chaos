@@ -455,23 +455,23 @@ public:
                                                        exeTime);
         }
 
-    LOG(FATAL) << "Unknown type " << type;
-    return nullptr;
-}
-
-static NebulaInstance* randomInstance(const std::vector<NebulaInstance*>& instances,
-                                        NebulaInstance::State state) {
-    std::vector<NebulaInstance*> candidate;
-    for (auto* instance : instances) {
-        if (instance->getState() == state) {
-            candidate.emplace_back(instance);
-        }
-    }
-    if (candidate.empty()) {
+        LOG(FATAL) << "Unknown type " << type;
         return nullptr;
     }
-    return candidate[folly::Random::rand32(candidate.size())];
-}
+
+    static NebulaInstance* randomInstance(const std::vector<NebulaInstance*>& instances,
+                                          NebulaInstance::State state) {
+        std::vector<NebulaInstance*> candidate;
+        for (auto* instance : instances) {
+            if (instance->getState() == state) {
+                candidate.emplace_back(instance);
+            }
+        }
+        if (candidate.empty()) {
+            return nullptr;
+        }
+        return candidate[folly::Random::rand32(candidate.size())];
+    }
 
 private:
     Utils() = default;

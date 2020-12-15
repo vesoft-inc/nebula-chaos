@@ -417,7 +417,7 @@ ResultCode DescSpaceAction::checkResp(const DataSet& resp) const {
         return ResultCode::ERR_FAILED;
     }
     auto& row = resp.rows[0];
-    if (row.size() != 6) {
+    if (row.size() != 7) {
         LOG(ERROR) << "Value number is wrong!";
         return ResultCode::ERR_FAILED;
     }
