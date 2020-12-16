@@ -7,6 +7,7 @@
 #include "nebula/NebulaAction.h"
 #include "nebula/NebulaUtils.h"
 #include "utils/SshHelper.h"
+#include "utils/Utils.h"
 #include "core/CheckProcAction.h"
 #include <folly/Random.h>
 #include <folly/GLog.h>
@@ -159,7 +160,12 @@ ResultCode MetaAction::checkResp(const DataSet&) const {
 ResultCode MetaAction::doRun() {
     CHECK_NOTNULL(client_);
     auto cmd = command();
-    LOG(INFO) << "Send " << cmd << " to graphd";
+    if (cmd.empty()) {
+        LOG(ERROR) << "Command is illegal";
+    } else {
+        LOG(INFO) << "Send " << cmd << " to graphd";
+    }
+
     DataSet resp;
     int32_t retry = 0;
     while (++retry < retryTimes_) {
@@ -443,7 +449,14 @@ ResultCode CheckLeadersAction::checkResp(const DataSet& resp) const {
         LOG(ERROR) << "Bad format for the response!";
         return ResultCode::ERR_FAILED;
     }
-    auto& leaderStr = row[4].getStr();
+
+    // If the value is kEmpty, need to try again
+    if (row[4] == nebula::Value::kEmpty) {
+        return ResultCode::ERR_FAILED;
+    }
+
+    folly::StringPiece leaderStr(row[4].getStr());
+    leaderStr = utils::Utils::trim(leaderStr, [](const char c) { return '\"' == c; });
     if (leaderStr.empty()) {
         return ResultCode::ERR_FAILED;
     }
@@ -476,7 +489,9 @@ ResultCode CheckLeadersAction::checkLeaderDis(const DataSet& resp) {
     bool first = true;
     for (uint32_t i = 0; i < resp.rows.size() - 1; i++) {
         auto& row = resp.rows[i];
-        if (row[2].getStr() == "offline") {
+        folly::StringPiece status(row[2].getStr());
+        status = utils::Utils::trim(status, [](const char c) { return '\"' == c; });
+        if (status.str() == "OFFLINE") {
             continue;
         }
         if (row.size() != 6) {
@@ -484,11 +499,14 @@ ResultCode CheckLeadersAction::checkLeaderDis(const DataSet& resp) {
             return ResultCode::ERR_FAILED;
         }
 
-        auto& ipStr = row[0].getStr();
+        folly::StringPiece ipStr(row[0].getStr());
+        ipStr = utils::Utils::trim(ipStr, [](const char c) { return '\"' == c; });
         if (ipStr.empty()) {
             return ResultCode::ERR_FAILED;
         }
-        auto& leaderStr = row[4].getStr();
+
+        folly::StringPiece leaderStr(row[4].getStr());
+        leaderStr = utils::Utils::trim(leaderStr, [](const char c) { return '\"' == c; });
         if (leaderStr.empty()) {
             return ResultCode::ERR_FAILED;
         }
@@ -505,7 +523,7 @@ ResultCode CheckLeadersAction::checkLeaderDis(const DataSet& resp) {
                 if (!first) {
                     restult_ += ",";
                 }
-                restult_ += ipStr;
+                restult_ += ipStr.str();
                 restult_ += ":";
                 restult_ += leaderNum.str();
                 first = false;

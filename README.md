@@ -18,8 +18,11 @@ Start all services, disturb (random kill a storage service, clean the data path,
 #### [random_kill_truncate_wal](conf/random_kill_truncate_wal.json)
 Start all services, disturb (random kill a storage service, truncate some bytes from last wal of specified space and part, restart) while write a circle, then check data integrity.
 
-#### [random_kill](conf/random_kill_plan.json)
-Start all services, disturb (random kill and restart a storage service) while write and read.
+#### [random_kill_with_int_vid](conf/random_kill_with_int_vid.json)
+Start all services, disturb (random kill and restart a storage service) while write and read using integer vid.
+
+#### [random_kill_with_string_vid](conf/random_kill_with_string_vid.json)
+Start all services, disturb (random kill and restart a storage service) while write and read using string vid.
 
 #### [kill_all](conf/kill_all_plan.json)
 Start all services, kill all storage services and restart while writing.

@@ -1,5 +1,5 @@
 {
-    "name": "Nebula random-kill plan",
+    "name": "Nebula random-kill-with-string-vid plan",
     "concurrency": 10,
     "rolling_table": true,
     "instances": [
@@ -76,14 +76,14 @@
         },
         {
             "type": "CreateSpaceAction",
-            "space_name": "random_kill",
+            "space_name": "random_kill_with_string_vid",
             "replica": 3,
             "parts": 100,
             "depends": [6]
         },
         {
             "type": "UseSpaceAction",
-            "space_name": "random_kill",
+            "space_name": "random_kill_with_string_vid",
             "depends": [7]
         },
         {
@@ -107,7 +107,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 100,
-            "space": "random_kill",
+            "space": "random_kill_with_string_vid",
             "depends": [11]
         },
         {
@@ -126,7 +126,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 100,
-            "space": "random_kill",
+            "space": "random_kill_with_string_vid",
             "depends": [14]
         },
         {
