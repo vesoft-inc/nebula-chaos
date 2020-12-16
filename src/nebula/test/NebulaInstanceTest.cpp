@@ -21,8 +21,8 @@ TEST(NebulaInstanceTest, DateTest) {
                             NebulaInstance::Type::STORAGE);
     CHECK(instance.init());
     CHECK_EQ(10086, instance.getPid().value());
-    CHECK_EQ(44500, instance.getPort().value());
-    CHECK_EQ(12000, instance.getHttpPort().value());
+    CHECK_EQ(9779, instance.getPort().value());
+    CHECK_EQ(19779, instance.getHttpPort().value());
     auto dataDirs = instance.dataDirs();
     CHECK(dataDirs.hasValue());
     auto dirs = std::move(dataDirs).value();

@@ -118,7 +118,8 @@ public:
                       uint64_t startId = 1,
                       bool     randomVal = false,
                       uint32_t tryNum = 32,
-                      uint32_t retryIntervalMs = 500)
+                      uint32_t retryIntervalMs = 500,
+                      bool stringVid = true)
         : client_(client)
         , tag_(tag)
         , col_(col)
@@ -128,7 +129,8 @@ public:
         , startId_(startId)
         , randomVal_(randomVal)
         , try_(tryNum)
-        , retryIntervalMs_(retryIntervalMs) {}
+        , retryIntervalMs_(retryIntervalMs)
+        , stringVid_(stringVid) {}
 
     virtual ~WriteCircleAction() = default;
 
@@ -140,6 +142,10 @@ public:
 
 private:
     ResultCode sendBatch(const std::vector<std::string>& batchCmds);
+
+    void buildVIdAndValue(uint64_t vid, std::string val, std::vector<std::string>& cmds);
+
+    void buildVIdAndValue(uint64_t vid,  uint64_t val, std::vector<std::string>& cmds);
 
     std::string genData();
 
@@ -156,6 +162,9 @@ private:
     bool         randomVal_;
     uint32_t     try_;
     uint32_t     retryIntervalMs_;
+
+    // Write string Vid, or int Vid
+    bool         stringVid_;
 };
 
 class WalkThroughAction : public core::Action {
@@ -165,20 +174,27 @@ public:
                       const std::string& col,
                       uint64_t totalRows,
                       uint32_t tryNum = 32,
-                      uint32_t retryIntervalMs = 1)
+                      uint32_t retryIntervalMs = 1,
+                      bool stringVid = true)
         : client_(client)
         , tag_(tag)
         , col_(col)
         , totalRows_(totalRows)
         , try_(tryNum)
-        , retryIntervalMs_(retryIntervalMs) {}
+        , retryIntervalMs_(retryIntervalMs)
+        , stringVid_(stringVid) {}
 
     ~WalkThroughAction() = default;
 
     ResultCode doRun() override;
 
     std::string toString() const override {
-        return folly::stringPrintf("Wark through the circle, from %ld, total %ld",
+        if (stringVid_) {
+            return folly::stringPrintf("Wark through the circle, from \"%lu\", total %ld",
+                                       start_,
+                                       totalRows_);
+        }
+        return folly::stringPrintf("Wark through the circle, from %lu, total %ld",
                                    start_,
                                    totalRows_);
     }
@@ -194,6 +210,9 @@ private:
     uint32_t     try_;
     uint32_t     retryIntervalMs_;
     uint64_t     start_ = 0;
+
+    // String Vid, or int Vid
+    bool         stringVid_;
 };
 
 class LookUpAction : public core::Action {
