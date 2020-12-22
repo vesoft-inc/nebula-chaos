@@ -114,10 +114,14 @@ public:
             auto spaceName = obj.at("space_name").asString();
             auto replica = obj.getDefault("replica", 3).asInt();
             auto parts = obj.getDefault("parts", 100).asInt();
+            auto vidType = obj.getDefault("vid_type", "fixed_string").asString();
+            auto vidLen = obj.getDefault("vid_len", 8).asInt();
             return std::make_unique<CreateSpaceAction>(ctx.gClient,
                                                        spaceName,
                                                        replica,
-                                                       parts);
+                                                       parts,
+                                                       vidType,
+                                                       vidLen);
         } else if (type == "UseSpaceAction") {
             auto spaceName = obj.at("space_name").asString();
             return std::make_unique<UseSpaceAction>(ctx.gClient,

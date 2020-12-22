@@ -281,26 +281,53 @@ public:
     CreateSpaceAction(GraphClient* client,
                       const std::string& spaceName = "test",
                       int32_t replica = 3,
-                      int32_t parts = 100)
+                      int32_t parts = 100,
+                      const std::string& vidType = "fixed_string",
+                      int32_t vidLen = 8)
         : MetaAction(client)
         , spaceName_(spaceName)
         , replica_(replica)
-        , parts_(parts) {}
+        , parts_(parts)
+        , vidType_(vidType)
+        , vidLen_(vidLen) {}
 
     ~CreateSpaceAction() = default;
 
     std::string command() const override {
-        return folly::stringPrintf(
-                       "CREATE SPACE IF NOT EXISTS %s (replica_factor=%d, partition_num=%d)",
+        if (vidType_ != "fixed_string" &&
+            vidType_ != "int" &&
+            vidType_ != "int64") {
+            LOG(ERROR) << "Vid type illegal, only support FIXED_STRING or INT64 vid type";
+            return "";
+        }
+        if (vidType_ == "fixed_string") {
+            return folly::stringPrintf(
+                       "CREATE SPACE IF NOT EXISTS %s (replica_factor=%d, partition_num=%d,"
+                       " vid_type = %s(%d))",
                        spaceName_.c_str(),
                        replica_,
-                       parts_);
+                       parts_,
+                       vidType_.c_str(),
+                       vidLen_);
+        } else {
+            return folly::stringPrintf(
+                       "CREATE SPACE IF NOT EXISTS %s (replica_factor=%d, partition_num=%d,"
+                       " vid_type = %s)",
+                       spaceName_.c_str(),
+                       replica_,
+                       parts_,
+                       vidType_.c_str());
+        }
     }
 
 protected:
     std::string spaceName_;
     int32_t replica_;
     int32_t parts_;
+    std::string vidType_;
+
+    // vidLen_ is valid only when vidType_ is fixed_string
+    int32_t vidLen_;
 };
 
 class UseSpaceAction : public MetaAction {
