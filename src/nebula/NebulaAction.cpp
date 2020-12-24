@@ -79,7 +79,8 @@ ResultCode StopAction::doRun() {
     LOG(INFO) << stopCommand << " on " << inst_->toString() << " as " << inst_->owner();
 
     int32_t tryTimes = 0;
-    while (++tryTimes < 10) {
+    int32_t canTryTimes = 10;
+    while (++tryTimes < canTryTimes) {
         auto ret = utils::SshHelper::run(
                     stopCommand,
                     inst_->getHost(),
@@ -95,12 +96,19 @@ ResultCode StopAction::doRun() {
         if (!pid.hasValue()) {
             return ResultCode::ERR_FAILED;
         }
+
+        // Wait a short time, then check the progress
+        sleep(2);
+
         // Check the stop action succeeded or not
         chaos::core::CheckProcAction action(inst_->getHost(), pid.value(), inst_->owner());
         auto res = action.doRun();
         if (res == ResultCode::OK) {
-            sleep(tryTimes);
-            LOG(INFO) << "Wait some time, and try again, try times " << tryTimes;
+            LOG(INFO) << "Stop instance failed";
+            if (tryTimes + 1 < canTryTimes) {
+                sleep(tryTimes);
+                LOG(INFO) << "Wait some time, and try again, try times " << tryTimes;
+            }
         } else if (res == ResultCode::ERR_NOT_FOUND) {
             inst_->setState(NebulaInstance::State::STOPPED);
             return ResultCode::OK;
@@ -460,6 +468,7 @@ ResultCode CheckLeadersAction::checkResp(const DataSet& resp) const {
     if (leaderStr.empty()) {
         return ResultCode::ERR_FAILED;
     }
+
     try {
         std::vector<folly::StringPiece> spaceLeaders;
         folly::split(",", leaderStr, spaceLeaders);
@@ -510,6 +519,9 @@ ResultCode CheckLeadersAction::checkLeaderDis(const DataSet& resp) {
         if (leaderStr.empty()) {
             return ResultCode::ERR_FAILED;
         }
+        if (leaderStr == "No valid partition") {
+            continue;
+        }
 
         std::vector<folly::StringPiece> spaceLeaders;
         folly::split(",", leaderStr, spaceLeaders);
@@ -543,29 +555,38 @@ ResultCode CheckLeadersAction::doRun() {
     while (++retry < retryTimes_) {
         auto res = client_->execute(cmd, resp);
         if (res == ErrorCode::SUCCEEDED) {
-            LOG(INFO) << "Execute " << cmd << " successfully!";
+            LOG(INFO) << "Execute " << cmd << " finished!";
             auto ret = checkResp(resp);
             if (ret == ResultCode::ERR_FAILED_NO_RETRY) {
+                LOG(INFO) << "Check execute " << cmd << " result failed in check resp!";
                 return ret;
             }
             if (ret == ResultCode::OK) {
                 if (resultVarName_.empty()) {
+                    LOG(INFO) << "Check execute " << cmd << " result successfully in check resp!";
                     return ResultCode::OK;
                 } else {
                     ret = checkLeaderDis(resp);
                     if (ret == ResultCode::ERR_FAILED_NO_RETRY) {
+                        LOG(INFO) << "Check Execute " << cmd
+                                  << " result failed in check leader distribution!";
                         return ret;
                     }
                     if (ret == ResultCode::OK) {
+                        LOG(INFO) << "Check execute " << cmd
+                                  << " result successfully in check leader distribution!";
                         ctx_->exprCtx.setVar(resultVarName_, std::move(restult_));
                         return ret;
                     }
                 }
             }
         }
-        LOG(ERROR) << "Execute " << cmd << " failed, retry " << retry
-                   << " after " << retry << " seconds...";
-        sleep(retry);
+
+        if (retry + 1 < retryTimes_) {
+            sleep(retry);
+            LOG(ERROR) << "Execute " << cmd << " failed, try again, try times " << retry
+                       << " after " << retry << " seconds...";
+        }
     }
     return ResultCode::ERR_FAILED;
 }
@@ -1301,7 +1322,7 @@ ResultCode RandomTruncateRestartAction::disturb() {
 
 ResultCode StoragePerfAction::doRun() {
     if (access(perfPath_.c_str(), F_OK) != 0) {
-        LOG(ERROR) << "File not exists " << perfPath_.c_str();
+        LOG(ERROR) << "File not exists " << perfPath_;
         return ResultCode::ERR_FAILED;
     }
     std::string randomMsg;
@@ -1327,14 +1348,16 @@ ResultCode StoragePerfAction::doRun() {
                                           tagName_.c_str(),
                                           edgeName_.c_str(),
                                           randomMsg.c_str());
-
+    LOG(INFO) << "storage perf command : " << commandStr;
     std::system(commandStr.c_str());
     sleep(exeTime_);
 
+    // Note, keep totalReqs_ large enough, after sleep exeTime_,
+    // storage perf process still exists
     // check storage perf is running
     FILE* fp = popen("ps -ux|grep storage_perf|grep -v grep|awk '{print $2}'", "r");
     if (!fp) {
-        LOG(ERROR) << "Failed to exe ps -ux|grep storage_perf|grep -v grep|awk '{print $2}'";
+        LOG(ERROR) << "Failed to exec \"ps -ux|grep storage_perf|grep -v grep|awk '{print $2}'\"";
         return ResultCode::ERR_FAILED;
     }
     char buffer[256];
