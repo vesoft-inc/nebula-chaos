@@ -49,7 +49,7 @@ private:
     std::string exprStr_;
 };
 
-}   // namespace core
-}   // namespace chaos
+}  // namespace core
+}  // namespace chaos
 
 #endif  // CORE_ASSIGNACTION_H_
