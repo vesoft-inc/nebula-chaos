@@ -1,6 +1,7 @@
 {
     "name": "Nebula random-kill-truncate-wal plan",
     "concurrency": 10,
+    "email": "",
     "rolling_table": true,
     "instances": [
         {
@@ -107,7 +108,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 3,
-            "space": "random_kill_truncate",
+            "space_name": "random_kill_truncate",
             "depends": [11]
         },
         {
@@ -140,7 +141,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 3,
-            "space": "random_kill_truncate",
+            "space_name": "random_kill_truncate",
             "depends": [16]
         },
         {

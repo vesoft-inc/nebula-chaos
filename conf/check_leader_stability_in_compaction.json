@@ -1,6 +1,7 @@
 {
     "name": "Nebula check-leader-stability-in-compaction plan",
     "concurrency": 10,
+    "email": "",
     "rolling_table": false,
     "instances": [
         {
@@ -126,7 +127,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 100,
-            "space": "check_leader_stability_in_compaction",
+            "space_name": "check_leader_stability_in_compaction",
             "depends": [14]
         },
         {
@@ -187,7 +188,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 100,
-            "space": "check_leader_stability_in_compaction",
+            "space_name": "check_leader_stability_in_compaction",
             "result_var_name": "leaderDis1",
             "depends": [21]
         },
@@ -210,7 +211,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 100,
-            "space": "check_leader_stability_in_compaction",
+            "space_name": "check_leader_stability_in_compaction",
             "result_var_name": "leaderDis2",
             "depends": [25]
         },
@@ -221,7 +222,7 @@
         },
         {
             "type": "DropSpaceAction",
-            "space_name": "check_leader_stability_in_compaction",
+            "space_space": "check_leader_stability_in_compaction",
             "depends": [27]
         },
         {

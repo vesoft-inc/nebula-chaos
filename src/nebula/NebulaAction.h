@@ -274,7 +274,7 @@ public:
         return command();
     }
 
-    virtual ResultCode checkResp(const DataSet& resp) const;
+    virtual ResultCode checkResp(const DataSet& resp);
 
 protected:
     GraphClient* client_ = nullptr;
@@ -431,7 +431,7 @@ public:
     BalanceDataAction(GraphClient* client, int32_t retry)
         : MetaAction(client, retry) {}
 
-    ResultCode checkResp(const DataSet& resp) const override;
+    ResultCode checkResp(const DataSet& resp) override;
 
     std::string command() const override {
         return "balance data";
@@ -447,7 +447,7 @@ public:
         : MetaAction(client)
         , spaceName_(spaceName) {}
 
-    ResultCode checkResp(const DataSet& resp) const override;
+    ResultCode checkResp(const DataSet& resp) override;
 
     std::string command() const override {
         return folly::stringPrintf("desc space %s", spaceName_.c_str());
@@ -483,7 +483,7 @@ public:
         return "show hosts";
     }
 
-    ResultCode checkResp(const DataSet& resp) const override;
+    ResultCode checkResp(const DataSet& resp) override;
 
     ResultCode checkLeaderDis(const DataSet& resp);
 
@@ -1037,27 +1037,66 @@ private:
 class RebuildIndexAction : public MetaAction {
 public:
     RebuildIndexAction(GraphClient* client,
+                       core::ActionContext* ctx,
                        const std::string& indexName,
-                       bool isEdge = false)
+                       bool isEdge,
+                       const std::string& jobIdVarName)
         : MetaAction(client)
-        , index_(indexName)
-        , isEdge_(isEdge) {}
+        , ctx_(ctx)
+        , indexName_(indexName)
+        , isEdge_(isEdge)
+        , jobIdVarName_(jobIdVarName) {}
 
     ~RebuildIndexAction() = default;
 
+    ResultCode doRun() override;
+
     std::string command() const override {
-        // todo: check status with "show tag index status"
-        return folly::stringPrintf("REBUILD %s INDEX %s OFFLINE",
+        return folly::stringPrintf("REBUILD %s INDEX %s",
                                    (isEdge_ ? "EDGE" : "TAG"),
-                                   index_.c_str());
+                                   indexName_.c_str());
     }
 
+    ResultCode checkResp(const DataSet& resp) override;
+
 private:
-    std::string index_;
-    bool isEdge_;
+    core::ActionContext*    ctx_{nullptr};
+    std::string             indexName_;
+    bool                    isEdge_;
+
+    // If jobIdVarName_ is empty, not store rebuid index job id.
+    std::string             jobIdVarName_;
+    int64_t                 jobId_;
 };
 
-}   // namespace nebula_chaos
-}   // namespace chaos
+class CheckJobStatusAction : public MetaAction {
+public:
+    CheckJobStatusAction(GraphClient* client,
+                         core::ActionContext* ctx,
+                         const std::string& jobIdVarName)
+        : MetaAction(client)
+        , ctx_(ctx)
+        , jobIdVarName_(jobIdVarName) {}
+
+    ~CheckJobStatusAction() = default;
+
+    ResultCode doRun() override;
+
+    std::string command() const override {
+        return folly::stringPrintf("SHOW JOB %ld", jobId_);
+    }
+
+    ResultCode checkResp(const DataSet& resp) override;
+
+private:
+    core::ActionContext*    ctx_{nullptr};
+
+    // jobIdVarName_ stores job id
+    std::string             jobIdVarName_;
+    int64_t                 jobId_;
+};
+
+}  // namespace nebula_chaos
+}  // namespace chaos
 
 #endif  // NEBULA_CRASHACTION_H_

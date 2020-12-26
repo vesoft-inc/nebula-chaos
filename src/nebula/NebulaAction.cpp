@@ -161,7 +161,7 @@ ResultCode CleanDataAction::doRun() {
     return ResultCode::OK;
 }
 
-ResultCode MetaAction::checkResp(const DataSet&) const {
+ResultCode MetaAction::checkResp(const DataSet&) {
     return ResultCode::OK;
 }
 
@@ -170,6 +170,7 @@ ResultCode MetaAction::doRun() {
     auto cmd = command();
     if (cmd.empty()) {
         LOG(ERROR) << "Command is illegal";
+        return ResultCode::ERR_FAILED;
     } else {
         LOG(INFO) << "Send " << cmd << " to graphd";
     }
@@ -411,6 +412,7 @@ ResultCode LookUpAction::doRun() {
                                        tag_.c_str(),
                                        col_.c_str(),
                                        id.c_str());
+
         FB_LOG_EVERY_MS(INFO, 3000) << cmd;
         auto res = sendCommand(cmd);
         if (res) {
@@ -425,10 +427,17 @@ ResultCode LookUpAction::doRun() {
             break;
         }
     }
+
+    if (id != std::to_string(start_)) {
+        LOG(ERROR) << "Wrong value, id = \"" << id.c_str()
+                   << "\", start = \"" << start_ << "\"";
+        return ResultCode::ERR_FAILED;
+    }
+
     return count == totalRows_ ? ResultCode::OK : ResultCode::ERR_FAILED;
 }
 
-ResultCode BalanceDataAction::checkResp(const DataSet&) const {
+ResultCode BalanceDataAction::checkResp(const DataSet&) {
     // TODO(pandasheeps)
     /*
     auto* msg = resp.get_error_msg();
@@ -440,7 +449,7 @@ ResultCode BalanceDataAction::checkResp(const DataSet&) const {
     return ResultCode::OK;
 }
 
-ResultCode DescSpaceAction::checkResp(const DataSet& resp) const {
+ResultCode DescSpaceAction::checkResp(const DataSet& resp) {
     if (resp.rows.empty()) {
         LOG(ERROR) << "Result should not be empty!";
         return ResultCode::ERR_FAILED;
@@ -462,7 +471,7 @@ ResultCode DescSpaceAction::checkResp(const DataSet& resp) const {
     return ResultCode::OK;
 }
 
-ResultCode CheckLeadersAction::checkResp(const DataSet& resp) const {
+ResultCode CheckLeadersAction::checkResp(const DataSet& resp) {
     if (resp.rows.empty()) {
         LOG(ERROR) << "Result should not be empty!";
         return ResultCode::ERR_FAILED;
@@ -1410,5 +1419,136 @@ ResultCode StoragePerfAction::doRun() {
     return ResultCode::OK;
 }
 
-}   // namespace nebula_chaos
-}   // namespace chaos
+ResultCode RebuildIndexAction::checkResp(const DataSet& resp) {
+    if (resp.rows.empty()) {
+        LOG(ERROR) << "Result should not be empty!";
+        return ResultCode::ERR_FAILED;
+    }
+    if (resp.rows.size() != 1) {
+        LOG(ERROR) << "Row number is wrong!";
+        return ResultCode::ERR_FAILED;
+    }
+    auto& row = resp.rows[0];
+    if (row.size() != 1) {
+        LOG(ERROR) << "Value number is wrong!";
+        return ResultCode::ERR_FAILED;
+    }
+
+    jobId_ = row[0].getInt();
+    if (jobId_ <= 0) {
+        LOG(ERROR) << "Rebuild index job id illegal!";
+        return ResultCode::ERR_FAILED;
+    }
+    return ResultCode::OK;
+}
+
+ResultCode RebuildIndexAction::doRun() {
+    CHECK_NOTNULL(client_);
+    auto cmd = command();
+    LOG(INFO) << "Send " << cmd << " to graphd";
+
+    DataSet resp;
+    int32_t retry = 0;
+    while (++retry < retryTimes_) {
+        auto res = client_->execute(cmd, resp);
+        if (res == ErrorCode::SUCCEEDED) {
+            LOG(INFO) << "Execute " << cmd << " finished!";
+            auto ret = checkResp(resp);
+            if (ret == ResultCode::ERR_FAILED_NO_RETRY) {
+                LOG(INFO) << "Check execute " << cmd << " result failed in check resp!";
+                return ret;
+            }
+
+            if (ret == ResultCode::OK) {
+                if (!jobIdVarName_.empty()) {
+                    ctx_->exprCtx.setVar(jobIdVarName_, std::move(jobId_));
+                }
+                LOG(INFO) << "Execute " << cmd << " successfully!";
+                return ret;
+            }
+        }
+
+        if (retry + 1 < retryTimes_) {
+            LOG(ERROR) << "Execute " << cmd << " failed, retry " << retry
+                       << " after " << retry << " seconds...";
+            sleep(retry);
+        } else {
+            LOG(ERROR) << "Execute " << cmd << " failed!";
+        }
+    }
+
+    return ResultCode::ERR_FAILED;
+}
+
+ResultCode CheckJobStatusAction::checkResp(const DataSet& resp) {
+    if (resp.rows.empty()) {
+        LOG(ERROR) << "Result should not be empty!";
+        return ResultCode::ERR_FAILED;
+    }
+
+    auto& row = resp.rows[0];
+    if (row.size() != 5) {
+        LOG(ERROR) << "Value number is wrong!";
+        return ResultCode::ERR_FAILED;
+    }
+    auto jobId = row[0].getInt();
+    if (jobId != jobId_) {
+        LOG(ERROR) << "ShOW JOB " << jobId_  << " result error!";
+        return ResultCode::ERR_FAILED;
+    }
+
+    folly::StringPiece status(row[2].getStr());
+    status = utils::Utils::trim(status, [](const char c) { return '\"' == c; });
+    if (status.str() != "FINISHED") {
+        LOG(INFO) << "Job Id " << jobId_ << " not finished!";
+        return ResultCode::ERR_FAILED;
+    }
+    return ResultCode::OK;
+}
+
+ResultCode CheckJobStatusAction::doRun() {
+    CHECK_NOTNULL(client_);
+
+    // Get job id from job id variable
+    auto varValue = ctx_->exprCtx.getVar(jobIdVarName_);
+    if (!varValue) {
+        LOG(ERROR) << "Get job id failed from " << jobIdVarName_;
+        return ResultCode::ERR_FAILED;
+    }
+    jobId_ = ExprUtils::asInt(varValue.value());
+
+    auto cmd = command();
+    LOG(INFO) << "Send " << cmd << " to graphd";
+
+    DataSet resp;
+    int32_t retry = 0;
+    while (++retry < retryTimes_) {
+        auto res = client_->execute(cmd, resp);
+        if (res == ErrorCode::SUCCEEDED) {
+            LOG(INFO) << "Execute " << cmd << " finished!";
+            auto ret = checkResp(resp);
+            if (ret == ResultCode::ERR_FAILED_NO_RETRY) {
+                LOG(INFO) << "Check execute " << cmd << " result failed in check resp!";
+                return ret;
+            }
+
+            if (ret == ResultCode::OK) {
+                LOG(INFO) << "Execute " << cmd << " successfully!";
+                return ret;
+            }
+        }
+
+        if (retry + 1 < retryTimes_) {
+            LOG(ERROR) << "Execute " << cmd << " failed, retry " << retry
+                       << " after " << retry << " seconds...";
+            sleep(retry);
+        } else {
+            LOG(ERROR) << "Execute " << cmd << " failed!";
+        }
+    }
+
+    return ResultCode::ERR_FAILED;
+}
+
+}  // namespace nebula_chaos
+}  // namespace chaos

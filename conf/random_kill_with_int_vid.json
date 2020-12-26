@@ -1,6 +1,7 @@
 {
     "name": "Nebula random-kill-with-int-vid plan",
     "concurrency": 10,
+    "email": "",
     "rolling_table": true,
     "instances": [
         {
@@ -108,7 +109,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 100,
-            "space": "random_kill_with_int_vid",
+            "space_name": "random_kill_with_int_vid",
             "depends": [11]
         },
         {
@@ -127,7 +128,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 100,
-            "space": "random_kill_with_int_vid",
+            "space_name": "random_kill_with_int_vid",
             "depends": [14]
         },
         {
@@ -150,6 +151,11 @@
             "type": "EmptyAction",
             "name": "JoinNode",
             "depends": [17, 15]
+        },
+        {
+            "type": "DropSpaceAction",
+            "space_name": "random_kill_with_int_vid",
+            "depends": [18]
         },
         {
             "type": "StopAction",
