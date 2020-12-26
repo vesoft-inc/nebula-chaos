@@ -186,9 +186,14 @@ ResultCode MetaAction::doRun() {
                 return ret;
             }
         }
-        LOG(ERROR) << "Execute " << cmd << " failed, retry " << retry
-                   << " after " << retry << " seconds...";
-        sleep(retry);
+
+        if (retry + 1 < retryTimes_) {
+            LOG(ERROR) << "Execute " << cmd << " failed, retry " << retry
+                       << " after " << retry << " seconds...";
+            sleep(retry);
+        } else {
+            LOG(ERROR) << "Execute " << cmd << " failed!";
+        }
     }
     return ResultCode::ERR_FAILED;
 }
@@ -208,9 +213,12 @@ ResultCode WriteCircleAction::sendBatch(const std::vector<std::string>& batchCmd
         if (res == nebula::ErrorCode::SUCCEEDED) {
             return ResultCode::OK;
         }
-        usleep(retryInterval * 1000 * tryTimes);
+
         LOG(WARNING) << "Failed to send request, tryTimes " << tryTimes
                      << ", error code " << static_cast<int32_t>(res);
+        if (tryTimes + 1 < try_) {
+            usleep(retryInterval * 1000 * tryTimes);
+        }
     }
     return ResultCode::ERR_FAILED;
 }
@@ -302,9 +310,12 @@ WalkThroughAction::sendCommand(const std::string& cmd) {
             VLOG(1) << resp.rows.size() << ", " << resp.rows[0].size();
             return resp.rows[0][1].getStr();
         }
-        usleep(retryInterval * 1000 * tryTimes);
+
         LOG(WARNING) << "Failed to send request, tryTimes " << tryTimes
                      << ", error code " << static_cast<int32_t>(res);
+        if (tryTimes + 1 < try_) {
+            usleep(retryInterval * 1000 * tryTimes);
+        }
     }
     return folly::makeUnexpected(ResultCode::ERR_FAILED);
 }
@@ -348,6 +359,7 @@ ResultCode WalkThroughAction::doRun() {
             break;
         }
     }
+
     if (id != std::to_string(start_)) {
         if (stringVid_) {
             LOG(ERROR) << "Wrong value, id = \"" << id.c_str()
@@ -360,7 +372,7 @@ ResultCode WalkThroughAction::doRun() {
     return count == totalRows_ ? ResultCode::OK : ResultCode::ERR_FAILED;
 }
 
-folly::Expected<uint64_t, ResultCode>
+folly::Expected<std::string, ResultCode>
 LookUpAction::sendCommand(const std::string& cmd) {
     VLOG(1) << cmd;
     DataSet resp;
@@ -374,11 +386,14 @@ LookUpAction::sendCommand(const std::string& cmd) {
                 break;
             }
             VLOG(1) << resp.rows.size() << ", " << resp.rows[0].size();
-            return resp.rows[0][0].getInt();
+            return resp.rows[0][0].getStr();
         }
-        usleep(retryInterval * 1000 * tryTimes);
+
         LOG(WARNING) << "Failed to send request, tryTimes " << tryTimes
                      << ", error code " << static_cast<int32_t>(res);
+        if (tryTimes + 1 < try_) {
+            usleep(retryInterval * 1000 * tryTimes);
+        }
     }
     return folly::makeUnexpected(ResultCode::ERR_FAILED);
 }
@@ -386,13 +401,17 @@ LookUpAction::sendCommand(const std::string& cmd) {
 ResultCode LookUpAction::doRun() {
     CHECK_NOTNULL(client_);
     start_ = folly::Random::rand64(totalRows_);
-    uint64_t id = start_;
+    auto id = std::to_string(start_);
     uint64_t count = 0;
+
     while (++count <= totalRows_) {
-        auto cmd = folly::stringPrintf("LOOKUP ON %s WHERE %s.%s == \"%ld\"",
-                                       tag_.c_str(), tag_.c_str(),
-                                       col_.c_str(), id);
-        VLOG(1) << cmd;
+        // TODO(pandasheep) will add yield clause to return vid filed
+        auto cmd = folly::stringPrintf("LOOKUP ON %s WHERE %s.%s == \"%s\"",
+                                       tag_.c_str(),
+                                       tag_.c_str(),
+                                       col_.c_str(),
+                                       id.c_str());
+        FB_LOG_EVERY_MS(INFO, 3000) << cmd;
         auto res = sendCommand(cmd);
         if (res) {
             id = res.value();
@@ -400,7 +419,7 @@ ResultCode LookUpAction::doRun() {
             LOG(ERROR) << "Send command failed!";
             return ResultCode::ERR_FAILED;
         }
-        if (id == start_) {
+        if (id == std::to_string(start_)) {
             LOG(INFO) << "We are back to " << start_
                       << ", total count " << count;
             break;
@@ -586,6 +605,8 @@ ResultCode CheckLeadersAction::doRun() {
             sleep(retry);
             LOG(ERROR) << "Execute " << cmd << " failed, try again, try times " << retry
                        << " after " << retry << " seconds...";
+        } else {
+            LOG(ERROR) << "Execute " << cmd << " failed!";
         }
     }
     return ResultCode::ERR_FAILED;
@@ -644,9 +665,14 @@ ResultCode UpdateConfigsAction::doRun() {
                 return ret;
             }
         }
-        LOG(ERROR) << "Execute " << cmd << " failed, retry " << retry
-                   << " after " << retry << " seconds...";
-        sleep(retry);
+
+        if (retry + 1 < retryTimes_) {
+            LOG(ERROR) << "Execute " << cmd << " failed, retry " << retry
+                       << " after " << retry << " seconds...";
+            sleep(retry);
+        } else {
+            LOG(ERROR) << "Execute " << cmd << " failed!";
+        }
     }
     return ResultCode::ERR_FAILED;
 }
@@ -687,8 +713,13 @@ ResultCode RandomRestartAction::start(NebulaInstance* inst) {
         if (ret == ResultCode::OK) {
             return ret;
         }
-        LOG(ERROR) << "Start failed, retry " << retry;
-        sleep(retry);
+
+        if (retry + 1 != 32) {
+            LOG(ERROR) << "Start failed, retry " << retry;
+            sleep(retry);
+        } else {
+            LOG(ERROR) << "Start failed!";
+        }
     }
     return ResultCode::ERR_FAILED;
 }
@@ -984,8 +1015,13 @@ ResultCode FillDiskAction::reboot(NebulaInstance* inst) {
         if (ret == ResultCode::OK) {
             return ret;
         }
-        LOG(ERROR) << "Reboot failed, retry " << retry;
-        sleep(retry);
+
+        if (retry + 1 != 32) {
+            sleep(retry);
+            LOG(ERROR) << "Reboot failed, retry " << retry;
+        } else {
+            LOG(ERROR) << "Reboot failed!";
+        }
     }
     return ResultCode::ERR_FAILED;
 }

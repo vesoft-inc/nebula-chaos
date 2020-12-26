@@ -93,8 +93,13 @@ public:
             if (nebula::ErrorCode::SUCCEEDED == code) {
                 return ResultCode::OK;
             }
-            LOG(ERROR) << "connect failed, retry " << retry;
-            sleep(retry);
+
+            if (retry + 1 < 32) {
+                sleep(retry);
+                LOG(ERROR) << "connect failed, retry " << retry;
+            } else {
+                LOG(ERROR) << "connect failed!";
+            }
         }
         return ResultCode::ERR_FAILED;
     }
@@ -232,7 +237,7 @@ public:
 
     ~LookUpAction() = default;
 
-    folly::Expected<uint64_t, ResultCode> sendCommand(const std::string& cmd);
+    folly::Expected<std::string, ResultCode> sendCommand(const std::string& cmd);
 
     ResultCode doRun() override;
 
@@ -981,30 +986,52 @@ public:
                       const std::string& schemaName,
                       const std::string& indexName,
                       const std::string& field,
-                      bool isEdge = false)
+                      bool isEdge = false,
+                      bool isStringField = false,
+                      uint32_t indexLen = 255)
         : MetaAction(client)
         , schema_(schemaName)
         , index_(indexName)
         , field_(field)
-        , isEdge_(isEdge) {}
+        , isEdge_(isEdge)
+        , isStringField_(isStringField)
+        , indexLen_(indexLen) {}
 
     ~CreateIndexAction() = default;
 
     std::string command() const override {
+        std::string entry;
         if (isEdge_) {
-            return folly::stringPrintf("CREATE EDGE INDEX %s ON %s(%s)", index_.c_str(),
-                                       schema_.c_str(), field_.c_str());
+            entry = "EDGE";
         } else {
-            return folly::stringPrintf("CREATE TAG INDEX %s ON %s(%s)", index_.c_str(),
-                                       schema_.c_str(), field_.c_str());
+            entry = "TAG";
+        }
+
+        if (isStringField_) {
+            return folly::stringPrintf("CREATE %s INDEX %s ON %s(%s(%d))",
+                                       entry.c_str(),
+                                       index_.c_str(),
+                                       schema_.c_str(),
+                                       field_.c_str(),
+                                       indexLen_);
+        } else {
+            return folly::stringPrintf("CREATE %s INDEX %s ON %s(%s)",
+                                       entry.c_str(),
+                                       index_.c_str(),
+                                       schema_.c_str(),
+                                       field_.c_str());
         }
     }
 
 private:
-    std::string schema_;
-    std::string index_;
-    std::string field_;
-    bool isEdge_;
+    std::string     schema_;
+    std::string     index_;
+    std::string     field_;
+    bool            isEdge_;
+    bool            isStringField_;
+
+    // indexLen_ is meaningful only when the index field is a string field
+    uint32_t        indexLen_;
 };
 
 class RebuildIndexAction : public MetaAction {

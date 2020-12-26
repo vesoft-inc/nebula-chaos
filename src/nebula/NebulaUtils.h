@@ -150,23 +150,27 @@ public:
                                                         props,
                                                         edgeOrTag);
         } else if (type == "CreateIndexAction") {
-            auto tag = obj.at("tag").asString();
+            auto schemaName = obj.at("schema_name").asString();
             if (ctx.rolling) {
-                tag = Utils::getOperatingTable(tag);
+                schemaName = Utils::getOperatingTable(schemaName);
             }
 
-            auto index = obj.at("index").asString();
+            auto indexName = obj.at("index_name").asString();
             if (ctx.rolling) {
-                index = Utils::getOperatingTable(index);
+                indexName = Utils::getOperatingTable(indexName);
             }
 
             auto field = obj.at("field").asString();
             auto edgeOrTag = obj.at("edge_or_tag").asBool();
+            auto stringField = obj.getDefault("string_field", false).asBool();
+            auto indexLen = obj.getDefault("index_len", 255).asInt();
             return std::make_unique<CreateIndexAction>(ctx.gClient,
-                                                       tag,
-                                                       index,
+                                                       schemaName,
+                                                       indexName,
                                                        field,
-                                                       edgeOrTag);
+                                                       edgeOrTag,
+                                                       stringField,
+                                                       indexLen);
         } else if (type == "RebuildIndexAction") {
             auto index = obj.at("index").asString();
             if (ctx.rolling) {

@@ -52,7 +52,7 @@ ErrorCode GraphClient::execute(folly::StringPiece stmt,
     }
 
     int32_t retry = 0;
-    while (retry++ < kRetryTimes) {
+    while (++retry <= kRetryTimes) {
         auto exeRet = session_->execute(stmt.str());
         if (exeRet.errorCode() != nebula::ErrorCode::SUCCEEDED) {
             LOG(ERROR) << stmt.str() << " execute failed, error code : "
@@ -60,6 +60,7 @@ ErrorCode GraphClient::execute(folly::StringPiece stmt,
             if (retry ==  kRetryTimes) {
                 return exeRet.errorCode();
             }
+
             sleep(retry);
             continue;
         }

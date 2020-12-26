@@ -98,10 +98,12 @@
         },
         {
             "type": "CreateIndexAction",
-            "tag": "circle",
-            "index": "circle_index",
+            "schema_name": "circle",
+            "index_name": "circle_index",
             "field": "nextId",
             "edge_or_tag": false,
+            "string_field": true,
+            "index_len": 20,
             "depends": [9]
         },
         {
