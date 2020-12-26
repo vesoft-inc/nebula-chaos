@@ -1,6 +1,7 @@
 {
     "name": "Nebula random-kill-clean plan",
     "concurrency": 10,
+    "email": "",
     "rolling_table": true,
     "instances": [
         {
@@ -107,7 +108,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
-            "space": "random_kill_clean",
+            "space_name": "random_kill_clean",
             "depends": [11]
         },
         {
@@ -139,7 +140,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
-            "space": "random_kill_clean",
+            "space_name": "random_kill_clean",
             "depends": [16]
         },
         {
@@ -150,34 +151,39 @@
             "depends": [17]
         },
         {
+            "type": "DropSpaceAction",
+            "space_name": "random_kill_clean",
+            "depends": [18]
+        },
+        {
             "type": "EmptyAction",
             "name": "JoinNode",
-            "depends": [18]
+            "depends": [19]
         },
         {
             "type": "StopAction",
             "inst_index": 0,
-            "depends": [19]
+            "depends": [20]
         },
         {
             "type": "StopAction",
             "inst_index": 1,
-            "depends": [19]
+            "depends": [20]
         },
         {
             "type": "StopAction",
             "inst_index": 2,
-            "depends": [19]
+            "depends": [20]
         },
         {
             "type": "StopAction",
             "inst_index": 3,
-            "depends": [19]
+            "depends": [20]
         },
         {
             "type": "StopAction",
             "inst_index": 4,
-            "depends": [19]
+            "depends": [20]
         }
     ]
 }

@@ -1,6 +1,7 @@
 {
     "name": "Nebula random-slow-disk plan",
     "concurrency": 10,
+    "email": "",
     "rolling_table": true,
     "instances": [
         {
@@ -107,7 +108,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
-            "space": "slow_disk",
+            "space_name": "slow_disk",
             "depends": [11]
         },
         {
@@ -140,7 +141,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
-            "space": "slow_disk",
+            "space_name": "slow_disk",
             "depends": [16]
         },
         {

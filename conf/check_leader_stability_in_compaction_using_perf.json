@@ -159,7 +159,7 @@
                 {
                     "type": "CheckLeadersAction",
                     "expected_num": 100,
-                    "space": "check_leader_stability_in_compaction_using_perf",
+                    "space_name": "check_leader_stability_in_compaction_using_perf",
                     "depends": [15]
                 },
                 {
@@ -186,7 +186,7 @@
                 {
                     "type": "CheckLeadersAction",
                     "expected_num": 100,
-                    "space": "check_leader_stability_in_compaction_using_perf",
+                    "space_name": "check_leader_stability_in_compaction_using_perf",
                     "result_var_name": "leaderDis1",
                     "depends": [18]
                 },
@@ -209,7 +209,7 @@
                 {
                     "type": "CheckLeadersAction",
                     "expected_num": 100,
-                    "space": "check_leader_stability_in_compaction_using_perf",
+                    "space_name": "check_leader_stability_in_compaction_using_perf",
                     "result_var_name": "leaderDis2",
                     "depends": [22]
                 },

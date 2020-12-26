@@ -1,6 +1,7 @@
 {
     "name": "Nebula clean-wals plan",
     "concurrency": 10,
+    "email": "",
     "rolling_table": true,
     "instances": [
         {
@@ -105,7 +106,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 100,
-            "space": "random_kill",
+            "space_name": "random_kill",
             "depends": [11]
         },
         {
@@ -115,7 +116,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 100,
-            "space": "random_kill",
+            "space_name": "random_kill",
             "depends": [13]
         },
         {

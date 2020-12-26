@@ -1,6 +1,7 @@
 {
     "name": "Nebula random-disk-full plan",
     "concurrency": 10,
+    "email": "",
     "rolling_table": true,
     "instances": [
         {
@@ -107,7 +108,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
-            "space": "full_disk",
+            "space_name": "full_disk",
             "depends": [11]
         },
         {
@@ -138,7 +139,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
-            "space": "full_disk",
+            "space_name": "full_disk",
             "depends": [16]
         },
         {

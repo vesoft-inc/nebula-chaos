@@ -1,6 +1,7 @@
 {
     "name": "Nebula scale-up-and-down plan",
     "concurrency": 10,
+    "email": "",
     "rolling_table": true,
     "instances": [
         {
@@ -141,7 +142,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
-            "space": "scale_up_and_down",
+            "space_name": "scale_up_and_down",
             "depends": [14]
         },
         {
@@ -177,7 +178,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
-            "space": "scale_up_and_down",
+            "space_name": "scale_up_and_down",
             "depends": [21]
         },
         {
@@ -220,7 +221,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
-            "space": "scale_up_and_down",
+            "space_name": "scale_up_and_down",
             "depends": [29]
         },
         {
@@ -263,7 +264,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
-            "space": "scale_up_and_down",
+            "space_name": "scale_up_and_down",
             "depends": [37]
         },
         {
@@ -306,7 +307,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
-            "space": "scale_up_and_down",
+            "space_name": "scale_up_and_down",
             "depends": [45]
         },
         {

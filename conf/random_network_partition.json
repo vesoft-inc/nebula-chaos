@@ -1,6 +1,7 @@
 {
     "name": "Nebula random-network-partition plan",
     "concurrency": 10,
+    "email": "",
     "rolling_table": true,
     "instances": [
         {
@@ -107,7 +108,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
-            "space": "random_network_partition",
+            "space_name": "random_network_partition",
             "depends": [11]
         },
         {
@@ -139,7 +140,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
-            "space": "random_network_partition",
+            "space_name": "random_network_partition",
             "depends": [16]
         },
         {

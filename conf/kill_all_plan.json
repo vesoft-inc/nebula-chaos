@@ -1,6 +1,7 @@
 {
     "name": "Nebula kill the whole cluster plan",
     "concurrency": 10,
+    "email": "",
     "rolling_table": true,
     "instances": [
         {
@@ -107,7 +108,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 100,
-            "space": "kill_all",
+            "space_name": "kill_all",
             "depends": [11]
         },
         {

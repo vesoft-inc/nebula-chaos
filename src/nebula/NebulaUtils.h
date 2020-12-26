@@ -172,11 +172,26 @@ public:
                                                        stringField,
                                                        indexLen);
         } else if (type == "RebuildIndexAction") {
-            auto index = obj.at("index").asString();
+            auto index = obj.at("index_name").asString();
             if (ctx.rolling) {
                 index = Utils::getOperatingTable(index);
             }
-            return std::make_unique<RebuildIndexAction>(ctx.gClient, index);
+            auto isEdge = obj.getDefault("edge_or_tag", false).asBool();
+
+            // The value of result_job_id is a variable name,
+            // the variable name is used to store the rebuild index job id.
+            // If the value of result_job_id is empty, the jobId variable is not stored.
+            auto jobIdVarName = obj.getDefault("result_job_id", "").asString();
+            return std::make_unique<RebuildIndexAction>(ctx.gClient,
+                                                        &ctx.planCtx->actionCtx,
+                                                        index,
+                                                        isEdge,
+                                                        jobIdVarName);
+        } else if (type == "CheckJobStatusAction") {
+            auto jobIdVarName = obj.at("job_id").asString();
+            return std::make_unique<CheckJobStatusAction>(ctx.gClient,
+                                                          &ctx.planCtx->actionCtx,
+                                                          jobIdVarName);
         } else if (type == "LookUpAction") {
             auto tag = obj.at("tag").asString();
             if (ctx.rolling) {
@@ -192,7 +207,7 @@ public:
             return std::make_unique<BalanceDataAction>(ctx.gClient, retry);
         } else if (type == "CheckLeadersAction") {
             auto expectedNum = obj.at("expected_num").asInt();
-            auto spaceName = obj.at("space").asString();
+            auto spaceName = obj.at("space_name").asString();
             // If result_var_name is specified, it is used to store the result
             // of the leader distribution. If not specified, do not check leader distribution.
             auto resultVarName = obj.getDefault("result_var_name", "").asString();
