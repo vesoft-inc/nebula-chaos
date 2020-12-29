@@ -412,6 +412,47 @@ protected:
     bool edgeOrTag_;
 };
 
+class AddGroupAction : public MetaAction {
+public:
+    AddGroupAction(GraphClient* client,
+                   const std::string& groupName,
+                   const std::string& zoneList)
+        : MetaAction(client)
+        , groupName_(groupName)
+        , zoneList_(zoneList) {}
+
+    std::string command() const override {
+        return folly::stringPrintf("ADD GROUP %s %s",
+                                   groupName_.c_str(),
+                                   zoneList_.c_str());
+    }
+
+private:
+    std::string groupName_;
+    std::string zoneList_;
+};
+
+
+class AddZoneAction : public MetaAction {
+public:
+    AddZoneAction(GraphClient* client,
+                  const std::string& zoneName,
+                  const std::string& hostList)
+        : MetaAction(client)
+        , zoneName_(zoneName)
+        , hostList_(hostList) {}
+
+    std::string command() const override {
+        return folly::stringPrintf("ADD ZONE %s %s",
+                                   zoneName_.c_str(),
+                                   hostList_.c_str());
+    }
+
+private:
+    std::string zoneName_;
+    std::string hostList_;
+};
+
 class BalanceLeaderAction : public MetaAction {
 public:
     /**
