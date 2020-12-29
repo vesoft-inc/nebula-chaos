@@ -187,7 +187,9 @@ public:
         , totalRows_(totalRows)
         , try_(tryNum)
         , retryIntervalMs_(retryIntervalMs)
-        , stringVid_(stringVid) {}
+        , stringVid_(stringVid) {
+            start_ = folly::Random::rand64(totalRows_);
+        }
 
     ~WalkThroughAction() = default;
 
@@ -233,7 +235,9 @@ public:
         , col_(col)
         , totalRows_(totalRows)
         , try_(tryNum)
-        , retryIntervalMs_(retryIntervalMs) {}
+        , retryIntervalMs_(retryIntervalMs) {
+            start_ = folly::Random::rand64(totalRows_);
+        }
 
     ~LookUpAction() = default;
 
