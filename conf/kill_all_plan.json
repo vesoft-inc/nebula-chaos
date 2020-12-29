@@ -5,37 +5,37 @@
     "rolling_table": true,
     "instances": [
         {
-            "host":"",
-            "install_dir":"",
+            "host": "",
+            "install_dir": "",
             "conf_dir":"",
             "type": "graphd",
             "user": ""
         },
         {
-            "host":"",
-            "install_dir":"",
-            "conf_dir":"",
+            "host": "",
+            "install_dir": "",
+            "conf_dir": "",
             "type": "metad",
             "user": ""
         },
         {
-            "host":"",
-            "install_dir":"",
-            "conf_dir":"",
+            "host": "",
+            "install_dir": "",
+            "conf_dir": "",
             "type": "storaged",
             "user": ""
         },
         {
-            "host":"",
-            "install_dir":"",
-            "conf_dir":"",
+            "host": "",
+            "install_dir": "",
+            "conf_dir": "",
             "type": "storaged",
             "user": ""
         },
         {
-            "host":"",
-            "install_dir":"",
-            "conf_dir":"",
+            "host": "",
+            "install_dir": "",
+            "conf_dir": "",
             "type": "storaged",
             "user": ""
         }
@@ -44,7 +44,7 @@
         {
             "type": "StartAction",
             "inst_index": 0,
-            "depends": []
+            "depends": [2, 3, 4]
         },
         {
             "type": "StartAction",
@@ -54,22 +54,22 @@
         {
             "type": "StartAction",
             "inst_index": 2,
-            "depends": []
+            "depends": [1]
         },
         {
             "type": "StartAction",
             "inst_index": 3,
-            "depends": []
+            "depends": [1]
         },
         {
             "type": "StartAction",
             "inst_index": 4,
-            "depends": []
+            "depends": [1]
         },
         {
             "type": "WaitAction",
             "wait_time_ms": 20000,
-            "depends": [0, 1, 2, 3, 4]
+            "depends": [0]
         },
         {
             "type": "ClientConnectAction",

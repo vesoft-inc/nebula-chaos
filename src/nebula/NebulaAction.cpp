@@ -323,7 +323,6 @@ WalkThroughAction::sendCommand(const std::string& cmd) {
 
 ResultCode WalkThroughAction::doRun() {
     CHECK_NOTNULL(client_);
-    start_ = folly::Random::rand64(totalRows_);
     auto id = std::to_string(start_);
     uint64_t count = 0;
     while (++count <= totalRows_) {
@@ -401,7 +400,6 @@ LookUpAction::sendCommand(const std::string& cmd) {
 
 ResultCode LookUpAction::doRun() {
     CHECK_NOTNULL(client_);
-    start_ = folly::Random::rand64(totalRows_);
     auto id = std::to_string(start_);
     uint64_t count = 0;
 
