@@ -41,7 +41,7 @@ bool NebulaInstance::parseConf(const std::string& confFile) {
                     },
                     owner_);
     CHECK_EQ(0, ret.exitStatus());
-    VLOG(1) << "The conf is " << this->conf_;
+    LOG(INFO) << "The conf is " << this->conf_;
     return true;
 }
 
@@ -112,7 +112,7 @@ folly::Optional<int32_t> NebulaInstance::getPid(bool skipCache) {
 
 folly::Optional<int32_t> NebulaInstance::getIntFromConf(const std::string& key) const {
     try {
-        CHECK(conf_.isObject());
+        // CHECK(conf_.isObject());
         auto it = conf_.find(folly::stringPrintf("--%s", key.c_str()));
         if (it == conf_.items().end()) {
             LOG(ERROR) << "Can't find the " << key << " in conf";
@@ -131,7 +131,7 @@ folly::Optional<int32_t> NebulaInstance::getIntFromConf(const std::string& key) 
 
 folly::Optional<std::string> NebulaInstance::getStringFromConf(const std::string& key) const {
     try {
-        CHECK(conf_.isObject());
+        // CHECK(conf_.isObject());
         auto it = conf_.find(folly::stringPrintf("--%s", key.c_str()));
         if (it == conf_.items().end()) {
             LOG(ERROR) << "Can't find the " << key << " in conf";
@@ -159,7 +159,7 @@ folly::Optional<int32_t> NebulaInstance::getHttpPort() const {
 folly::Optional<std::vector<std::string>>
 NebulaInstance::dataDirs() const {
     try {
-        CHECK(conf_.isObject());
+        // CHECK(conf_.isObject());
         auto it = conf_.find("--data_path");
         if (it == conf_.items().end()) {
             LOG(ERROR) << "Can't find data_path in conf";

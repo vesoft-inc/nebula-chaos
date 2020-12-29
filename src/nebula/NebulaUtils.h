@@ -116,12 +116,14 @@ public:
             auto parts = obj.getDefault("parts", 100).asInt();
             auto vidType = obj.getDefault("vid_type", "fixed_string").asString();
             auto vidLen = obj.getDefault("vid_len", 8).asInt();
+            auto groupName = obj.getDefault("group_name", "").asString();
             return std::make_unique<CreateSpaceAction>(ctx.gClient,
                                                        spaceName,
                                                        replica,
                                                        parts,
                                                        vidType,
-                                                       vidLen);
+                                                       vidLen,
+                                                       groupName);
         } else if (type == "UseSpaceAction") {
             auto spaceName = obj.at("space_name").asString();
             return std::make_unique<UseSpaceAction>(ctx.gClient,
@@ -149,6 +151,42 @@ public:
                                                         name,
                                                         props,
                                                         edgeOrTag);
+        } else if (type == "AddGroupAction") {
+            auto groupName = obj.at("group_name").asString();
+            auto zoneNames = obj.at("zone_names").asString();
+            return std::make_unique<AddGroupAction>(ctx.gClient,
+                                                    groupName,
+                                                    zoneNames);
+        } else if (type == "ExpandGroupAction") {
+            auto groupName = obj.at("group_name").asString();
+            auto zoneName = obj.at("zone_name").asString();
+            return std::make_unique<ExpandGroupAction>(ctx.gClient,
+                                                       groupName,
+                                                       zoneName);
+        } else if (type == "ShrinkGroupAction") {
+            auto groupName = obj.at("group_name").asString();
+            auto zoneName = obj.at("zone_name").asString();
+            return std::make_unique<ShrinkGroupAction>(ctx.gClient,
+                                                       groupName,
+                                                       zoneName);
+        } else if (type == "AddZoneAction") {
+            auto zoneName = obj.at("zone_name").asString();
+            auto hostList = obj.at("host_list").asString();
+            return std::make_unique<AddZoneAction>(ctx.gClient,
+                                                   zoneName,
+                                                   hostList);
+        } else if (type == "ExpandZoneAction") {
+            auto zoneName = obj.at("zone_name").asString();
+            auto host = obj.at("host").asString();
+            return std::make_unique<ExpandZoneAction>(ctx.gClient,
+                                                      zoneName,
+                                                      host);
+        } else if (type == "ShrinkZoneAction") {
+            auto zoneName = obj.at("zone_name").asString();
+            auto host = obj.at("host").asString();
+            return std::make_unique<ShrinkZoneAction>(ctx.gClient,
+                                                      zoneName,
+                                                      host);
         } else if (type == "CreateIndexAction") {
             auto schemaName = obj.at("schema_name").asString();
             if (ctx.rolling) {
