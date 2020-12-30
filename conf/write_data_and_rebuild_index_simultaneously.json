@@ -130,7 +130,12 @@
             "type": "WriteCircleAction",
             "tag": "circle",
             "col": "nextId",
-            "total_rows": 40000,
+            "total_rows": 100000,
+            "depends": [13]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 2000,
             "depends": [13]
         },
         {
@@ -138,59 +143,59 @@
             "index_name": "circle_rebuild_index",
             "edge_or_tag": false,
             "result_job_id": "rebuildJobId",
-            "depends": [13]
+            "depends": [15]
         },
         {
             "type": "WaitAction",
             "wait_time_ms": 30000,
-            "depends": [14, 15]
+            "depends": [14, 16]
         },
         {
             "type": "CheckJobStatusAction",
             "job_id": "rebuildJobId",
-            "depends": [16]
+            "depends": [17]
         },
         {
             "type": "LookUpAction",
             "tag": "circle",
             "col": "nextId",
-            "total_rows": 40000,
-            "depends": [17]
+            "total_rows": 100000,
+            "depends": [18]
         },
         {
             "type": "DropSpaceAction",
             "space_name": "write_data_and_rebuild_index_simultaneously",
-            "depends": [18]
+            "depends": [19]
         },
         {
             "type": "EmptyAction",
             "name": "JoinNode",
-            "depends": [19]
+            "depends": [20]
         },
         {
             "type": "StopAction",
             "inst_index": 0,
-            "depends": [20]
+            "depends": [21]
         },
         {
             "type": "StopAction",
             "inst_index": 1,
-            "depends": [20]
+            "depends": [21]
         },
         {
             "type": "StopAction",
             "inst_index": 2,
-            "depends": [20]
+            "depends": [21]
         },
         {
             "type": "StopAction",
             "inst_index": 3,
-            "depends": [20]
+            "depends": [21]
         },
         {
             "type": "StopAction",
             "inst_index": 4,
-            "depends": [20]
+            "depends": [21]
         }
     ]
 }
