@@ -19,10 +19,10 @@ Start all services, disturb (random kill a storage service, clean the data path,
 Start all services, disturb (random kill a storage service, truncate some bytes from last wal of specified space and part, restart) while write a circle, then check data integrity.
 
 #### [random_kill_with_int_vid](conf/random_kill_with_int_vid.json)
-Start all services, disturb (random kill and restart a storage service) while write and read using integer vid.
+Use integer vid, start all services, disturb (random kill and restart a storage service) while write and read using integer vid.
 
 #### [random_kill_with_string_vid](conf/random_kill_with_string_vid.json)
-Start all services, disturb (random kill and restart a storage service) while write and read using string vid.
+Use string vid, start all services, disturb (random kill and restart a storage service) while write and read using string vid.
 
 #### [kill_all](conf/kill_all_plan.json)
 Start all services, kill all storage services and restart while writing.
@@ -72,3 +72,7 @@ Start all services, write some data with index, check if index is compatible wit
 
 #### [rebuild_index](conf/rebuild_index.json)
 Start all services, write some data, rebuild index, check if index is compatible with data.
+
+#### [write_data_and_rebuild_index_simultaneously](conf/write_data_and_rebuild_index_simultaneously.json)
+Start all services, write some data, then write some data to overwrite the previous data and rebuild index at the same time, check if index is compatible with data.
+
