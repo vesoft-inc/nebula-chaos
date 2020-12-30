@@ -33,7 +33,8 @@ public:
     void disconnect();
 
     ErrorCode execute(folly::StringPiece stmt,
-                      nebula::DataSet& resp);
+                      nebula::DataSet& resp,
+                      std::string& errMSg);
 
     std::string serverAddress() const {
         return folly::stringPrintf("%s:%d", addr_.c_str(), port_);

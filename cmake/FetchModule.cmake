@@ -20,7 +20,7 @@ macro(nebula_fetch_module)
     endif()
 
     if(NOT EXISTS ${module_dir}/.git)
-        message(STATUS "Cloning from ${module_URL}")
+        message(STATUS "${module_NAME} cloning from ${module_URL}:${module_TAG}")
         execute_process(
             COMMAND
                 ${GIT_EXECUTABLE} clone
@@ -31,17 +31,17 @@ macro(nebula_fetch_module)
             ERROR_VARIABLE ERROR_MESSAGE
         )
         if(NOT ${fetch_status} EQUAL 0)
-            message(FATAL_ERROR "Cloning failed")
+            message(FATAL_ERROR "${module_NAME} cloning failed")
         endif()
     elseif(${module_UPDATE})
-        message(STATUS "Updating from ${module_URL}")
+        message(STATUS "${module_NAME} updating from ${module_URL}")
         execute_process(
             COMMAND ${GIT_EXECUTABLE} pull
             WORKING_DIRECTORY ${module_dir}
             RESULT_VARIABLE fetch_status
         )
         if(NOT ${fetch_status} EQUAL 0)
-            message(FATAL_ERROR "Updating failed")
+            message(FATAL_ERROR "${module_NAME} updating failed")
         endif()
     endif()
 endmacro()

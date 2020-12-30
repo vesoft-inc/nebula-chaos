@@ -41,8 +41,10 @@ void GraphClient::disconnect() {
     conPool_ = nullptr;
 }
 
+// No retry
 ErrorCode GraphClient::execute(folly::StringPiece stmt,
-                               nebula::DataSet& resp) {
+                               nebula::DataSet& resp,
+                               std::string& errMSg) {
     if (!session_->valid()) {
         auto ret = session_->retryConnect();
         if (ret != nebula::ErrorCode::SUCCEEDED ||
@@ -51,27 +53,24 @@ ErrorCode GraphClient::execute(folly::StringPiece stmt,
         }
     }
 
-    int32_t retry = 0;
-    while (++retry <= kRetryTimes) {
-        auto exeRet = session_->execute(stmt.str());
-        if (exeRet.errorCode() != nebula::ErrorCode::SUCCEEDED) {
-            LOG(ERROR) << stmt.str() << " execute failed, error code : "
-                       << static_cast<int>(exeRet.errorCode());
-            if (retry ==  kRetryTimes) {
-                return exeRet.errorCode();
-            }
-
-            sleep(retry);
-            continue;
-        }
-
-        // Not every ResultSet returned by Session::execute contains a DataSet
-        if (exeRet.data()) {
-            resp = *(const_cast<nebula::DataSet*>(exeRet.data()));
-        }
-        return nebula::ErrorCode::SUCCEEDED;
+    auto exeRet = session_->execute(stmt.str());
+    if (exeRet.errorCode() != nebula::ErrorCode::SUCCEEDED) {
+        auto* msg = exeRet.errorMsg();
+        if (msg != nullptr) {
+           LOG(ERROR) << *msg;
+           errMSg = *msg;
+        }    
+        LOG(ERROR) << stmt.str() << " execute failed, error code : "
+                   << static_cast<int>(exeRet.errorCode());
+        return exeRet.errorCode();
     }
-    return nebula::ErrorCode::E_EXECUTION_ERROR;
+
+    // Not every ResultSet returned by Session::execute contains a DataSet
+    auto* dataSet = exeRet.data();
+    if (dataSet != nullptr) {
+       resp = *(const_cast<nebula::DataSet*>(dataSet));
+    }
+    return nebula::ErrorCode::SUCCEEDED;
 }
 
 }  // namespace nebula_chaos
