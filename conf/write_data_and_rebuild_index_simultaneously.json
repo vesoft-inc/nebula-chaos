@@ -1,41 +1,41 @@
 {
-    "name": "Nebula create index and check plan",
+    "name": "Nebula write data and rebuild index simultaneously plan",
     "concurrency": 10,
     "email": "",
     "rolling_table": true,
     "instances": [
         {
-            "host":"",
-            "install_dir":"",
-            "conf_dir":"",
+            "host": "",
+            "install_dir": "",
+            "conf_dir": "",
             "type": "graphd",
             "user": ""
         },
         {
-            "host":"",
-            "install_dir":"",
-            "conf_dir":"",
+            "host": "",
+            "install_dir": "",
+            "conf_dir": "",
             "type": "metad",
             "user": ""
         },
         {
-            "host":"",
-            "install_dir":"",
-            "conf_dir":"",
+            "host": "",
+            "install_dir": "",
+            "conf_dir": "",
             "type": "storaged",
             "user": ""
         },
         {
-            "host":"",
-            "install_dir":"",
-            "conf_dir":"",
+            "host": "",
+            "install_dir": "",
+            "conf_dir": "",
             "type": "storaged",
             "user": ""
         },
         {
-            "host":"",
-            "install_dir":"",
-            "conf_dir":"",
+            "host": "",
+            "install_dir": "",
+            "conf_dir": "",
             "type": "storaged",
             "user": ""
         }
@@ -77,14 +77,14 @@
         },
         {
             "type": "CreateSpaceAction",
-            "space_name": "index_rebuild",
+            "space_name": "write_data_and_rebuild_index_simultaneously",
             "replica": 3,
             "parts": 100,
             "depends": [6]
         },
         {
             "type": "UseSpaceAction",
-            "space_name": "index_rebuild",
+            "space_name": "write_data_and_rebuild_index_simultaneously",
             "depends": [7]
         },
         {
@@ -106,12 +106,10 @@
             "tag": "circle",
             "col": "nextId",
             "total_rows": 40000,
+            "row_size": 20,
+            "start_id": 1,
+            "random_value": true,
             "depends": [10]
-        },
-        {
-            "type": "WaitAction",
-            "wait_time_ms": 3000,
-            "depends": [11]
         },
         {
             "type": "CreateIndexAction",
@@ -121,11 +119,18 @@
             "edge_or_tag": false,
             "string_field": true,
             "index_len": 20,
-            "depends": [12]
+            "depends": [11]
         },
         {
             "type": "WaitAction",
             "wait_time_ms": 10000,
+            "depends": [12]
+        },
+        {
+            "type": "WriteCircleAction",
+            "tag": "circle",
+            "col": "nextId",
+            "total_rows": 40000,
             "depends": [13]
         },
         {
@@ -133,12 +138,12 @@
             "index_name": "circle_rebuild_index",
             "edge_or_tag": false,
             "result_job_id": "rebuildJobId",
-            "depends": [14]
+            "depends": [13]
         },
         {
             "type": "WaitAction",
             "wait_time_ms": 30000,
-            "depends": [15]
+            "depends": [14, 15]
         },
         {
             "type": "CheckJobStatusAction",
@@ -154,7 +159,7 @@
         },
         {
             "type": "DropSpaceAction",
-            "space_name": "index_rebuild",
+            "space_name": "write_data_and_rebuild_index_simultaneously",
             "depends": [18]
         },
         {
