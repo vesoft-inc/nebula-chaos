@@ -41,7 +41,6 @@ void GraphClient::disconnect() {
     conPool_ = nullptr;
 }
 
-// No retry
 ErrorCode GraphClient::execute(folly::StringPiece stmt,
                                nebula::DataSet& resp,
                                std::string* errMSg) {
@@ -53,26 +52,40 @@ ErrorCode GraphClient::execute(folly::StringPiece stmt,
         }
     }
 
-    auto exeRet = session_->execute(stmt.str());
-    if (exeRet.errorCode() != nebula::ErrorCode::SUCCEEDED) {
-        auto* msg = exeRet.errorMsg();
-        if (msg != nullptr) {
-           LOG(ERROR) << *msg;
-           if (errMSg != nullptr) {
-               *errMSg = *msg;
-           }
-        }
-        LOG(ERROR) << stmt.str() << " execute failed, error code : "
-                   << static_cast<int>(exeRet.errorCode());
-        return exeRet.errorCode();
-    }
+    // If an exception is thrown in Connection::execute,
+    // the error E_RPC_FAILURE will be returned and need to retry
+    int32_t retry = 0;
+    while (++retry <= kRetryTimes) {
+        auto exeRet = session_->execute(stmt.str());
+        auto errCode = exeRet.errorCode();
 
-    // Not every ResultSet returned by Session::execute contains a DataSet
-    auto* dataSet = exeRet.data();
-    if (dataSet != nullptr) {
-       resp = *(const_cast<nebula::DataSet*>(dataSet));
+        if (errCode == nebula::ErrorCode::E_RPC_FAILURE) {
+            LOG(ERROR) << "Thrift rpc call failed, retry times " << retry;
+            if (retry + 1 <= kRetryTimes) {
+                sleep(retry);
+            }
+            continue;
+        } else if (errCode != nebula::ErrorCode::SUCCEEDED) {
+            auto* msg = exeRet.errorMsg();
+            if (msg != nullptr) {
+                LOG(ERROR) << *msg;
+                if (errMSg != nullptr) {
+                    *errMSg = *msg;
+                }
+            }
+            LOG(ERROR) << stmt.str() << " execute failed, error code : "
+                       << static_cast<int>(exeRet.errorCode());
+            return errCode;
+        } else {
+            // Not every ResultSet returned by Session::execute contains a DataSet
+            auto* dataSet = exeRet.data();
+            if (dataSet != nullptr) {
+                resp = *(const_cast<nebula::DataSet*>(dataSet));
+            }
+            return nebula::ErrorCode::SUCCEEDED;
+        }
     }
-    return nebula::ErrorCode::SUCCEEDED;
+    return nebula::ErrorCode::E_RPC_FAILURE;
 }
 
 }  // namespace nebula_chaos
