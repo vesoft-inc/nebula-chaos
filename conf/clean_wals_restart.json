@@ -262,7 +262,7 @@
         },
         {
             "type": "DropSpaceAction",
-            "space_space": "clean_wal_restart",
+            "space_name": "clean_wal_restart",
             "depends": [39]
         },
         {
