@@ -85,6 +85,13 @@ ErrorCode GraphClient::execute(folly::StringPiece stmt,
             return nebula::ErrorCode::SUCCEEDED;
         }
     }
+
+    // Reconnect to server
+    auto ret = session_->retryConnect();
+    if (ret != nebula::ErrorCode::SUCCEEDED || !session_->valid()) {
+        return nebula::ErrorCode::E_DISCONNECTED;
+    }
+
     return nebula::ErrorCode::E_RPC_FAILURE;
 }
 
