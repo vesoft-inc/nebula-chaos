@@ -5,37 +5,37 @@
     "rolling_table": false,
     "instances": [
         {
-            "host":"",
-            "install_dir":"",
-            "conf_dir":"",
+            "host": "",
+            "install_dir": "",
+            "conf_dir": "",
             "type": "graphd",
             "user": ""
         },
         {
-            "host":"",
-            "install_dir":"",
-            "conf_dir":"",
+            "host": "",
+            "install_dir": "",
+            "conf_dir": "",
             "type": "metad",
             "user": ""
         },
         {
-            "host":"",
-            "install_dir":"",
-            "conf_dir":"",
+            "host": "",
+            "install_dir": "",
+            "conf_dir": "",
             "type": "storaged",
             "user": ""
         },
         {
-            "host":"",
-            "install_dir":"",
-            "conf_dir":"",
+            "host": "",
+            "install_dir": "",
+            "conf_dir": "",
             "type": "storaged",
             "user": ""
         },
         {
-            "host":"",
-            "install_dir":"",
-            "conf_dir":"",
+            "host": "",
+            "install_dir": "",
+            "conf_dir": "",
             "type": "storaged",
             "user": ""
         }
@@ -222,7 +222,7 @@
         },
         {
             "type": "DropSpaceAction",
-            "space_space": "check_leader_stability_in_compaction",
+            "space_name": "check_leader_stability_in_compaction",
             "depends": [27]
         },
         {

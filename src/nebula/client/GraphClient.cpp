@@ -44,7 +44,7 @@ void GraphClient::disconnect() {
 // No retry
 ErrorCode GraphClient::execute(folly::StringPiece stmt,
                                nebula::DataSet& resp,
-                               std::string& errMSg) {
+                               std::string* errMSg) {
     if (!session_->valid()) {
         auto ret = session_->retryConnect();
         if (ret != nebula::ErrorCode::SUCCEEDED ||
@@ -58,8 +58,10 @@ ErrorCode GraphClient::execute(folly::StringPiece stmt,
         auto* msg = exeRet.errorMsg();
         if (msg != nullptr) {
            LOG(ERROR) << *msg;
-           errMSg = *msg;
-        }    
+           if (errMSg != nullptr) {
+               *errMSg = *msg;
+           }
+        }
         LOG(ERROR) << stmt.str() << " execute failed, error code : "
                    << static_cast<int>(exeRet.errorCode());
         return exeRet.errorCode();

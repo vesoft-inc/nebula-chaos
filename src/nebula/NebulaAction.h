@@ -278,7 +278,7 @@ public:
         return command();
     }
 
-    virtual ResultCode checkResp(const DataSet& resp, const std::string& errMsg);
+    virtual ResultCode checkResp(const DataSet& resp, std::string errMsg = "");
 
 protected:
     GraphClient* client_ = nullptr;
@@ -480,7 +480,7 @@ public:
 
     ResultCode doRun() override;
 
-    ResultCode checkResp(const DataSet& resp, const std::string& errMsg) override;
+    ResultCode checkResp(const DataSet& resp, std::string errMsg = "") override;
 
     std::string command() const override {
         return "balance data";
@@ -496,7 +496,7 @@ public:
         : MetaAction(client)
         , spaceName_(spaceName) {}
 
-    ResultCode checkResp(const DataSet& resp, const std::string& errMsg) override;
+    ResultCode checkResp(const DataSet& resp, std::string errMsg = "") override;
 
     std::string command() const override {
         return folly::stringPrintf("desc space %s", spaceName_.c_str());
@@ -532,7 +532,7 @@ public:
         return "show hosts";
     }
 
-    ResultCode checkResp(const DataSet& resp, const std::string& errMsg) override;
+    ResultCode checkResp(const DataSet& resp, std::string errMsg = "") override;
 
     ResultCode checkLeaderDis(const DataSet& resp);
 
@@ -1106,7 +1106,7 @@ public:
                                    indexName_.c_str());
     }
 
-    ResultCode checkResp(const DataSet& resp, const std::string& errMsg) override;
+    ResultCode checkResp(const DataSet& resp, std::string errMsg = "") override;
 
 private:
     core::ActionContext*    ctx_{nullptr};
@@ -1135,7 +1135,7 @@ public:
         return folly::stringPrintf("SHOW JOB %ld", jobId_);
     }
 
-    ResultCode checkResp(const DataSet& resp, const std::string& errMsg) override;
+    ResultCode checkResp(const DataSet& resp, std::string errMsg = "") override;
 
 private:
     core::ActionContext*    ctx_{nullptr};
