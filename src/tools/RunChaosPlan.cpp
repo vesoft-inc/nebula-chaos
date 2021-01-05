@@ -23,6 +23,7 @@ int run() {
     if (!FLAGS_flow_chart_script.empty()) {
         folly::Subprocess proc(
             std::vector<std::string>{"/bin/python3", FLAGS_flow_chart_script,
+                                     FLAGS_instance_conf_file,
                                      FLAGS_action_conf_file},
             folly::Subprocess::Options().pipeStdout());
         auto p = proc.communicate();
