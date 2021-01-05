@@ -1,0 +1,39 @@
+{
+    "instances": [
+        {
+            "host": "",
+            "install_dir": "",
+            "conf_dir": "",
+            "type": "graphd",
+            "user": "pandasheep.yue"
+        },
+        {
+            "host": "",
+            "install_dir": "",
+            "conf_dir": "",
+            "type": "metad",
+            "user": "pandasheep.yue"
+        },
+        {
+            "host": "",
+            "install_dir": "",
+            "conf_dir": "",
+            "type": "storaged",
+            "user": "pandasheep.yue"
+        },
+        {
+            "host": "",
+            "install_dir": "",
+            "conf_dir": "",
+            "type": "storaged",
+            "user": "pandasheep.yue"
+        },
+        {
+            "host": "",
+            "install_dir": "",
+            "conf_dir": "",
+            "type": "storaged",
+            "user": ""
+        }
+    ]
+}

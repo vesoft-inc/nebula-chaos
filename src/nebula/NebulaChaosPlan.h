@@ -40,8 +40,16 @@ public:
         }
     }
 
+    static std::unique_ptr<PlanContext>
+    loadInstanceFromFile(const std::string& instanceFilename, std::vector<NebulaInstance*>& insts);
+
     static std::unique_ptr<NebulaChaosPlan>
-    loadFromFile(const std::string& filename);
+    loadActionFromFile(const std::string& actionFilename,
+                       std::unique_ptr<PlanContext> ctx,
+                       const std::vector<NebulaInstance*>& insts);
+
+    static std::unique_ptr<NebulaChaosPlan>
+    loadFromFile(const std::string& instanceFilename, const std::string& actionFilename);
 
     void prepare() override {
     }

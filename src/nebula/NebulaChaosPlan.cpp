@@ -16,30 +16,30 @@ namespace chaos {
 namespace nebula_chaos {
 
 // static
-std::unique_ptr<NebulaChaosPlan>
-NebulaChaosPlan::loadFromFile(const std::string& filename) {
+std::unique_ptr<PlanContext>
+NebulaChaosPlan::loadInstanceFromFile(const std::string& instanceFilename,
+                                      std::vector<NebulaInstance*>& insts) {
     std::string jsonStr;
-    if (access(filename.c_str(), F_OK) != 0) {
-        LOG(ERROR) << "File not exists " << filename.c_str();
+    if (access(instanceFilename.c_str(), F_OK) != 0) {
+        LOG(ERROR) << "Instance file not exists " << instanceFilename;
         return nullptr;
     }
 
-    if (!folly::readFile(filename.c_str(), jsonStr)) {
-        LOG(ERROR) << "Parse file " << filename << " failed!";
+    if (!folly::readFile(instanceFilename.c_str(), jsonStr)) {
+        LOG(ERROR) << "Parse Instance file " << instanceFilename << " failed!";
         return nullptr;
     }
     auto jsonObj = folly::parseJson(jsonStr);
     VLOG(1) << folly::toPrettyJson(jsonObj);
-    auto planName = jsonObj.at("name").asString();
     auto instances = jsonObj.at("instances");
-    auto rolling = jsonObj.getDefault("rolling_table", true).asBool();
     CHECK(instances.isArray());
-    auto it = instances.begin();
+
     auto ctx = std::make_unique<PlanContext>();
     // Ensure the vector large enough.
     ctx->storageds.reserve(instances.size());
     ctx->metads.reserve(instances.size());
-    std::vector<NebulaInstance*> insts;
+    auto it = instances.begin();
+
     while (it != instances.end()) {
         CHECK(it->isObject());
         auto type = it->at("type").asString();
@@ -84,16 +84,43 @@ NebulaChaosPlan::loadFromFile(const std::string& filename) {
         }
         it++;
     }
+
+    return ctx;
+}
+
+
+// static
+std::unique_ptr<NebulaChaosPlan>
+NebulaChaosPlan::loadActionFromFile(const std::string& actionFilename,
+                                    std::unique_ptr<PlanContext> ctx,
+                                    const std::vector<NebulaInstance*>& insts) {
+    std::string jsonStr;
+    if (access(actionFilename.c_str(), F_OK) != 0) {
+        LOG(ERROR) << "Action file not exists " << actionFilename;
+        return nullptr;
+    }
+
+    if (!folly::readFile(actionFilename.c_str(), jsonStr)) {
+        LOG(ERROR) << "Parse action file " << actionFilename << " failed!";
+        return nullptr;
+    }
+
+    auto jsonObj = folly::parseJson(jsonStr);
+    VLOG(1) << folly::toPrettyJson(jsonObj);
+    auto planName = jsonObj.at("name").asString();
     auto concurrency = jsonObj.at("concurrency").asInt();
+    auto rolling = jsonObj.getDefault("rolling_table", true).asBool();
     auto emailTo = jsonObj.getDefault("email", FLAGS_email_to).asString();
-    auto plan = std::make_unique<NebulaChaosPlan>(std::move(ctx), concurrency, emailTo, planName);
     auto actionsItem = jsonObj.at("actions");
+
+    auto plan = std::make_unique<NebulaChaosPlan>(std::move(ctx), concurrency, emailTo, planName);
     std::vector<std::unique_ptr<core::Action>> actions;
     LoadContext loadCtx;
     loadCtx.insts = std::move(insts);
     loadCtx.gClient = plan->getGraphClient();
     loadCtx.rolling = rolling;
     loadCtx.planCtx = plan->getContext();
+
     {
         auto actionIt = actionsItem.begin();
         while (actionIt != actionsItem.end()) {
@@ -122,6 +149,19 @@ NebulaChaosPlan::loadFromFile(const std::string& filename) {
     }
     plan->addActions(std::move(actions));
     return plan;
+}
+
+
+// static
+std::unique_ptr<NebulaChaosPlan>
+NebulaChaosPlan::loadFromFile(const std::string& instanceFilename,
+                              const std::string& actionFilename) {
+    std::vector<NebulaInstance*> insts;
+    auto ctx = loadInstanceFromFile(instanceFilename, insts);
+    if (ctx == nullptr) {
+        return nullptr;
+    }
+    return loadActionFromFile(actionFilename, std::move(ctx), insts);
 }
 
 }   // namespace nebula_chaos

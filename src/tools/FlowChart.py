@@ -32,19 +32,21 @@ def parseActions(graph, instances, actions, prefix):
             graph.edge(prefix + str(depend), prefix + str(i))
 
 
-def parseJson(path):
-    filename, _ = os.path.splitext(path)
+def parseJson(instancePath, actionPath):
+    filename, _ = os.path.splitext(actionPath)
     graph = Digraph(name = filename, format = "png", directory = ".")
-    with open(path, 'r', encoding="utf-8") as f:
-        data = json.load(f)
-        # parse all actions
-        parseActions(graph, data["instances"], data["actions"], "main")
-        print(graph.render())
+    with open(actionPath, 'r', encoding="utf-8") as actf:
+        actiondata = json.load(actf)
+        with open(instancePath, 'r', encoding="utf-8") as insf:
+            instancedata = json.load(insf)
+            # parse all actions
+            parseActions(graph, instancedata["instances"], actiondata["actions"], "main")
+            print(graph.render())
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2 or sys.argv[1] == "-h":
+    if len(sys.argv) != 3 or sys.argv[1] == "-h":
         print("Install graphviz first: pip3 install graphviz")
         print("Or install from mirror: pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple graphviz")
-        print("Use it like this: python3 FlowChart.py jsonPath")
+        print("Use it like this: python3 FlowChart.py instanceJsonPath actionJsonPath")
     else:
-        parseJson(sys.argv[1])
+        parseJson(sys.argv[1], sys.argv[2])
