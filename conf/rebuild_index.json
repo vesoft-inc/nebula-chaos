@@ -3,43 +3,7 @@
     "concurrency": 10,
     "email": "",
     "rolling_table": true,
-    "instances": [
-        {
-            "host":"",
-            "install_dir":"",
-            "conf_dir":"",
-            "type": "graphd",
-            "user": ""
-        },
-        {
-            "host":"",
-            "install_dir":"",
-            "conf_dir":"",
-            "type": "metad",
-            "user": ""
-        },
-        {
-            "host":"",
-            "install_dir":"",
-            "conf_dir":"",
-            "type": "storaged",
-            "user": ""
-        },
-        {
-            "host":"",
-            "install_dir":"",
-            "conf_dir":"",
-            "type": "storaged",
-            "user": ""
-        },
-        {
-            "host":"",
-            "install_dir":"",
-            "conf_dir":"",
-            "type": "storaged",
-            "user": ""
-        }
-    ],
+
     "actions" : [
         {
             "type": "StartAction",

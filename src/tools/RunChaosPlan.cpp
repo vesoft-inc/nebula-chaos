@@ -11,7 +11,8 @@
 #include "nebula/NebulaChaosPlan.h"
 #include "nebula/NebulaUtils.h"
 
-DEFINE_string(conf_file, "", "json path");
+DEFINE_string(instance_conf_file, "", "The json path of the instance conf file");
+DEFINE_string(action_conf_file, "", "The json path of the action conf file");
 DEFINE_string(flow_chart_script, "", "python script to generate flow chart of json");
 
 namespace chaos {
@@ -21,7 +22,9 @@ int run() {
     std::string flowChart;
     if (!FLAGS_flow_chart_script.empty()) {
         folly::Subprocess proc(
-            std::vector<std::string>{"/bin/python3", FLAGS_flow_chart_script, FLAGS_conf_file},
+            std::vector<std::string>{"/bin/python3", FLAGS_flow_chart_script,
+                                     FLAGS_instance_conf_file,
+                                     FLAGS_action_conf_file},
             folly::Subprocess::Options().pipeStdout());
         auto p = proc.communicate();
         if (proc.wait().exitStatus() == 0) {
@@ -30,7 +33,7 @@ int run() {
         }
     }
     try {
-        auto plan = NebulaChaosPlan::loadFromFile(FLAGS_conf_file);
+        auto plan = NebulaChaosPlan::loadFromFile(FLAGS_instance_conf_file, FLAGS_action_conf_file);
         if (plan == nullptr) {
             return 0;
         }
