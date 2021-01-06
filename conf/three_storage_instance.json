@@ -5,28 +5,28 @@
             "install_dir": "",
             "conf_dir": "",
             "type": "graphd",
-            "user": "pandasheep.yue"
+            "user": ""
         },
         {
             "host": "",
             "install_dir": "",
             "conf_dir": "",
             "type": "metad",
-            "user": "pandasheep.yue"
+            "user": ""
         },
         {
             "host": "",
             "install_dir": "",
             "conf_dir": "",
             "type": "storaged",
-            "user": "pandasheep.yue"
+            "user": ""
         },
         {
             "host": "",
             "install_dir": "",
             "conf_dir": "",
             "type": "storaged",
-            "user": "pandasheep.yue"
+            "user": ""
         },
         {
             "host": "",
