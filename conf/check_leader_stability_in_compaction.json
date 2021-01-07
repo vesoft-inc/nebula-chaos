@@ -1,7 +1,6 @@
 {
     "name": "Nebula check-leader-stability-in-compaction plan",
     "concurrency": 10,
-    "email": "",
     "rolling_table": false,
 
     "actions" : [

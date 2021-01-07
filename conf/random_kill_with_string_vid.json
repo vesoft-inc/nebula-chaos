@@ -1,7 +1,6 @@
 {
     "name": "Nebula random-kill-with-string-vid plan",
     "concurrency": 10,
-    "email": "",
     "rolling_table": true,
     "actions" : [
         {
