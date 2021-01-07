@@ -1,7 +1,6 @@
 {
     "name": "Nebula scale-up-and-down plan",
     "concurrency": 10,
-    "email": "",
     "rolling_table": true,
     "actions" : [
         {

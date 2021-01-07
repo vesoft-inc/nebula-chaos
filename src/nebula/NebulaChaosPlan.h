@@ -41,12 +41,14 @@ public:
     }
 
     static std::unique_ptr<PlanContext>
-    loadInstanceFromFile(const std::string& instanceFilename, std::vector<NebulaInstance*>& insts);
+    loadInstanceFromFile(const std::string& instanceFilename, std::vector<NebulaInstance*>& insts,
+                         std::string& email);
 
     static std::unique_ptr<NebulaChaosPlan>
     loadActionFromFile(const std::string& actionFilename,
                        std::unique_ptr<PlanContext> ctx,
-                       const std::vector<NebulaInstance*>& insts);
+                       const std::vector<NebulaInstance*>& insts,
+                       const std::string email);
 
     static std::unique_ptr<NebulaChaosPlan>
     loadFromFile(const std::string& instanceFilename, const std::string& actionFilename);

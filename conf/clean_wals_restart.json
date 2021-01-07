@@ -1,7 +1,6 @@
 {
     "name": "Nebula clean-wals plan",
     "concurrency": 10,
-    "email": "",
     "rolling_table": true,
 
     "actions" : [

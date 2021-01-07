@@ -1,9 +1,7 @@
 {
     "name": "Nebula create index and check plan",
     "concurrency": 10,
-    "email": "",
     "rolling_table": true,
-
     "actions" : [
         {
             "type": "StartAction",

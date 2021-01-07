@@ -10,7 +10,7 @@
 #include <folly/FileUtil.h>
 #include <folly/json.h>
 
-DEFINE_string(email_to, "", "");
+DEFINE_string(email_to, "", "mail list");
 
 namespace chaos {
 namespace nebula_chaos {
@@ -18,7 +18,8 @@ namespace nebula_chaos {
 // static
 std::unique_ptr<PlanContext>
 NebulaChaosPlan::loadInstanceFromFile(const std::string& instanceFilename,
-                                      std::vector<NebulaInstance*>& insts) {
+                                      std::vector<NebulaInstance*>& insts,
+                                      std::string& email) {
     std::string jsonStr;
     if (access(instanceFilename.c_str(), F_OK) != 0) {
         LOG(ERROR) << "Instance file not exists " << instanceFilename;
@@ -31,9 +32,10 @@ NebulaChaosPlan::loadInstanceFromFile(const std::string& instanceFilename,
     }
     auto jsonObj = folly::parseJson(jsonStr);
     VLOG(1) << folly::toPrettyJson(jsonObj);
+
     auto instances = jsonObj.at("instances");
     CHECK(instances.isArray());
-
+    email = jsonObj.getDefault("email", FLAGS_email_to).asString();
     auto ctx = std::make_unique<PlanContext>();
     // Ensure the vector large enough.
     ctx->storageds.reserve(instances.size());
@@ -93,7 +95,8 @@ NebulaChaosPlan::loadInstanceFromFile(const std::string& instanceFilename,
 std::unique_ptr<NebulaChaosPlan>
 NebulaChaosPlan::loadActionFromFile(const std::string& actionFilename,
                                     std::unique_ptr<PlanContext> ctx,
-                                    const std::vector<NebulaInstance*>& insts) {
+                                    const std::vector<NebulaInstance*>& insts,
+                                    const std::string emailTo) {
     std::string jsonStr;
     if (access(actionFilename.c_str(), F_OK) != 0) {
         LOG(ERROR) << "Action file not exists " << actionFilename;
@@ -110,7 +113,6 @@ NebulaChaosPlan::loadActionFromFile(const std::string& actionFilename,
     auto planName = jsonObj.at("name").asString();
     auto concurrency = jsonObj.at("concurrency").asInt();
     auto rolling = jsonObj.getDefault("rolling_table", true).asBool();
-    auto emailTo = jsonObj.getDefault("email", FLAGS_email_to).asString();
     auto actionsItem = jsonObj.at("actions");
 
     auto plan = std::make_unique<NebulaChaosPlan>(std::move(ctx), concurrency, emailTo, planName);
@@ -157,11 +159,12 @@ std::unique_ptr<NebulaChaosPlan>
 NebulaChaosPlan::loadFromFile(const std::string& instanceFilename,
                               const std::string& actionFilename) {
     std::vector<NebulaInstance*> insts;
-    auto ctx = loadInstanceFromFile(instanceFilename, insts);
+    std::string emailTo;
+    auto ctx = loadInstanceFromFile(instanceFilename, insts, emailTo);
     if (ctx == nullptr) {
         return nullptr;
     }
-    return loadActionFromFile(actionFilename, std::move(ctx), insts);
+    return loadActionFromFile(actionFilename, std::move(ctx), insts, emailTo);
 }
 
 }   // namespace nebula_chaos

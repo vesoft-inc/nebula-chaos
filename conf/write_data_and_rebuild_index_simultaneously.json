@@ -1,7 +1,6 @@
 {
     "name": "Nebula write data and rebuild index simultaneously plan",
     "concurrency": 10,
-    "email": "",
     "rolling_table": true,
     "actions" : [
         {
