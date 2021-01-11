@@ -278,34 +278,39 @@
             "depends": [47]
         },
         {
+            "type": "DropSpaceAction",
+            "space_name": "scale_up_and_down",
+            "depends": [48]
+        },
+        {
             "type": "StopAction",
             "inst_index": 0,
-            "depends": [48]
+            "depends": [49]
         },
         {
             "type": "StopAction",
             "inst_index": 1,
-            "depends": [48]
+            "depends": [49]
         },
         {
             "type": "StopAction",
             "inst_index": 2,
-            "depends": [48]
+            "depends": [49]
         },
         {
             "type": "StopAction",
             "inst_index": 3,
-            "depends": [48]
+            "depends": [49]
         },
         {
             "type": "StopAction",
             "inst_index": 4,
-            "depends": [48]
+            "depends": [49]
         },
         {
             "type": "StopAction",
             "inst_index": 5,
-            "depends": [48]
+            "depends": [49]
         }
     ]
 }

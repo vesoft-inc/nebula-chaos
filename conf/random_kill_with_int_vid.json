@@ -122,27 +122,27 @@
         {
             "type": "StopAction",
             "inst_index": 0,
-            "depends": [18]
+            "depends": [19]
         },
         {
             "type": "StopAction",
             "inst_index": 1,
-            "depends": [18]
+            "depends": [19]
         },
         {
             "type": "StopAction",
             "inst_index": 2,
-            "depends": [18]
+            "depends": [19]
         },
         {
             "type": "StopAction",
             "inst_index": 3,
-            "depends": [18]
+            "depends": [19]
         },
         {
             "type": "StopAction",
             "inst_index": 4,
-            "depends": [18]
+            "depends": [19]
         }
     ]
 }
