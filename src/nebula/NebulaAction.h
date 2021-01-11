@@ -292,13 +292,15 @@ public:
                       int32_t replica = 3,
                       int32_t parts = 100,
                       const std::string& vidType = "fixed_string",
-                      int32_t vidLen = 8)
+                      int32_t vidLen = 8,
+                      const std::string& groupName = "")
         : MetaAction(client)
         , spaceName_(spaceName)
         , replica_(replica)
         , parts_(parts)
         , vidType_(vidType)
-        , vidLen_(vidLen) {}
+        , vidLen_(vidLen)
+        , groupName_(groupName) {}
 
     ~CreateSpaceAction() = default;
 
@@ -309,23 +311,47 @@ public:
             LOG(ERROR) << "Vid type illegal, only support FIXED_STRING or INT64 vid type";
             return "";
         }
+
         if (vidType_ == "fixed_string") {
-            return folly::stringPrintf(
-                       "CREATE SPACE IF NOT EXISTS %s (replica_factor=%d, partition_num=%d,"
-                       " vid_type = %s(%d))",
-                       spaceName_.c_str(),
-                       replica_,
-                       parts_,
-                       vidType_.c_str(),
-                       vidLen_);
+            if (groupName_.empty()) {
+                return folly::stringPrintf(
+                           "CREATE SPACE IF NOT EXISTS %s (replica_factor=%d, partition_num=%d,"
+                           " vid_type = %s(%d))",
+                           spaceName_.c_str(),
+                           replica_,
+                           parts_,
+                           vidType_.c_str(),
+                           vidLen_);
+            } else {
+                return folly::stringPrintf(
+                           "CREATE SPACE IF NOT EXISTS %s (replica_factor=%d, partition_num=%d,"
+                           " vid_type = %s(%d)) ON %s",
+                           spaceName_.c_str(),
+                           replica_,
+                           parts_,
+                           vidType_.c_str(),
+                           vidLen_,
+                           groupName_.c_str());
+            }
         } else {
-            return folly::stringPrintf(
-                       "CREATE SPACE IF NOT EXISTS %s (replica_factor=%d, partition_num=%d,"
-                       " vid_type = %s)",
-                       spaceName_.c_str(),
-                       replica_,
-                       parts_,
-                       vidType_.c_str());
+            if (groupName_.empty()) {
+                return folly::stringPrintf(
+                           "CREATE SPACE IF NOT EXISTS %s (replica_factor=%d, partition_num=%d,"
+                           " vid_type = %s)",
+                           spaceName_.c_str(),
+                           replica_,
+                           parts_,
+                           vidType_.c_str());
+            } else {
+                return folly::stringPrintf(
+                           "CREATE SPACE IF NOT EXISTS %s (replica_factor=%d, partition_num=%d,"
+                           " vid_type = %s) ON %s",
+                           spaceName_.c_str(),
+                           replica_,
+                           parts_,
+                           vidType_.c_str(),
+                           groupName_.c_str());
+            }
         }
     }
 
@@ -337,6 +363,7 @@ protected:
 
     // vidLen_ is valid only when vidType_ is fixed_string
     int32_t vidLen_;
+    std::string groupName_;
 };
 
 class UseSpaceAction : public MetaAction {
@@ -432,6 +459,45 @@ private:
     std::string zoneList_;
 };
 
+class ExpandGroupAction : public MetaAction {
+public:
+    ExpandGroupAction(GraphClient* client,
+                      const std::string& groupName,
+                      const std::string& zoneName)
+        : MetaAction(client)
+        , groupName_(groupName)
+        , zoneName_(zoneName) {}
+
+    std::string command() const override {
+        return folly::stringPrintf("ADD ZONE %s INTO GROUP %s",
+                                   zoneName_.c_str(),
+                                   groupName_.c_str());
+    }
+
+private:
+    std::string groupName_;
+    std::string zoneName_;
+};
+
+class ShrinkGroupAction : public MetaAction {
+public:
+    ShrinkGroupAction(GraphClient* client,
+                      const std::string& groupName,
+                      const std::string& zoneName)
+        : MetaAction(client)
+        , groupName_(groupName)
+        , zoneName_(zoneName) {}
+
+    std::string command() const override {
+        return folly::stringPrintf("DROP ZONE %s FROM GROUP %s",
+                                   zoneName_.c_str(),
+                                   groupName_.c_str());
+    }
+
+private:
+    std::string groupName_;
+    std::string zoneName_;
+};
 
 class AddZoneAction : public MetaAction {
 public:
@@ -451,6 +517,46 @@ public:
 private:
     std::string zoneName_;
     std::string hostList_;
+};
+
+class ExpandZoneAction : public MetaAction {
+public:
+    ExpandZoneAction(GraphClient* client,
+                     const std::string& zoneName,
+                     const std::string& hostName)
+        : MetaAction(client)
+        , zoneName_(zoneName)
+        , hostName_(hostName) {}
+
+    std::string command() const override {
+        return folly::stringPrintf("ADD HOST %s INTO ZONE %s",
+                                   hostName_.c_str(),
+                                   zoneName_.c_str());
+    }
+
+private:
+    std::string zoneName_;
+    std::string hostName_;
+};
+
+class ShrinkZoneAction : public MetaAction {
+    public:
+    ShrinkZoneAction(GraphClient* client,
+                     const std::string& zoneName,
+                     const std::string& hostName)
+        : MetaAction(client)
+        , zoneName_(zoneName)
+        , hostName_(hostName) {}
+
+    std::string command() const override {
+        return folly::stringPrintf("DROP HOST %s FROM ZONE %s",
+                                   hostName_.c_str(),
+                                   zoneName_.c_str());
+    }
+
+private:
+    std::string zoneName_;
+    std::string hostName_;
 };
 
 class BalanceLeaderAction : public MetaAction {

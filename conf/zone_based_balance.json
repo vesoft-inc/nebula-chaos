@@ -1,0 +1,289 @@
+{
+    "name": "Nebula zone based balance plan",
+    "concurrency": 10,
+    "email": "",
+    "rolling_table": true,
+    "actions" : [
+        {
+            "type": "StartAction",
+            "inst_index": 0,
+            "depends": [2, 3, 4, 5, 6, 7]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 1,
+            "depends": []
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 2,
+            "depends": [1]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 3,
+            "depends": [1]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 4,
+            "depends": [1]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 5,
+            "depends": [1]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 6,
+            "depends": [1]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 7,
+            "depends": [1]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 10000,
+            "depends": [0]
+        },
+        {
+            "type": "ClientConnectAction",
+            "depends": [8]
+        },
+        {
+            "type": "AddZoneAction",
+            "zone_name": "zone0",
+            "host_list": "127.0.0.1:7679",
+            "depends": [9]
+        },
+        {
+            "type": "AddZoneAction",
+            "zone_name": "zone1",
+            "host_list": "127.0.0.1:7579",
+            "depends": [10]
+        },
+        {
+            "type": "AddZoneAction",
+            "zone_name": "zone2",
+            "host_list": "127.0.0.1:7479",
+            "depends": [11]
+        },
+        {
+            "type": "AddGroupAction",
+            "group_name": "group0",
+            "zone_names": "zone0,zone1,zone2",
+            "depends": [12]
+        },
+        {
+            "type": "CreateSpaceAction",
+            "space_name": "zone_based_balance",
+            "replica": 3,
+            "parts": 10,
+            "group_name": "group0",
+            "depends": [13]
+        },
+        {
+            "type": "UseSpaceAction",
+            "space_name": "zone_based_balance",
+            "depends": [14]
+        },
+        {
+            "type": "CreateSchemaAction",
+            "name": "circle",
+            "props": [
+                {"name": "nextId", "type": "string"}
+            ],
+            "edge_or_tag": false,
+            "depends": [15]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 5000,
+            "depends": [16]
+        },
+        {
+            "type": "BalanceLeaderAction",
+            "depends": [17]
+        },
+        {
+            "type": "CheckLeadersAction",
+            "expected_num": 10,
+            "space_name": "zone_based_balance",
+            "depends": [18]
+        },
+        {
+            "type": "WriteCircleAction",
+            "tag": "circle",
+            "col": "nextId",
+            "total_rows": 20000,
+            "depends": [19]
+        },
+        {
+            "type": "WalkThroughAction",
+            "tag": "circle",
+            "col": "nextId",
+            "total_rows": 20000,
+            "depends": [20]
+        },
+        {
+            "type": "WriteCircleAction",
+            "tag": "circle",
+            "col": "nextId",
+            "total_rows": 20000,
+            "depends": [21]
+        },
+        {
+            "type": "ExpandZoneAction",
+            "zone_name": "zone0",
+            "host": "127.0.0.1:7379",
+            "depends": [21]
+        },
+        {
+            "type": "ExpandZoneAction",
+            "zone_name": "zone1",
+            "host": "127.0.0.1:7279",
+            "depends": [23]
+        },
+        {
+            "type": "ExpandZoneAction",
+            "zone_name": "zone2",
+            "host": "127.0.0.1:7179",
+            "depends": [24]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 10000,
+            "depends": [25]
+        },
+        {
+            "type": "BalanceDataAction",
+            "depends": [26]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 10000,
+            "depends": [22, 27]
+        },
+        {
+            "type": "BalanceLeaderAction",
+            "depends": [28]
+        },
+        {
+            "type": "CheckLeadersAction",
+            "expected_num": 10,
+            "space_name": "zone_based_balance",
+            "depends": [29]
+        },
+        {
+            "type": "WalkThroughAction",
+            "tag": "circle",
+            "col": "nextId",
+            "total_rows": 20000,
+            "depends": [30]
+        },
+        {
+            "type": "WriteCircleAction",
+            "tag": "circle",
+            "col": "nextId",
+            "total_rows": 20000,
+            "depends": [31]
+        },
+        {
+            "type": "ShrinkZoneAction",
+            "zone_name": "zone0",
+            "host": "127.0.0.1:7379",
+            "depends": [31]
+        },
+        {
+            "type": "ShrinkZoneAction",
+            "zone_name": "zone1",
+            "host": "127.0.0.1:7279",
+            "depends": [33]
+        },
+        {
+            "type": "ShrinkZoneAction",
+            "zone_name": "zone2",
+            "host": "127.0.0.1:7179",
+            "depends": [34]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 10000,
+            "depends": [35]
+        },
+        {
+            "type": "BalanceDataAction",
+            "depends": [36]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 10000,
+            "depends": [32, 37]
+        },
+        {
+            "type": "BalanceLeaderAction",
+            "depends": [38]
+        },
+        {
+            "type": "CheckLeadersAction",
+            "expected_num": 10,
+            "space_name": "zone_based_balance",
+            "depends": [39]
+        },
+        {
+            "type": "WalkThroughAction",
+            "tag": "circle",
+            "col": "nextId",
+            "total_rows": 20000,
+            "depends": [40]
+        },
+        {
+            "type": "EmptyAction",
+            "name": "JoinNode",
+            "depends": [41]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 0,
+            "depends": [42]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 1,
+            "depends": [42]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 2,
+            "depends": [42]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 3,
+            "depends": [42]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 4,
+            "depends": [42]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 5,
+            "depends": [42]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 6,
+            "depends": [42]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 7,
+            "depends": [42]
+        }
+    ]
+}
