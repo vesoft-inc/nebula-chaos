@@ -626,6 +626,8 @@ ResultCode CheckLeadersAction::doRun() {
                     if (ret == ResultCode::OK) {
                         LOG(INFO) << "Check execute " << cmd
                                   << " result successfully in check leader distribution!";
+                        LOG(INFO) << "Variable Name  : " << resultVarName_;
+                        LOG(INFO) << "Variable Value : " << restult_;
                         ctx_->exprCtx.setVar(resultVarName_, std::move(restult_));
                         return ret;
                     }
