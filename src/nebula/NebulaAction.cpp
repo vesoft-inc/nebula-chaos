@@ -474,16 +474,16 @@ ResultCode BalanceDataAction::doRun() {
 
 ResultCode DescSpaceAction::checkResp(const DataSet& resp, std::string) {
     if (resp.rows.empty()) {
-        LOG(ERROR) << "Result should not be empty!";
+        LOG(ERROR) << "Desc space result should not be empty!";
         return ResultCode::ERR_FAILED;
     }
     if (resp.rows.size() != 1) {
-        LOG(ERROR) << "Row number is wrong!";
+        LOG(ERROR) << "Desc space row number is wrong!";
         return ResultCode::ERR_FAILED;
     }
     auto& row = resp.rows[0];
-    if (row.size() != 7) {
-        LOG(ERROR) << "Value number is wrong!";
+    if (row.size() != 8) {
+        LOG(ERROR) << "Desc space coloumn number is wrong!";
         return ResultCode::ERR_FAILED;
     }
     if (row[1].getStr() != spaceName_) {
@@ -496,12 +496,12 @@ ResultCode DescSpaceAction::checkResp(const DataSet& resp, std::string) {
 
 ResultCode CheckLeadersAction::checkResp(const DataSet& resp, std::string) {
     if (resp.rows.empty()) {
-        LOG(ERROR) << "Result should not be empty!";
+        LOG(ERROR) << "Show hosts result should not be empty!";
         return ResultCode::ERR_FAILED;
     }
     auto& row = resp.rows[resp.rows.size() - 1];
     if (row.size() != 6) {
-        LOG(ERROR) << "Value number is wrong!";
+        LOG(ERROR) << "Show host column number is wrong!";
         return ResultCode::ERR_FAILED;
     }
     if (row[0].getStr() != "Total") {
@@ -555,7 +555,7 @@ ResultCode CheckLeadersAction::checkLeaderDis(const DataSet& resp) {
             continue;
         }
         if (row.size() != 6) {
-            LOG(ERROR) << "Value number is wrong!";
+            LOG(ERROR) << "Show host column number is wrong!";
             return ResultCode::ERR_FAILED;
         }
 
@@ -1507,18 +1507,18 @@ ResultCode RebuildIndexAction::doRun() {
 
 ResultCode CheckJobStatusAction::checkResp(const DataSet& resp, std::string) {
     if (resp.rows.empty()) {
-        LOG(ERROR) << "Result should not be empty!";
+        LOG(ERROR) << "Show job " << jobId_ <<" Result should not be empty!";
         return ResultCode::ERR_FAILED;
     }
 
     auto& row = resp.rows[0];
     if (row.size() != 5) {
-        LOG(ERROR) << "Value number is wrong!";
+        LOG(ERROR) << "Show one job column number is wrong!";
         return ResultCode::ERR_FAILED;
     }
     auto jobId = row[0].getInt();
     if (jobId != jobId_) {
-        LOG(ERROR) << "ShOW JOB " << jobId_  << " result error!";
+        LOG(ERROR) << "Show job " << jobId_  << " result error!";
         return ResultCode::ERR_FAILED;
     }
 
