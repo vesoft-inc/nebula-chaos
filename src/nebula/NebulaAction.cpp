@@ -482,10 +482,16 @@ ResultCode DescSpaceAction::checkResp(const DataSet& resp, std::string) {
         return ResultCode::ERR_FAILED;
     }
     auto& row = resp.rows[0];
-    if (row.size() != 8) {
+    if (row.size() <= 2) {
         LOG(ERROR) << "Desc space coloumn number is wrong!";
         return ResultCode::ERR_FAILED;
     }
+
+    if (resp.colNames.empty() || resp.colNames[0] != "ID" || resp.colNames[1] != "Name" ) {
+        LOG(ERROR) << "Desc space coloumn is wrong!";
+        return ResultCode::ERR_FAILED;
+    }
+    
     if (row[1].getStr() != spaceName_) {
         LOG(ERROR) << "Desc a wrong space! Should be " << spaceName_;
         return ResultCode::ERR_FAILED;
