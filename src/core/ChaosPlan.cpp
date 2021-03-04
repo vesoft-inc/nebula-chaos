@@ -94,7 +94,7 @@ void ChaosPlan::schedule() {
             })
             .thenError([this, actionPtr](auto ew) {
                 LOG(ERROR) << "Run " << actionPtr->toString()
-                                   << " failed, msg " << ew.what();
+                           << " failed, msg " << ew.what();
                 actionPtr->markFailed(std::move(ew));
                 if (status_ == Status::SUCCEEDED) {
                     status_ = Status::FAILED;
