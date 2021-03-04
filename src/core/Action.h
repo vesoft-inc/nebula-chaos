@@ -104,7 +104,7 @@ public:
             case Status::RUNNING:
                 return "running";
             case Status::SUCCEEDED:
-                return "succceeded";
+                return "succeeded";
             case Status::FAILED:
                 return "failed";
             default:
@@ -118,18 +118,18 @@ public:
         CHECK(promise_ != nullptr);
         status_ = Status::RUNNING;
         TimePoint start = Clock::now();
-        LOG(INFO) << "Begin the action " << id_ << ":" << toString();
+        LOG(INFO) << "Begin the action " << id_ << ": " << toString();
         auto rc = this->doRun();
         auto end = Clock::now();
         timeSpent_ = end - start;
         CHECK(Status::RUNNING == status_);
         if (rc == ResultCode::OK) {
             status_ = Status::SUCCEEDED;
-            LOG(INFO) << "Then action " << id_ << ":" << toString() << " finished!";
+            LOG(INFO) << "Then action " << id_ << ": " << toString() << " finished!";
             promise_->setTry(folly::Try<folly::Unit>(folly::Unit()));
         } else {
             status_ = Status::FAILED;
-            LOG(ERROR) << "The action " << id_ << ":" << toString() << " failed!";
+            LOG(ERROR) << "The action " << id_ << ": " << toString() << " failed!";
             promise_->setException(
                     std::runtime_error(
                         folly::stringPrintf("run failed, rc %d",

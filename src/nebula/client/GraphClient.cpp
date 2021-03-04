@@ -25,6 +25,7 @@ GraphClient::~GraphClient() {
 
 ErrorCode GraphClient::connect(const std::string& username,
                                const std::string& password) {
+    std::lock_guard<std::mutex> lk(sessionLk_);
     auto session = conPool_->getSession(username, password);
     if (session.valid()) {
         session_.reset(new nebula::Session(std::move(session)));
@@ -34,8 +35,8 @@ ErrorCode GraphClient::connect(const std::string& username,
 }
 
 void GraphClient::disconnect() {
+    std::lock_guard<std::mutex> lk(sessionLk_);
     if (session_ != nullptr) {
-        session_->release();
         session_ = nullptr;
     }
     conPool_ = nullptr;
@@ -44,6 +45,7 @@ void GraphClient::disconnect() {
 ErrorCode GraphClient::execute(folly::StringPiece stmt,
                                nebula::DataSet& resp,
                                std::string* errMSg) {
+    std::lock_guard<std::mutex> lk(sessionLk_);
     if (!session_->valid()) {
         auto ret = session_->retryConnect();
         if (ret != nebula::ErrorCode::SUCCEEDED ||

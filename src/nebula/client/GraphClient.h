@@ -45,6 +45,7 @@ private:
     const std::string                       addr_;
     const uint16_t                          port_;
     std::unique_ptr<nebula::Session>        session_{nullptr};
+    std::mutex                              sessionLk_;
 };
 
 }  // namespace nebula_chaos
