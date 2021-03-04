@@ -74,20 +74,34 @@ void ChaosPlan::schedule() {
             dependees.emplace_back(dee->promise_->getFuture());
         }
         auto actionPtr = action.get();
-        folly::collect(dependees)
-                    .via(threadsPool_.get())
-                    .thenValue([actionPtr](auto&&) {
-                        actionPtr->run();
-                    })
-                    .thenError([this, actionPtr](auto ew) {
+
+        folly::collectAll(std::move(dependees))
+            .via(threadsPool_.get())
+            .thenValue([this, actionPtr](const auto&& tries) mutable {
+                for (auto& t : tries) {
+                    if (t.hasException()) {
+                        auto ew = t.exception();
                         LOG(ERROR) << "Run " << actionPtr->toString()
                                    << " failed, msg " << ew.what();
                         actionPtr->markFailed(std::move(ew));
                         if (status_ == Status::SUCCEEDED) {
                             status_ = Status::FAILED;
                         }
-                    });
+                        return;
+                    }
+                }
+                actionPtr->run();
+            })
+            .thenError([this, actionPtr](auto ew) {
+                LOG(ERROR) << "Run " << actionPtr->toString()
+                           << " failed, msg " << ew.what();
+                actionPtr->markFailed(std::move(ew));
+                if (status_ == Status::SUCCEEDED) {
+                    status_ = Status::FAILED;
+                }
+            });
     }
+
     sinkAction->promise_->getFuture().wait();
     if (sinkAction->status() == ActionStatus::FAILED) {
         LOG(INFO) << "The plan failed, rerun the last action "
