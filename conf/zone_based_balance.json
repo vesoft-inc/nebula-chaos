@@ -246,44 +246,49 @@
             "depends": [41]
         },
         {
+            "type": "DropSpaceAction",
+            "space_name": "zone_based_balance",
+            "depends": [42]
+        },
+        {
             "type": "StopAction",
             "inst_index": 0,
-            "depends": [42]
+            "depends": [43]
         },
         {
             "type": "StopAction",
             "inst_index": 1,
-            "depends": [42]
+            "depends": [43]
         },
         {
             "type": "StopAction",
             "inst_index": 2,
-            "depends": [42]
+            "depends": [43]
         },
         {
             "type": "StopAction",
             "inst_index": 3,
-            "depends": [42]
+            "depends": [43]
         },
         {
             "type": "StopAction",
             "inst_index": 4,
-            "depends": [42]
+            "depends": [43]
         },
         {
             "type": "StopAction",
             "inst_index": 5,
-            "depends": [42]
+            "depends": [43]
         },
         {
             "type": "StopAction",
             "inst_index": 6,
-            "depends": [42]
+            "depends": [43]
         },
         {
             "type": "StopAction",
             "inst_index": 7,
-            "depends": [42]
+            "depends": [43]
         }
     ]
 }
