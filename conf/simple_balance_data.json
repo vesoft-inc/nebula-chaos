@@ -1,0 +1,338 @@
+{
+    "name": "Nebula scale-up-and-down plan",
+    "concurrency": 10,
+    "rolling_table": true,
+    "actions" : [
+        {
+            "type": "StartAction",
+            "inst_index": 0,
+            "depends": [2, 3, 4]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 1,
+            "depends": []
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 2,
+            "parameters": "--local_config=true --wal_file_size=102400 --wal_ttl=60 --clean_wal_interval_secs=60",
+            "depends": [1]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 3,
+            "parameters": "--local_config=true --wal_file_size=102400 --wal_ttl=60 --clean_wal_interval_secs=60",
+            "depends": [1]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 4,
+            "parameters": "--local_config=true --wal_file_size=102400 --wal_ttl=60 --clean_wal_interval_secs=60",
+            "depends": [1]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 15000,
+            "depends": [0]
+        },
+        {
+            "type": "ClientConnectAction",
+            "depends": [5]
+        },
+        {
+            "type": "CreateSpaceAction",
+            "space_name": "scale_up_and_down",
+            "replica": 3,
+            "parts": 10,
+            "depends": [6]
+        },
+        {
+            "type": "UseSpaceAction",
+            "space_name": "scale_up_and_down",
+            "depends": [7]
+        },
+        {
+            "type": "CreateSchemaAction",
+            "name": "circle0",
+            "props": [
+                {"name": "nextId", "type": "string"}
+            ],
+            "edge_or_tag": false,
+            "depends": [8]
+        },
+        {
+            "type": "CreateSchemaAction",
+            "name": "circle1",
+            "props": [
+                {"name": "nextId", "type": "string"}
+            ],
+            "edge_or_tag": false,
+            "depends": [9]
+        },
+        {
+            "type": "CreateIndexAction",
+            "schema_name": "circle0",
+            "index_name": "circle0_index0",
+            "field": "nextId",
+            "edge_or_tag": false,
+            "string_field": true,
+            "index_len": 64,
+            "depends": [10]
+        },
+        {
+            "type": "CreateIndexAction",
+            "schema_name": "circle1",
+            "index_name": "circle1_index0",
+            "field": "nextId",
+            "edge_or_tag": false,
+            "string_field": true,
+            "index_len": 64,
+            "depends": [11]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 15000,
+            "depends": [12]
+        },
+        {
+            "type": "BalanceLeaderAction",
+            "depends": [13]
+        },
+        {
+            "type": "CheckLeadersAction",
+            "expected_num": 10,
+            "space_name": "scale_up_and_down",
+            "depends": [14]
+        },
+        {
+            "type": "WriteCircleAction",
+            "tag": "circle0",
+            "col": "nextId",
+            "total_rows": 200000,
+            "depends": [15]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 2,
+            "depends": [16]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 3,
+            "depends": [16]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 4,
+            "depends": [16]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 15000,
+            "depends": [17, 18, 19]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 2,
+            "parameters": "--local_config=true --wal_file_size=102400 --wal_ttl=60 --clean_wal_interval_secs=60",
+            "depends": [20]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 3,
+            "parameters": "--local_config=true --wal_file_size=102400 --wal_ttl=60 --clean_wal_interval_secs=60",
+            "depends": [20]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 4,
+            "parameters": "--local_config=true --wal_file_size=102400 --wal_ttl=60 --clean_wal_interval_secs=60",
+            "depends": [20]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 5,
+            "parameters": "--local_config=true --wal_file_size=102400 --wal_ttl=60 --clean_wal_interval_secs=60",
+            "depends": [20]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 30000,
+            "depends": [21, 22, 23, 24]
+        },
+        {
+            "type": "BalanceLeaderAction",
+            "depends": [25]
+        },
+        {
+            "type": "BalanceDataAction",
+            "depends": [26]
+        },
+        {
+            "type": "BalanceLeaderAction",
+            "depends": [27]
+        },
+        {
+            "type": "CheckLeadersAction",
+            "expected_num": 10,
+            "space_name": "scale_up_and_down",
+            "depends": [28]
+        },
+        {
+            "type": "WalkThroughAction",
+            "tag": "circle0",
+            "col": "nextId",
+            "total_rows": 200000,
+            "depends": [29]
+        },
+        {
+            "type": "LookUpAction",
+            "tag": "circle0",
+            "col": "nextId",
+            "total_rows": 200000,
+            "depends": [30]
+        },
+        {
+            "type": "WriteCircleAction",
+            "tag": "circle1",
+            "col": "nextId",
+            "total_rows": 200000,
+            "depends": [31]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 2,
+            "depends": [32]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 3,
+            "depends": [32]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 4,
+            "depends": [32]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 5,
+            "depends": [32]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 15000,
+            "depends": [33, 34, 35, 36]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 2,
+            "parameters": "--local_config=true --wal_file_size=102400 --wal_ttl=60 --clean_wal_interval_secs=60",
+            "depends": [37]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 3,
+            "parameters": "--local_config=true --wal_file_size=102400 --wal_ttl=60 --clean_wal_interval_secs=60",
+            "depends": [37]
+        },
+        {
+            "type": "StartAction",
+            "inst_index": 4,
+            "parameters": "--local_config=true --wal_file_size=102400 --wal_ttl=60 --clean_wal_interval_secs=60",
+            "depends": [37]
+        },
+        {
+            "type": "WaitAction",
+            "wait_time_ms": 30000,
+            "depends": [38, 39, 40]
+        },
+        {
+            "type": "BalanceLeaderAction",
+            "depends": [41]
+        },
+        {
+            "type": "BalanceDataAction",
+            "depends": [42]
+        },
+        {
+            "type": "BalanceLeaderAction",
+            "depends": [43]
+        },
+        {
+            "type": "CheckLeadersAction",
+            "expected_num": 10,
+            "space_name": "scale_up_and_down",
+            "depends": [44]
+        },
+        {
+            "type": "WalkThroughAction",
+            "tag": "circle0",
+            "col": "nextId",
+            "total_rows": 200000,
+            "depends": [45]
+        },
+        {
+            "type": "WalkThroughAction",
+            "tag": "circle1",
+            "col": "nextId",
+            "total_rows": 200000,
+            "depends": [46]
+        },
+        {
+            "type": "LookUpAction",
+            "tag": "circle0",
+            "col": "nextId",
+            "total_rows": 200000,
+            "depends": [47]
+        },
+        {
+            "type": "LookUpAction",
+            "tag": "circle1",
+            "col": "nextId",
+            "total_rows": 200000,
+            "depends": [48]
+        },
+        {
+            "type": "EmptyAction",
+            "name": "JoinNode",
+            "depends": [49]
+        },
+        {
+            "type": "DropSpaceAction",
+            "space_name": "scale_up_and_down",
+            "depends": [50]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 0,
+            "depends": [51]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 1,
+            "depends": [51]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 2,
+            "depends": [51]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 3,
+            "depends": [51]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 4,
+            "depends": [51]
+        },
+        {
+            "type": "StopAction",
+            "inst_index": 5,
+            "depends": [51]
+        }
+    ]
+}

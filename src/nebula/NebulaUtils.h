@@ -51,7 +51,8 @@ public:
             auto instIndex = obj.at("inst_index").asInt();
             CHECK_GE(instIndex, 0);
             CHECK_LT(instIndex, ctx.insts.size());
-            return std::make_unique<StartAction>(ctx.insts[instIndex]);
+            auto parameters = obj.getDefault("parameters", "").asString();
+            return std::make_unique<StartAction>(ctx.insts[instIndex], parameters);
         } else if (type == "StopAction") {
             auto instIndex = obj.at("inst_index").asInt();
             CHECK_GE(instIndex, 0);
