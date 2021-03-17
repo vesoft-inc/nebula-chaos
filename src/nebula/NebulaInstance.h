@@ -57,7 +57,7 @@ public:
 
     folly::Optional<std::vector<std::string>> walDirs(int64_t spaceId) const;
 
-    std::string startCommand() const;
+    std::string startCommand(const std::string& parameters = "") const;
 
     std::string stopCommand() const;
 

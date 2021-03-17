@@ -47,7 +47,7 @@ ResultCode CrashAction::doRun() {
 
 ResultCode StartAction::doRun() {
     CHECK_NOTNULL(inst_);
-    auto startCommand = inst_->startCommand();
+    auto startCommand = inst_->startCommand(parameters_);
     LOG(INFO) << startCommand << " on " << inst_->toString() << " as " << inst_->owner();
     auto ret = utils::SshHelper::run(
                 startCommand,
@@ -487,11 +487,11 @@ ResultCode DescSpaceAction::checkResp(const DataSet& resp, std::string) {
         return ResultCode::ERR_FAILED;
     }
 
-    if (resp.colNames.empty() || resp.colNames[0] != "ID" || resp.colNames[1] != "Name" ) {
+    if (resp.colNames.empty() || resp.colNames[0] != "ID" || resp.colNames[1] != "Name") {
         LOG(ERROR) << "Desc space coloumn is wrong!";
         return ResultCode::ERR_FAILED;
     }
-    
+
     if (row[1].getStr() != spaceName_) {
         LOG(ERROR) << "Desc a wrong space! Should be " << spaceName_;
         return ResultCode::ERR_FAILED;

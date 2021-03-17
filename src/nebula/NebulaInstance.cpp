@@ -207,8 +207,18 @@ std::string NebulaInstance::command(const std::string& cmd) const {
             moduleName_.c_str());
 }
 
-std::string NebulaInstance::startCommand() const {
-    return command("start");
+std::string NebulaInstance::startCommand(const std::string& parameters) const {
+    if (parameters.empty()) {
+        return command("start");
+    } else {
+        // when parameters is not empty, we can't start by scripts
+        return folly::stringPrintf("cd %s; %s/bin/nebula-%s --flagfile %s %s",
+                                   installPath_.c_str(),
+                                   installPath_.c_str(),
+                                   moduleName_.c_str(),
+                                   confPath_.c_str(),
+                                   parameters.c_str());
+    }
 }
 
 std::string NebulaInstance::stopCommand() const {

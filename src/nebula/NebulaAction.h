@@ -40,8 +40,9 @@ private:
 
 class StartAction : public core::Action {
 public:
-    explicit StartAction(NebulaInstance* inst)
-        : inst_(inst) {
+    explicit StartAction(NebulaInstance* inst, const std::string& parameters = "")
+        : inst_(inst)
+        , parameters_(parameters) {
         VLOG(1) << "Construct StartAction for " << inst_->toString();
     }
 
@@ -57,6 +58,7 @@ public:
 
 private:
     NebulaInstance* inst_ = nullptr;
+    std::string parameters_;
 };
 
 class StopAction : public core::Action {
