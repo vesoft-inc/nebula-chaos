@@ -1,5 +1,5 @@
 {
-    "name": "Nebula scale-up-and-down plan",
+    "name": "Nebula simple-balance-data plan",
     "concurrency": 10,
     "rolling_table": true,
     "actions" : [
@@ -42,14 +42,14 @@
         },
         {
             "type": "CreateSpaceAction",
-            "space_name": "scale_up_and_down",
+            "space_name": "simple_balance_data",
             "replica": 3,
             "parts": 10,
             "depends": [6]
         },
         {
             "type": "UseSpaceAction",
-            "space_name": "scale_up_and_down",
+            "space_name": "simple_balance_data",
             "depends": [7]
         },
         {
@@ -102,7 +102,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
-            "space_name": "scale_up_and_down",
+            "space_name": "simple_balance_data",
             "depends": [14]
         },
         {
@@ -176,7 +176,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
-            "space_name": "scale_up_and_down",
+            "space_name": "simple_balance_data",
             "depends": [28]
         },
         {
@@ -263,7 +263,7 @@
         {
             "type": "CheckLeadersAction",
             "expected_num": 10,
-            "space_name": "scale_up_and_down",
+            "space_name": "simple_balance_data",
             "depends": [44]
         },
         {
@@ -301,7 +301,7 @@
         },
         {
             "type": "DropSpaceAction",
-            "space_name": "scale_up_and_down",
+            "space_name": "simple_balance_data",
             "depends": [50]
         },
         {
