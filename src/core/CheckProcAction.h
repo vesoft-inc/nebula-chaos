@@ -24,7 +24,7 @@ public:
 
     ResultCode doRun() override;
 
-    std::string toString() const override {
+    std::string toString() override {
         return folly::stringPrintf("check process %d on %s", pid_, host_.c_str());
     }
 

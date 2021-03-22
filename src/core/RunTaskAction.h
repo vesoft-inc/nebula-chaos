@@ -31,7 +31,7 @@ public:
         return ResultCode::ERR_BAD_ARGUMENT;
     }
 
-    std::string toString() const override {
+    std::string toString() override {
         return name_;
     }
 

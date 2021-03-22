@@ -111,7 +111,7 @@ void ChaosPlan::schedule() {
     return;
 }
 
-std::string ChaosPlan::toString() const {
+std::string ChaosPlan::toString() {
     std::stringstream str;
     str << "STATUS: " << (status_ == Status::SUCCEEDED ? "SUCCEEDED" : "FAILED") << "\n";
     for (auto& action : actions_) {

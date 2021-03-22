@@ -43,7 +43,7 @@ public:
         return ResultCode::OK;
     }
 
-    std::string toString() const override {
+    std::string toString() override {
         return folly::stringPrintf("Send e-mail to %s, attachment: %s",
                                    to_.c_str(),
                                    attachment_.c_str());

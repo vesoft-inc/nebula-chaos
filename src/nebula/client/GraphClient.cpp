@@ -104,7 +104,7 @@ ErrorCode GraphClient::execute(folly::StringPiece stmt,
         // Restore to the current space
         if (!spaceName_.empty()) {
             auto restoreSpace = folly::stringPrintf("USE %s", spaceName_.c_str());
-            auto exeRet = session_->execute(restoreSpace.str());
+            auto exeRet = session_->execute(restoreSpace);
             auto errCode = exeRet.errorCode();
 
             if (errCode != nebula::ErrorCode::SUCCEEDED) {

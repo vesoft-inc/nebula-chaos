@@ -26,7 +26,7 @@ public:
 
     ResultCode doRun() override;
 
-    std::string toString() const override {
+    std::string toString() override {
         return folly::stringPrintf("Run action, the condition is %s", conditionExpr_.c_str());
     }
 

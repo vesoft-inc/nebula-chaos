@@ -48,7 +48,7 @@ public:
 
     virtual ~Expression() {}
 
-    virtual std::string toString() const = 0;
+    virtual std::string toString() = 0;
 
     virtual ValueOrErr eval(ExprContext* ctx) const = 0;
 
@@ -102,7 +102,7 @@ public:
         operand_ = std::move(val);
     }
 
-    std::string toString() const override;
+    std::string toString() override;
 
     ValueOrErr eval(ExprContext*) const override;
 
@@ -117,7 +117,7 @@ public:
         varName_ = std::move(valName);
     }
 
-    std::string toString() const override {
+    std::string toString() override {
         return "$" + varName_;
     }
 
@@ -141,7 +141,7 @@ public:
         operand_.reset(operand);
     }
 
-    std::string toString() const override;
+    std::string toString() override;
 
     ValueOrErr eval(ExprContext*) const override;
 
@@ -179,7 +179,7 @@ public:
         right_.reset(right);
     }
 
-    std::string toString() const override;
+    std::string toString() override;
 
     ValueOrErr eval(ExprContext*) const override;
 
@@ -224,7 +224,7 @@ public:
 
     ValueOrErr eval(ExprContext*) const override;
 
-    std::string toString() const override;
+    std::string toString() override;
 
     std::string opStr() const {
         switch (op_) {
@@ -269,7 +269,7 @@ public:
 
     ValueOrErr eval(ExprContext*) const override;
 
-    std::string toString() const override;
+    std::string toString() override;
 
     std::string opStr() const {
         switch (op_) {
