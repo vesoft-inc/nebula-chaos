@@ -46,6 +46,9 @@ private:
     const uint16_t                          port_;
     std::unique_ptr<nebula::Session>        session_{nullptr};
     std::mutex                              sessionLk_;
+
+    // Save the current space name to use when reconnecting
+    std::string                             spaceName_;
 };
 
 }  // namespace nebula_chaos

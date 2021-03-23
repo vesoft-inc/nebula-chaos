@@ -84,16 +84,36 @@ ErrorCode GraphClient::execute(folly::StringPiece stmt,
             if (dataSet != nullptr) {
                 resp = *(const_cast<nebula::DataSet*>(dataSet));
             }
+
+            // Save the current spacename when the execution is successful
+            auto* spaceName = exeRet.spaceName();
+            if (spaceName != nullptr) {
+                spaceName_ = *spaceName;
+            }
             return nebula::ErrorCode::SUCCEEDED;
         }
     }
 
-    // Reconnect to server
-    auto ret = session_->retryConnect();
-    if (ret != nebula::ErrorCode::SUCCEEDED || !session_->valid()) {
-        return nebula::ErrorCode::E_DISCONNECTED;
-    }
+    // Reconnect to server, then restore space
+    {
+        auto ret = session_->retryConnect();
+        if (ret != nebula::ErrorCode::SUCCEEDED || !session_->valid()) {
+            return nebula::ErrorCode::E_DISCONNECTED;
+        }
 
+        // Restore to the current space
+        if (!spaceName_.empty()) {
+            auto restoreSpace = folly::stringPrintf("USE %s", spaceName_.c_str());
+            auto exeRet = session_->execute(restoreSpace.str());
+            auto errCode = exeRet.errorCode();
+
+            if (errCode != nebula::ErrorCode::SUCCEEDED) {
+                LOG(ERROR) << "Restore space failed when thrift rpc call failed!";
+            } else {
+                LOG(INFO) << "Restore space successed when thrift rpc call failed!";
+            }
+        }
+    }
     return nebula::ErrorCode::E_RPC_FAILURE;
 }
 
