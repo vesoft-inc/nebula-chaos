@@ -384,7 +384,8 @@ LookUpAction::sendCommand(const std::string& cmd) {
         auto res = client_->execute(cmd, resp);
         if (res == nebula::ErrorCode::SUCCEEDED) {
             if (resp.rows.empty() || resp.rows[0].empty()) {
-                LOG(WARNING) << "Bad result, resp.rows size " << resp.rows.size();
+                LOG(ERROR) << "Execute "<< cmd << " successed, "
+                           << " but bad result, resp.rows size " << resp.rows.size();
                 break;
             }
             VLOG(1) << resp.rows.size() << ", " << resp.rows[0].size();
@@ -1513,7 +1514,7 @@ ResultCode RebuildIndexAction::doRun() {
 
 ResultCode CheckJobStatusAction::checkResp(const DataSet& resp, std::string) {
     if (resp.rows.empty()) {
-        LOG(ERROR) << "Show job " << jobId_ <<" Result should not be empty!";
+        LOG(ERROR) << "Show job " << jobId_ <<" result should not be empty!";
         return ResultCode::ERR_FAILED;
     }
 
@@ -1540,13 +1541,10 @@ ResultCode CheckJobStatusAction::checkResp(const DataSet& resp, std::string) {
 ResultCode CheckJobStatusAction::doRun() {
     CHECK_NOTNULL(client_);
 
-    // Get job id from job id variable
-    auto varValue = ctx_->exprCtx.getVar(jobIdVarName_);
-    if (!varValue) {
+    if (jobId_ == 0) {
         LOG(ERROR) << "Get job id failed from " << jobIdVarName_;
         return ResultCode::ERR_FAILED;
     }
-    jobId_ = ExprUtils::asInt(varValue.value());
 
     auto cmd = command();
     LOG(INFO) << "Send " << cmd << " to graphd";

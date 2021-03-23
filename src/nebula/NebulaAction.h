@@ -28,7 +28,7 @@ public:
 
     ResultCode doRun() override;
 
-    std::string toString() const override {
+    std::string toString() override {
         CHECK_NOTNULL(inst_);
         auto hostAddr = inst_->toString();
         return folly::stringPrintf("kill -9 %s", hostAddr.c_str());
@@ -50,7 +50,7 @@ public:
 
     ResultCode doRun() override;
 
-    std::string toString() const override {
+    std::string toString() override {
         CHECK_NOTNULL(inst_);
         auto hostAddr = inst_->toString();
         return folly::stringPrintf("start %s", hostAddr.c_str());
@@ -70,7 +70,7 @@ public:
 
     ResultCode doRun() override;
 
-    std::string toString() const override {
+    std::string toString() override {
         CHECK_NOTNULL(inst_);
         auto hostAddr = inst_->toString();
         return folly::stringPrintf("stop %s", hostAddr.c_str());
@@ -106,7 +106,7 @@ public:
         return ResultCode::ERR_FAILED;
     }
 
-    std::string toString() const override {
+    std::string toString() override {
         return folly::stringPrintf("Connect to %s", client_->serverAddress().c_str());
     }
 
@@ -143,7 +143,7 @@ public:
 
     ResultCode doRun() override;
 
-    std::string toString() const override {
+    std::string toString() override {
         return folly::stringPrintf("Write data to %s", client_->serverAddress().c_str());
     }
 
@@ -197,7 +197,7 @@ public:
 
     ResultCode doRun() override;
 
-    std::string toString() const override {
+    std::string toString() override {
         if (stringVid_) {
             return folly::stringPrintf("Wark through the circle, from \"%lu\", total %ld",
                                        start_,
@@ -247,7 +247,7 @@ public:
 
     ResultCode doRun() override;
 
-    std::string toString() const override {
+    std::string toString() override {
         return folly::stringPrintf("LookUp the circle from %ld, total %ld", start_, totalRows_);
     }
 
@@ -274,9 +274,9 @@ public:
 
     ResultCode doRun() override;
 
-    virtual std::string command() const = 0;
+    virtual std::string command() = 0;
 
-    std::string toString() const override {
+    std::string toString() override {
         return command();
     }
 
@@ -306,7 +306,7 @@ public:
 
     ~CreateSpaceAction() = default;
 
-    std::string command() const override {
+    std::string command() override {
         if (vidType_ != "fixed_string" &&
             vidType_ != "int" &&
             vidType_ != "int64") {
@@ -374,7 +374,7 @@ public:
         : MetaAction(client)
         , spaceName_(spaceName) {}
 
-    std::string command() const override {
+    std::string command() override {
         return folly::stringPrintf("USE %s", spaceName_.c_str());
     }
 
@@ -388,7 +388,7 @@ public:
         : MetaAction(client)
         , spaceName_(spaceName) {}
 
-    std::string command() const override {
+    std::string command() override {
         return folly::stringPrintf("DROP SPACE %s", spaceName_.c_str());
     }
 
@@ -414,7 +414,7 @@ public:
 
     ~CreateSchemaAction() = default;
 
-    std::string command() const override {
+    std::string command() override {
         std::string str;
         str.reserve(256);
         str += "CREATE ";
@@ -450,7 +450,7 @@ public:
         , groupName_(groupName)
         , zoneList_(zoneList) {}
 
-    std::string command() const override {
+    std::string command() override {
         return folly::stringPrintf("ADD GROUP %s %s",
                                    groupName_.c_str(),
                                    zoneList_.c_str());
@@ -470,7 +470,7 @@ public:
         , groupName_(groupName)
         , zoneName_(zoneName) {}
 
-    std::string command() const override {
+    std::string command() override {
         return folly::stringPrintf("ADD ZONE %s INTO GROUP %s",
                                    zoneName_.c_str(),
                                    groupName_.c_str());
@@ -490,7 +490,7 @@ public:
         , groupName_(groupName)
         , zoneName_(zoneName) {}
 
-    std::string command() const override {
+    std::string command() override {
         return folly::stringPrintf("DROP ZONE %s FROM GROUP %s",
                                    zoneName_.c_str(),
                                    groupName_.c_str());
@@ -510,7 +510,7 @@ public:
         , zoneName_(zoneName)
         , hostList_(hostList) {}
 
-    std::string command() const override {
+    std::string command() override {
         return folly::stringPrintf("ADD ZONE %s %s",
                                    zoneName_.c_str(),
                                    hostList_.c_str());
@@ -530,7 +530,7 @@ public:
         , zoneName_(zoneName)
         , hostName_(hostName) {}
 
-    std::string command() const override {
+    std::string command() override {
         return folly::stringPrintf("ADD HOST %s INTO ZONE %s",
                                    hostName_.c_str(),
                                    zoneName_.c_str());
@@ -550,7 +550,7 @@ class ShrinkZoneAction : public MetaAction {
         , zoneName_(zoneName)
         , hostName_(hostName) {}
 
-    std::string command() const override {
+    std::string command() override {
         return folly::stringPrintf("DROP HOST %s FROM ZONE %s",
                                    hostName_.c_str(),
                                    zoneName_.c_str());
@@ -570,7 +570,7 @@ public:
     explicit BalanceLeaderAction(GraphClient* client)
         : MetaAction(client) {}
 
-    std::string command() const override {
+    std::string command() override {
         return "balance leader";
     }
 };
@@ -590,7 +590,7 @@ public:
 
     ResultCode checkResp(const DataSet& resp, std::string errMsg = "") override;
 
-    std::string command() const override {
+    std::string command() override {
         return "balance data";
     }
 };
@@ -606,7 +606,7 @@ public:
 
     ResultCode checkResp(const DataSet& resp, std::string errMsg = "") override;
 
-    std::string command() const override {
+    std::string command() override {
         return folly::stringPrintf("desc space %s", spaceName_.c_str());
     }
 
@@ -636,7 +636,7 @@ public:
 
     ResultCode doRun() override;
 
-    std::string command() const override {
+    std::string command() override {
         return "show hosts";
     }
 
@@ -671,11 +671,11 @@ public:
 
     ResultCode buildCmd();
 
-    std::string command() const override {
+    std::string command() override {
         return cmd_;
     }
 
-    std::string toString() const override {
+    std::string toString() override {
         return "update configs";
     }
 
@@ -693,7 +693,7 @@ public:
 
     ~CompactionAction() = default;
 
-    std::string command() const override {
+    std::string command() override {
         return "submit job compact";
     }
 };
@@ -709,7 +709,7 @@ public:
 
     ResultCode doRun() override;
 
-    std::string toString() const override {
+    std::string toString() override {
         return folly::stringPrintf("Execution expression %s",
                                    condition_.c_str());
     }
@@ -737,7 +737,7 @@ public:
 
     ~RandomRestartAction() = default;
 
-    std::string toString() const override {
+    std::string toString() override {
         return folly::stringPrintf("Random kill: loop %d", loopTimes_);
     }
 
@@ -765,7 +765,7 @@ public:
 
     ResultCode doRun() override;
 
-    std::string toString() const override {
+    std::string toString() override {
         return folly::stringPrintf("Clean space %s wal on instance %s",
                                    spaceName_.c_str(),
                                    inst_->toString().c_str());
@@ -792,7 +792,7 @@ public:
 
     ResultCode doRun() override;
 
-    std::string toString() const override {
+    std::string toString() override {
         CHECK_NOTNULL(inst_);
         auto hostAddr = inst_->toString();
         return folly::stringPrintf("clean data %s ", hostAddr.c_str());
@@ -823,7 +823,7 @@ public:
 
     ~RandomPartitionAction() = default;
 
-    std::string toString() const override {
+    std::string toString() override {
         return folly::stringPrintf("Random partition: loop %d", loopTimes_);
     }
 
@@ -864,7 +864,7 @@ public:
 
     ~RandomTrafficControlAction() = default;
 
-    std::string toString() const override {
+    std::string toString() override {
         return folly::stringPrintf("Random traffic control: loop %d delay %s +/- %s",
                                    loopTimes_, delay_.c_str(), dist_.c_str());
     }
@@ -897,7 +897,7 @@ public:
 
     ~FillDiskAction() = default;
 
-    std::string toString() const override {
+    std::string toString() override {
         return folly::stringPrintf("Fill disk: loop %d", loopTimes_);
     }
 
@@ -929,7 +929,7 @@ public:
 
     ~SlowDiskAction() = default;
 
-    std::string toString() const override {
+    std::string toString() override {
         return folly::stringPrintf("Slow disk: loop %d", loopTimes_);
     }
 
@@ -954,7 +954,7 @@ public:
 
     ~CreateCheckpointAction() = default;
 
-    std::string command() const override {
+    std::string command() override {
         return "CREATE SNAPSHOT";
     }
 };
@@ -969,7 +969,7 @@ public:
 
     ResultCode doRun() override;
 
-    std::string toString() const override {
+    std::string toString() override {
         return folly::stringPrintf("Clean snapshot on instance %s",
                                    inst_->toString().c_str());
     }
@@ -988,7 +988,7 @@ public:
 
     ResultCode doRun() override;
 
-    std::string toString() const override {
+    std::string toString() override {
         return folly::stringPrintf("Restore db from snapshot on instance %s",
                                    inst_->toString().c_str());
     }
@@ -1007,7 +1007,7 @@ public:
 
     ResultCode doRun() override;
 
-    std::string toString() const override {
+    std::string toString() override {
         return folly::stringPrintf("Restore db from data folder on instance %s",
                                    inst_->toString().c_str());
     }
@@ -1036,7 +1036,7 @@ public:
 
     ResultCode doRun() override;
 
-    std::string toString() const override {
+    std::string toString() override {
         return folly::stringPrintf("Truncate space %s wal", spaceName_.c_str());
     }
 
@@ -1071,7 +1071,7 @@ public:
 
     ~RandomTruncateRestartAction() = default;
 
-    std::string toString() const override {
+    std::string toString() override {
         return folly::stringPrintf("Random restart and truncate wal: loop %d", loopTimes_);
     }
 
@@ -1116,7 +1116,7 @@ public:
 
     ResultCode doRun() override;
 
-    std::string toString() const override {
+    std::string toString() override {
         return folly::stringPrintf("Execute storage perf : %s on host: %s",
                                     perfPath_.c_str(),
                                     metaServerAddrs_.c_str());
@@ -1156,7 +1156,7 @@ public:
 
     ~CreateIndexAction() = default;
 
-    std::string command() const override {
+    std::string command() override {
         std::string entry;
         if (isEdge_) {
             entry = "EDGE";
@@ -1208,7 +1208,7 @@ public:
 
     ResultCode doRun() override;
 
-    std::string command() const override {
+    std::string command() override {
         return folly::stringPrintf("REBUILD %s INDEX %s",
                                    (isEdge_ ? "EDGE" : "TAG"),
                                    indexName_.c_str());
@@ -1239,7 +1239,14 @@ public:
 
     ResultCode doRun() override;
 
-    std::string command() const override {
+    std::string command() override {
+        // Get job id from job id variable
+        auto varValue = ctx_->exprCtx.getVar(jobIdVarName_);
+        if (varValue.hasValue()) {
+            jobId_ = ExprUtils::asInt(varValue.value());
+        } else {
+            jobId_ = 0;
+        }
         return folly::stringPrintf("SHOW JOB %ld", jobId_);
     }
 

@@ -8,7 +8,7 @@
 
 namespace chaos {
 
-std::string ConstantExpression::toString() const {
+std::string ConstantExpression::toString() {
     char buf[1024];
     switch (operand_.which()) {
         case VAR_INT64:
@@ -51,7 +51,7 @@ ValueOrErr VariableExpression::eval(ExprContext* ctx) const {
     return ctx->getVar(varName_);
 }
 
-std::string UnaryExpression::toString() const {
+std::string UnaryExpression::toString() {
     std::string buf;
     buf.reserve(256);
     switch (op_) {
@@ -91,7 +91,7 @@ ValueOrErr UnaryExpression::eval(ExprContext* ctx) const {
     return folly::makeUnexpected(ErrorCode::ERR_UNKNOWN_OP);
 }
 
-std::string ArithmeticExpression::toString() const {
+std::string ArithmeticExpression::toString() {
     std::string buf;
     buf.reserve(256);
     buf += '(';
@@ -246,7 +246,7 @@ ValueOrErr ArithmeticExpression::eval(ExprContext* ctx) const {
     return folly::makeUnexpected(ErrorCode::ERR_UNKNOWN_OP);
 }
 
-std::string RelationalExpression::toString() const {
+std::string RelationalExpression::toString() {
     std::string buf;
     buf.reserve(256);
     buf += '(';
@@ -317,7 +317,7 @@ ValueOrErr RelationalExpression::eval(ExprContext* ctx) const {
     return folly::makeUnexpected(ErrorCode::ERR_UNKNOWN_OP);
 }
 
-std::string LogicalExpression::toString() const {
+std::string LogicalExpression::toString() {
     std::string buf;
     buf.reserve(256);
     buf += '(';

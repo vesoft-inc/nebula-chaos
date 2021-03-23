@@ -54,7 +54,7 @@ public:
         return actions_.back().get();
     }
 
-    std::string toString() const;
+    std::string toString();
 
     void setAttachment(const std::string& attachment) {
         attachment_ = attachment;

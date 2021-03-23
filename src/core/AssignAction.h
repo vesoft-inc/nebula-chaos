@@ -40,7 +40,7 @@ public:
         return ResultCode::OK;
     }
 
-    std::string toString() const override {
+    std::string toString() override {
         return folly::stringPrintf("$%s=%s", var_.c_str(), exprStr_.c_str());
     }
 

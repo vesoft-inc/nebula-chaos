@@ -142,7 +142,7 @@ public:
         promise_->setException(std::move(ew));
     }
 
-    virtual std::string toString() const = 0;
+    virtual std::string toString() = 0;
 
 protected:
     virtual ResultCode doRun() = 0;
@@ -174,7 +174,7 @@ public:
         return ResultCode::OK;
     }
 
-    std::string toString() const override {
+    std::string toString() override {
         return name_;
     }
 

@@ -27,7 +27,7 @@ public:
         return ResultCode::OK;
     }
 
-    std::string toString() const override {
+    std::string toString() override {
         return folly::stringPrintf("wait %ldms", waitTimeMs_);
     }
 
