@@ -59,7 +59,7 @@ ErrorCode GraphClient::execute(folly::StringPiece stmt,
     int32_t retry = 0;
     while (++retry <= kRetryTimes) {
         auto exeRet = session_->execute(stmt.str());
-        auto errCode = exeRet.errorCode();
+        auto errCode = exeRet.errorCode;
 
         if (errCode == nebula::ErrorCode::E_RPC_FAILURE) {
             LOG(ERROR) << "Thrift rpc call failed, retry times " << retry;
@@ -68,7 +68,7 @@ ErrorCode GraphClient::execute(folly::StringPiece stmt,
             }
             continue;
         } else if (errCode != nebula::ErrorCode::SUCCEEDED) {
-            auto* msg = exeRet.errorMsg();
+            auto* msg = exeRet.errorMsg.get();
             if (msg != nullptr) {
                 LOG(ERROR) << *msg;
                 if (errMSg != nullptr) {
@@ -76,17 +76,17 @@ ErrorCode GraphClient::execute(folly::StringPiece stmt,
                 }
             }
             LOG(ERROR) << stmt.str() << " execute failed, error code : "
-                       << static_cast<int>(exeRet.errorCode());
+                       << static_cast<int>(errCode);
             return errCode;
         } else {
             // Not every ResultSet returned by Session::execute contains a DataSet
-            auto* dataSet = exeRet.data();
+            auto* dataSet = exeRet.data.get();
             if (dataSet != nullptr) {
                 resp = *(const_cast<nebula::DataSet*>(dataSet));
             }
 
             // Save the current spacename when the execution is successful
-            auto* spaceName = exeRet.spaceName();
+            auto* spaceName = exeRet.spaceName.get();
             if (spaceName != nullptr) {
                 spaceName_ = *spaceName;
             }
@@ -105,7 +105,7 @@ ErrorCode GraphClient::execute(folly::StringPiece stmt,
         if (!spaceName_.empty()) {
             auto restoreSpace = folly::stringPrintf("USE %s", spaceName_.c_str());
             auto exeRet = session_->execute(restoreSpace);
-            auto errCode = exeRet.errorCode();
+            auto errCode = exeRet.errorCode;
 
             if (errCode != nebula::ErrorCode::SUCCEEDED) {
                 LOG(ERROR) << "Restore space failed when thrift rpc call failed!";
