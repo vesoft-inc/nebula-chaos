@@ -9,8 +9,6 @@
 #   CMAKE_C_COMPILER               -- Specify the compiler for C language
 #   CMAKE_CXX_COMPILER             -- Specify the compiler for C++ language
 #
-#   NEBULA_CLIENT_SOURCE_DIR       -- Path to nebula-client source directory
-#   NEBULA_CLIENT_BUILD_DIR        -- Path to nebula-client build directory
 #   NEBULA_CLIENT_REPO_URL         -- Git URL for the nebula-client repo
 #   NEBULA_CLIENT_REPO_TAG         -- Tag/branch of the nebula-client repo
 
@@ -54,41 +52,34 @@ endif()
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 message(STATUS "CMAKE_MODULE_PATH: " ${CMAKE_MODULE_PATH})
 
-if(NOT NEBULA_CLIENT_SOURCE_DIR)
-    include(FetchModule)
-    # fetch graph cpp client repo
-    nebula_fetch_module(
-        NAME
-            client
-        URL
-            ${NEBULA_CLIENT_REPO_URL}
-        TAG
-            ${NEBULA_CLIENT_REPO_TAG}
-        UPDATE
-            ${ENABLE_CLIENT_MODULE_UPDATE}
-    )
-    set(nebula_client_source_dir ${CMAKE_SOURCE_DIR}/modules/client)
-    set(nebula_client_build_dir ${CMAKE_BINARY_DIR}/modules/client)
+include(FetchModule)
+# fetch graph cpp client repo
+nebula_fetch_module(
+    NAME
+        client
+    URL
+        ${NEBULA_CLIENT_REPO_URL}
+    TAG
+        ${NEBULA_CLIENT_REPO_TAG}
+    UPDATE
+        ${ENABLE_CLIENT_MODULE_UPDATE}
+)
+set(nebula_client_source_dir ${CMAKE_SOURCE_DIR}/modules/client)
+set(nebula_client_build_dir ${CMAKE_BINARY_DIR}/modules/client)
 
-    # fetch common repo
-    nebula_fetch_module(
-        NAME
-            common
-        URL
-            ${NEBULA_COMMON_REPO_URL}
-        TAG
-            ${NEBULA_COMMON_REPO_TAG}
-        UPDATE
-            ${ENABLE_COMMON_MODULE_UPDATE}
-    )
-else()
-    set(nebula_client_source_dir ${NEBULA_CLIENT_SOURCE_DIR})
-    if(NOT NEBULA_CLIENT_BUILD_DIR)
-        set(nebula_client_build_dir ${CMAKE_BINARY_DIR}/modules/client)
-    else()
-        set(nebula_client_build_dir ${NEBULA_CLIENT_BUILD_DIR})
-    endif()
-endif()
+ # fetch common repo
+ nebula_fetch_module(
+    NAME
+        common
+    URL
+        ${NEBULA_COMMON_REPO_URL}
+    TAG
+        ${NEBULA_COMMON_REPO_TAG}
+    UPDATE
+        ${ENABLE_COMMON_MODULE_UPDATE}
+)
+set(nebula_common_source_dir ${CMAKE_SOURCE_DIR}/modules/client/modules/common)
+message(STATUS "nebula_common_source_dir: ${nebula_common_source_dir}")
 
 # graph cpp client cmake
 list(APPEND CMAKE_MODULE_PATH ${nebula_client_source_dir}/cmake)
