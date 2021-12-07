@@ -1,4 +1,7 @@
 # nebula-chaos
+
+**This repository has been deprecated, it's no longer maintained.**
+
 Chaos framework for the Storage Service
 
 ### Plan Intro
