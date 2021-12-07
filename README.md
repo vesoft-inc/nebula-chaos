@@ -1,6 +1,6 @@
 # nebula-chaos
 
-**This repository has been deprecated, they are no longer maintained.**
+**This repository has been deprecated, it's no longer maintained.**
 
 Chaos framework for the Storage Service
 
